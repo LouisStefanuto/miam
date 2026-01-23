@@ -1,0 +1,17 @@
+services:
+  miam:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: miam:latest
+    container_name: miam
+    volumes:
+      - .:/app                             # useful to dev
+      - /app/.venv
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    stdin_open: true   # equivalent to -it
+    tty: true          # keep interactive mode open
+    env_file:
+      - .env  # Docker reads this from the host, not container

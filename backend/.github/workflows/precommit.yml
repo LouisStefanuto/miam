@@ -1,0 +1,30 @@
+name: Precommit
+
+on: push
+jobs:
+  precommit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 👾 Clone repo to runner
+        uses: actions/checkout@v4
+
+      - name: 🐍 Install uv and set the python version
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.9.2
+          python-version: 3.12
+
+      - name: 👀 Check python and uv versions
+        run: |
+          uv run python --version
+          uv --version
+
+      - name: 🚧 Install the project
+        run: uv sync --all-extras --dev
+
+      - name: 🪝 Run pre-commit hooks
+        run: |
+          git init
+          git add .
+          uv run pre-commit run --all-files

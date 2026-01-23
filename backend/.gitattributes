@@ -1,0 +1,5 @@
+# The following .gitattributes config normalizes line endings to LF for all text files
+# checked into your repo while leaving local line endings untouched in the working tree
+# This is useful if you work with coworkers both on Unix and Windows.
+# Source: https://www.aleksandrhovhannisyan.com/blog/crlf-vs-lf-normalizing-line-endings-in-git/
+* text=auto

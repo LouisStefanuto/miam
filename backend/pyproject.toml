@@ -1,0 +1,46 @@
+[project]
+name = "miam"
+version = "0.0.1"
+description = "miam"
+authors = [
+  {name = "Louis Stefanuto", email = "me@email.com"}
+]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "typer>=0.15.2",
+  "pydantic>=2.0.1",
+  "pydantic-settings>=2.0.0",
+  "loguru>=0.7.3",
+  "fastapi[standard]>=0.115.12",
+]
+
+[project.optional-dependencies]
+dev = [
+  "ipdb>=0.13.11",
+  "pytest>=7.2.0",
+  "pytest-sugar>=0.9.6",
+  "pytest-mock>=3.10.0",
+  "pytest-cov>=6.1.0",
+  "ruff>=0.11.2",
+  "pre-commit>=4.2.0",
+  "pre-commit-hooks>=5.0.0",
+  "mypy>=1.18.2",
+]
+
+[tool.pytest.ini_options]
+addopts = "--cov=miam"
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = ["$MYPY_CONFIG_FILE_DIR"]
+strict = true
+exclude = ["tests/.*", "docs/"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/miam"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
