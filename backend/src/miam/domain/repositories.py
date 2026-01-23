@@ -7,7 +7,7 @@ class RecipeRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def add_recipe(self, recipe: Recipe):
+    def add_recipe(self, recipe: Recipe) -> Recipe:
         self.session.add(recipe)
         self.session.commit()
         self.session.refresh(recipe)

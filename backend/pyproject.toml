@@ -7,7 +7,7 @@ authors = [
 ]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 dependencies = [
   "typer>=0.15.2",
   "pydantic>=2.0.1",
@@ -36,10 +36,11 @@ dev = [
 addopts = "--cov=miam"
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 mypy_path = ["$MYPY_CONFIG_FILE_DIR"]
 strict = true
 exclude = ["tests/.*", "docs/"]
+plugins = ["pydantic.mypy"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/miam"]

@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-from src.miam.infra.db.base import Base
+from miam.infra.db.base import Base
 
 
 class AlembicConfig(BaseSettings):

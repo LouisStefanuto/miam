@@ -1,7 +1,7 @@
 repos:
 - repo: https://github.com/astral-sh/uv-pre-commit
   # uv version.
-  rev: 0.9.2
+  rev: 0.9.26
   hooks:
     - id: uv-lock
 - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -41,9 +41,9 @@ repos:
 # FIXME I think it would be better to use the mypy precommit hook, to not rely on uv. But I didn't manage to use the venv when using the mypy hook.
 - repo: local
   hooks:
-    - id: mypy
+    - id: mypy-python-backend
       name: mypy
-      entry: uv run mypy --config-file=pyproject.toml .
+      entry: uv --project backend run mypy --config-file=backend/pyproject.toml .
       args: []
       language: system
       types: [python]
