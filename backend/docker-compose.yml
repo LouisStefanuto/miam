@@ -1,17 +1,16 @@
 services:
-  miam:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: miam:latest
-    container_name: miam
-    volumes:
-      - .:/app                             # useful to dev
-      - /app/.venv
-    working_dir: /app
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: recipes
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/recipes
     ports:
       - "8000:8000"
-    stdin_open: true   # equivalent to -it
-    tty: true          # keep interactive mode open
-    env_file:
-      - .env  # Docker reads this from the host, not container

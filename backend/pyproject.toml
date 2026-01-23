@@ -14,6 +14,9 @@ dependencies = [
   "pydantic-settings>=2.0.0",
   "loguru>=0.7.3",
   "fastapi[standard]>=0.115.12",
+  "sqlalchemy>=2.0.46",
+  "alembic>=1.18.1",
+  "psycopg2-binary>=2.9.11",
 ]
 
 [project.optional-dependencies]
