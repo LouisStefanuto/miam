@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:16
+    container_name: miam-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -9,7 +10,10 @@ services:
       - "5432:5432"
 
   backend:
-    build: .
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: miam-backend
     environment:
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/recipes
     ports:
