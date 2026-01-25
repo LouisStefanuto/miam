@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 
 from miam.infra.db.base import Ingredient, Recipe, RecipeIngredient
@@ -39,3 +40,34 @@ class RecipeRepository:
 
         recipe = self.session.execute(stmt).scalars().first()
         return recipe
+
+    def search_recipes(
+        self,
+        recipe_id: Optional[UUID] = None,
+        title: Optional[str] = None,
+        category: Optional[str] = None,
+        is_veggie: Optional[bool] = None,
+        season: Optional[str] = None,
+    ) -> list[Recipe]:
+        """
+        Search recipes with dynamic filters.
+        """
+        stmt = select(Recipe).options(
+            joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
+            joinedload(Recipe.images),
+            joinedload(Recipe.sources),
+        )
+
+        # Apply filters dynamically
+        if recipe_id:
+            stmt = stmt.where(Recipe.id == recipe_id)
+        if title:
+            stmt = stmt.where(Recipe.title.ilike(f"%{title}%"))
+        if category:
+            stmt = stmt.where(Recipe.category == category)
+        if is_veggie is not None:
+            stmt = stmt.where(Recipe.is_veggie == is_veggie)
+        if season:
+            stmt = stmt.where(Recipe.season == season)
+
+        return list(self.session.execute(stmt).unique().scalars().all())

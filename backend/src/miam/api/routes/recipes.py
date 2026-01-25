@@ -1,8 +1,8 @@
 from collections.abc import Generator
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -88,11 +88,36 @@ class RecipeDetailResponse(BaseModel):
     season: Optional[str]
     category: str
     is_veggie: bool
-    ingredients: List[IngredientResponse]
-    images: List[ImageResponse]
-    sources: List[SourceResponse]
+    ingredients: list[IngredientResponse]
+    images: list[ImageResponse]
+    sources: list[SourceResponse]
 
     model_config = {"from_attributes": True}
+
+
+@router.get("/search", response_model=list[RecipeDetailResponse])
+def search_recipes(
+    recipe_id: Optional[UUID] = Query(None),
+    title: Optional[str] = Query(None),
+    category: Optional[str] = Query(None),
+    is_veggie: Optional[bool] = Query(None),
+    season: Optional[str] = Query(None),
+    service: RecipeService = Depends(get_recipe_service),
+) -> list[RecipeDetailResponse]:
+    """
+    Search recipes with optional filters.
+    """
+    recipes = service.search_recipes(
+        recipe_id=recipe_id,
+        title=title,
+        category=category,
+        is_veggie=is_veggie,
+        season=season,
+    )
+    if not recipes:
+        raise HTTPException(status_code=404, detail="No recipes found")
+
+    return [RecipeDetailResponse.model_validate(r) for r in recipes]
 
 
 @router.get("/{recipe_id}", response_model=RecipeDetailResponse)
