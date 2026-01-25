@@ -1,13 +1,14 @@
 from collections.abc import Generator
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from miam.domain.repositories import RecipeRepository
 from miam.domain.schemas import RecipeCreate
 from miam.domain.services import RecipeService
 from miam.infra.db.session import SessionLocal
+from miam.infra.repositories import RecipeRepository
 
 router = APIRouter(
     prefix="/recipes",
@@ -35,7 +36,7 @@ def get_recipe_service(db: Session = Depends(get_db)) -> RecipeService:
 
 
 class RecipeResponse(BaseModel):
-    id: int
+    id: UUID
 
 
 @router.post("", response_model=RecipeResponse, status_code=status.HTTP_201_CREATED)

@@ -1,6 +1,6 @@
-from miam.domain.repositories import RecipeRepository
 from miam.domain.schemas import RecipeCreate
 from miam.infra.db.base import Image, Recipe, RecipeIngredient, Source
+from miam.infra.repositories import RecipeRepository
 
 
 class RecipeService:

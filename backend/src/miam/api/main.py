@@ -1,13 +1,9 @@
-from fastapi import FastAPI, status
+from fastapi import FastAPI
 
-from miam.api.routes import recipes
+from miam import __version__
+from miam.api.routes import recipes, root
 
-app = FastAPI(title="Livre Recettes")
+app = FastAPI(title="Livre Recettes", version=__version__)
 
-
-@app.get("/", status_code=status.HTTP_201_CREATED)
-def root() -> str:
-    return "Livre Recettes"
-
-
+app.include_router(root.router)
 app.include_router(recipes.router, prefix="/api")
