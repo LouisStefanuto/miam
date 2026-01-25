@@ -1,6 +1,9 @@
-from sqlalchemy.orm import Session
+from typing import Optional
+from uuid import UUID
 
-from miam.infra.db.base import Ingredient, Recipe
+from miam.infra.db.base import Ingredient, Recipe, RecipeIngredient
+from sqlalchemy import select
+from sqlalchemy.orm import Session, joinedload
 
 
 class RecipeRepository:
@@ -14,9 +17,57 @@ class RecipeRepository:
         return recipe
 
     def get_or_create_ingredient(self, name: str) -> Ingredient:
-        ingredient = self.session.query(Ingredient).filter_by(name=name).first()
+        stmt = select(Ingredient).where(Ingredient.name == name)
+        ingredient = self.session.execute(stmt).scalars().first()
+
         if ingredient is None:
             ingredient = Ingredient(name=name)
             self.session.add(ingredient)
-            self.session.flush()  # so we can reference id
+            self.session.flush()  # still explicit execution
+
         return ingredient
+
+    def get_recipe_by_id(self, recipe_id: UUID) -> Recipe | None:
+        stmt = (
+            select(Recipe)
+            .options(
+                joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
+                joinedload(Recipe.images),
+                joinedload(Recipe.sources),
+            )
+            .where(Recipe.id == recipe_id)
+        )
+
+        recipe = self.session.execute(stmt).scalars().first()
+        return recipe
+
+    def search_recipes(
+        self,
+        recipe_id: Optional[UUID] = None,
+        title: Optional[str] = None,
+        category: Optional[str] = None,
+        is_veggie: Optional[bool] = None,
+        season: Optional[str] = None,
+    ) -> list[Recipe]:
+        """
+        Search recipes with dynamic filters.
+        """
+        stmt = select(Recipe).options(
+            joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
+            joinedload(Recipe.images),
+            joinedload(Recipe.sources),
+        )
+
+        # Apply filters dynamically
+        if recipe_id:
+            stmt = stmt.where(Recipe.id == recipe_id)
+        if title:
+            stmt = stmt.where(Recipe.title.ilike(f"%{title}%"))
+        if category:
+            stmt = stmt.where(Recipe.category == category)
+        if is_veggie is not None:
+            stmt = stmt.where(Recipe.is_veggie == is_veggie)
+        if season:
+            stmt = stmt.where(Recipe.season == season)
+
+        return list(self.session.execute(stmt).unique().scalars().all())
