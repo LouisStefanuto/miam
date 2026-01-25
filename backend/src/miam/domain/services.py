@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from miam.domain.schemas import RecipeCreate
 from miam.infra.db.base import Image, Recipe, RecipeIngredient, Source
 from miam.infra.repositories import RecipeRepository
@@ -42,3 +44,6 @@ class RecipeService:
             recipe.sources.append(source)
 
         return self.repository.add_recipe(recipe)
+
+    def get_recipe_by_id(self, recipe_id: UUID) -> Recipe | None:
+        return self.repository.get_recipe_by_id(recipe_id)
