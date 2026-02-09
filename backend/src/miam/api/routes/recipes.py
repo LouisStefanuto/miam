@@ -132,6 +132,17 @@ def get_recipe(
             detail=f"Recipe with id {recipe_id} not found",
         )
 
-    # Pydantic will automatically convert nested relationships
-    # thanks to orm_mode=True
     return RecipeDetailResponse.model_validate(recipe)
+
+
+@router.get("", response_model=list[RecipeDetailResponse])
+def get_recipes(
+    service: RecipeService = Depends(get_recipe_service),
+) -> list[RecipeDetailResponse]:
+    """
+    Retrieve all recipes.
+    """
+    recipes = service.search_recipes()
+    if not recipes:
+        raise HTTPException(status_code=404, detail="No recipes found")
+    return [RecipeDetailResponse.model_validate(r) for r in recipes]
