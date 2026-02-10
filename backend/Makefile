@@ -57,3 +57,7 @@ clean: ## Delete all compiled Python files
 docker: ## Build Docker image and run a container
 	chmod +x ./scripts/build_run_docker.sh
 	./scripts/build_run_docker.sh
+
+.PHONY: sql
+sql: ## Test connexion to the sql server
+	uv run scripts/test_connexion_db.py

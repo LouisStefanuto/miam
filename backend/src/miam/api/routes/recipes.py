@@ -11,6 +11,7 @@ from fastapi import (
     Response,
     status,
 )
+from miam.infra.exporter import Exporter
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -35,7 +36,8 @@ def get_db() -> Generator[Session, None, None]:
 
 def get_recipe_service(db: Session = Depends(get_db)) -> RecipeService:
     repo = RecipeRepository(db)
-    return RecipeService(repo)
+    exporter = Exporter()
+    return RecipeService(repo, exporter)
 
 
 # ---- Routes ----
@@ -153,15 +155,13 @@ def get_recipes(
     return [RecipeDetailResponse.model_validate(r) for r in recipes]
 
 
-class ExportRequest(BaseModel):
-    content: str
-    filename: str = "export.md"
-
-
 @router.post("/export")
-async def export_markdown(req: ExportRequest) -> Response:
+async def export_markdown(
+    service: RecipeService = Depends(get_recipe_service),
+) -> Response:
+    content = service.export_to_markdown()
     return Response(
-        content=req.content,
+        content=content,
         media_type="text/markdown",
-        headers={"Content-Disposition": f'attachment; filename="{req.filename}"'},
+        headers={"Content-Disposition": 'attachment; filename="recipes.md"'},
     )
