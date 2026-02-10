@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 
 class AlembicConfig(BaseSettings):
-    database_url: str
+    database_url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/recipes"
 
     model_config = SettingsConfigDict(
         env_file=".env",

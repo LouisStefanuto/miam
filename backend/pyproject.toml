@@ -32,6 +32,9 @@ dev = [
 [tool.pytest.ini_options]
 addopts = "--cov=src/miam"
 
+[tool.coverage.report]
+skip_empty = true
+
 [tool.mypy]
 python_version = "3.13"
 mypy_path = ["$MYPY_CONFIG_FILE_DIR"]

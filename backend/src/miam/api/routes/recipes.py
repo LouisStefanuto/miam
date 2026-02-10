@@ -2,7 +2,16 @@ from collections.abc import Generator
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Path,
+    Query,
+    Response,
+    status,
+)
+from miam.infra.exporter import Exporter
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -11,10 +20,7 @@ from miam.domain.services import RecipeService
 from miam.infra.db.session import SessionLocal
 from miam.infra.repositories import RecipeRepository
 
-router = APIRouter(
-    prefix="/recipes",
-    tags=["recipes"],
-)
+router = APIRouter(prefix="/recipes", tags=["recipes"])
 
 
 # ---- Dependencies ----
@@ -30,7 +36,8 @@ def get_db() -> Generator[Session, None, None]:
 
 def get_recipe_service(db: Session = Depends(get_db)) -> RecipeService:
     repo = RecipeRepository(db)
-    return RecipeService(repo)
+    exporter = Exporter()
+    return RecipeService(repo, exporter)
 
 
 # ---- Routes ----
@@ -132,6 +139,29 @@ def get_recipe(
             detail=f"Recipe with id {recipe_id} not found",
         )
 
-    # Pydantic will automatically convert nested relationships
-    # thanks to orm_mode=True
     return RecipeDetailResponse.model_validate(recipe)
+
+
+@router.get("", response_model=list[RecipeDetailResponse])
+def get_recipes(
+    service: RecipeService = Depends(get_recipe_service),
+) -> list[RecipeDetailResponse]:
+    """
+    Retrieve all recipes.
+    """
+    recipes = service.search_recipes()
+    if not recipes:
+        raise HTTPException(status_code=404, detail="No recipes found")
+    return [RecipeDetailResponse.model_validate(r) for r in recipes]
+
+
+@router.post("/export")
+async def export_markdown(
+    service: RecipeService = Depends(get_recipe_service),
+) -> Response:
+    content = service.export_to_markdown()
+    return Response(
+        content=content,
+        media_type="text/markdown",
+        headers={"Content-Disposition": 'attachment; filename="recipes.md"'},
+    )
