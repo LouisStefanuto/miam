@@ -25,6 +25,12 @@ help: ## Show this help message
 # COMMANDS                                                                      #
 #################################################################################
 
+.PHONY: install
+install: ## Setup your project by installing dependencies and venv
+	cd backend
+	uv sync --all-extras
+	cd ..
+
 .PHONY: start
 start: ## Start
 	docker compose up --build
@@ -32,3 +38,8 @@ start: ## Start
 .PHONY: stop
 stop: ## Stop
 	docker compose stop
+
+.PHONY: pre-commit
+pre-commit: ## Run pre-commit
+	cd backend
+	uv --directory backend run pre-commit run --all-files
