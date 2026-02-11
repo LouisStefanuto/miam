@@ -5,6 +5,8 @@ repo_name: LouisStefanuto/miam
 
 theme:
   name: 'material'
+  logo: assets/images/chef.png
+  favicon: assets/images/favicon.png
   features:
     - content.code.copy
     # - navigation.sections

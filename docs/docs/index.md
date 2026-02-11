@@ -8,7 +8,6 @@
   <img src="./assets/images/logo.png" alt="Logo" width="50%">
 </div>
 
-
 ## Install
 
 Install dependencies and setup virtual environment. Requires [`uv`](https://docs.astral.sh/uv/getting-started/installation/) installed.
