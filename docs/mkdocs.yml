@@ -1,6 +1,7 @@
 site_name: Miam
 
 repo_url: https://github.com/LouisStefanuto/miam
+repo_name: LouisStefanuto/miam
 
 theme:
   name: 'material'
