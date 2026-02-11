@@ -16,6 +16,7 @@ dependencies = [
   "sqlalchemy>=2.0.46",
   "alembic>=1.18.1",
   "psycopg2-binary>=2.9.11",
+  "python-docx>=1.2.0",
 ]
 
 [project.optional-dependencies]

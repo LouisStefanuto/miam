@@ -3,7 +3,7 @@ from pathlib import Path
 from miam.infra.db.base import Recipe
 
 
-class Exporter:
+class MarkdownExporter:
     def to_string(self, recipes: List[Recipe]) -> str:
         """Convert a list of Recipe objects to a Markdown string."""
 
