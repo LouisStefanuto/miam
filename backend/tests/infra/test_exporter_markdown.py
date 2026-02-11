@@ -10,7 +10,7 @@ from miam.infra.db.base import (
     Category,
     Season,
 )
-from miam.infra.exporter import Exporter
+from miam.infra.exporter_markdown import MarkdownExporter
 
 
 # -----------------------------
@@ -69,7 +69,7 @@ def sample_recipes():
 # Tests
 # -----------------------------
 def test_exporter_to_string(sample_recipes):
-    exporter = Exporter()
+    exporter = MarkdownExporter()
     output = exporter.to_string(sample_recipes)
 
     assert isinstance(output, str)
@@ -81,7 +81,7 @@ def test_exporter_to_string(sample_recipes):
 
 
 def test_exporter_to_markdown(tmp_path, sample_recipes):
-    exporter = Exporter()
+    exporter = MarkdownExporter()
     output_file = tmp_path / "recipes.md"
 
     exporter.to_markdown(sample_recipes, output_file=str(output_file))

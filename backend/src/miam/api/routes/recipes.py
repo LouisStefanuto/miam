@@ -1,46 +1,14 @@
-from collections.abc import Generator
 from typing import Optional
 from uuid import UUID
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Path,
-    Query,
-    Response,
-    status,
-)
-from miam.infra.exporter import Exporter
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from miam.api.deps import get_recipe_service
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
 from miam.domain.schemas import RecipeCreate
 from miam.domain.services import RecipeService
-from miam.infra.db.session import SessionLocal
-from miam.infra.repositories import RecipeRepository
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
-
-
-# ---- Dependencies ----
-
-
-def get_db() -> Generator[Session, None, None]:
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-def get_recipe_service(db: Session = Depends(get_db)) -> RecipeService:
-    repo = RecipeRepository(db)
-    exporter = Exporter()
-    return RecipeService(repo, exporter)
-
-
-# ---- Routes ----
 
 
 class RecipeResponse(BaseModel):
@@ -153,15 +121,3 @@ def get_recipes(
     if not recipes:
         raise HTTPException(status_code=404, detail="No recipes found")
     return [RecipeDetailResponse.model_validate(r) for r in recipes]
-
-
-@router.post("/export")
-async def export_markdown(
-    service: RecipeService = Depends(get_recipe_service),
-) -> Response:
-    content = service.export_to_markdown()
-    return Response(
-        content=content,
-        media_type="text/markdown",
-        headers={"Content-Disposition": 'attachment; filename="recipes.md"'},
-    )

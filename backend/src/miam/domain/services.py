@@ -2,14 +2,14 @@ from uuid import UUID
 
 from miam.domain.schemas import RecipeCreate
 from miam.infra.db.base import Image, Recipe, RecipeIngredient, Source
-from miam.infra.exporter import Exporter
+from miam.infra.exporter_markdown import MarkdownExporter
 from miam.infra.repositories import RecipeRepository
+from miam.infra.exporter_word import RecipeWordExporter
 
 
 class RecipeService:
-    def __init__(self, repository: RecipeRepository, exporter: Exporter):
+    def __init__(self, repository: RecipeRepository):
         self.repository = repository
-        self.exporter = exporter
 
     def create_recipe(self, data: RecipeCreate) -> Recipe:
         recipe = Recipe(
@@ -67,5 +67,11 @@ class RecipeService:
         )
 
     def export_to_markdown(self) -> str:
+        markdown_exporter = MarkdownExporter()
         recipes = self.search_recipes()
-        return self.exporter.to_string(recipes)
+        return markdown_exporter.to_string(recipes)
+
+    def export_to_word(self) -> bytes:
+        word_exporter = RecipeWordExporter()
+        recipes = self.search_recipes()
+        return word_exporter.to_bytes(recipes)
