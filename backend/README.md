@@ -29,8 +29,8 @@ uv sync --extra dev
 
 ## Run
 
-- **Option 1 - Docker (recommended)** 
-    
+- **Option 1 - Docker (recommended)**
+
     - To launch the backend only, start the `db` and `backend` services, defined in the [`docker-compose.yml`](../docker-compose.yml) in the root folder.
 
         ```bash
@@ -38,7 +38,7 @@ uv sync --extra dev
         docker compose up db backend
         ```
 
-- **Option 2 - Manual** 
+- **Option 2 - Manual**
 
     - Activate your virtual environment.
 

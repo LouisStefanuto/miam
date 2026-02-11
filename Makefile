@@ -41,5 +41,4 @@ stop: ## Stop
 
 .PHONY: pre-commit
 pre-commit: ## Run pre-commit
-	cd backend
 	uv --directory backend run pre-commit run --all-files
