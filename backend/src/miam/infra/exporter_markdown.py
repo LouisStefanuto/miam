@@ -1,6 +1,7 @@
 from pathlib import Path
-from miam.infra.db.base import Recipe
+
 from miam.domain.ports_secondary import MarkdownExporterPort
+from miam.infra.db.base import Recipe
 
 
 class MarkdownExporter(MarkdownExporterPort):

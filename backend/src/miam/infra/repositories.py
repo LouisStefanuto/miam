@@ -1,12 +1,14 @@
 from typing import Optional
 from uuid import UUID
 
-from miam.infra.db.base import Ingredient, Recipe, RecipeIngredient
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
+from miam.domain.ports_secondary import RecipeRepositoryPort
+from miam.infra.db.base import Ingredient, Recipe, RecipeIngredient
 
-class RecipeRepository:
+
+class RecipeRepository(RecipeRepositoryPort):
     def __init__(self, session: Session):
         self.session = session
 

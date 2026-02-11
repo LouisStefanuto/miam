@@ -3,8 +3,8 @@ from uuid import UUID
 from miam.domain.schemas import RecipeCreate
 from miam.infra.db.base import Image, Recipe, RecipeIngredient, Source
 from miam.infra.exporter_markdown import MarkdownExporter
-from miam.infra.repositories import RecipeRepository
 from miam.infra.exporter_word import WordExporter
+from miam.infra.repositories import RecipeRepository
 
 
 class RecipeService:

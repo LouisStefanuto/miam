@@ -1,14 +1,16 @@
-import pytest
 import uuid
+
+import pytest
+
 from miam.infra.db.base import (
+    Category,
+    Image,
+    Ingredient,
     Recipe,
     RecipeIngredient,
-    Ingredient,
-    Image,
+    Season,
     Source,
     SourceType,
-    Category,
-    Season,
 )
 from miam.infra.exporter_markdown import MarkdownExporter
 

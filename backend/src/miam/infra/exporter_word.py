@@ -1,8 +1,10 @@
 import io
 from typing import Any
+
 from docx import Document
-from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Pt
+
 from miam.domain.ports_secondary import WordExporterPort
 from miam.infra.db.base import Recipe
 

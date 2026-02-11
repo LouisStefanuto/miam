@@ -2,9 +2,9 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
-from miam.api.deps import get_recipe_service
 from pydantic import BaseModel
 
+from miam.api.deps import get_recipe_service
 from miam.domain.schemas import RecipeCreate
 from miam.domain.services import RecipeService
 

@@ -1,8 +1,9 @@
 import io
-from fastapi import APIRouter, Depends, Response
-from miam.api.deps import get_recipe_service
 
+from fastapi import APIRouter, Depends, Response
 from fastapi.responses import StreamingResponse
+
+from miam.api.deps import get_recipe_service
 from miam.domain.services import RecipeService
 
 router = APIRouter(prefix="/export", tags=["export"])
