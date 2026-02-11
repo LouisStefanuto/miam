@@ -1,0 +1,26 @@
+name: Publish-mkdocs-on-github
+on:
+  push:
+    branches:
+      - main
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 👾 Clone repo to runner
+        uses: actions/checkout@v6
+
+      - name: 🐍 Install python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.13
+
+      - name: 📘 Install mkdocs dependencies
+        working_directory: docs
+        run: pip install .
+
+      - name: 🚀 Build and deploy updated documentation to gh-pages branch
+        working_directory: docs
+        run: mkdocs gh-deploy --force

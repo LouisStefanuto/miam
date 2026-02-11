@@ -1,0 +1,114 @@
+site_name: Miam
+
+repo_url: https://github.com/LouisStefanuto/miam
+
+theme:
+  name: 'material'
+  features:
+    - content.code.copy
+    # - navigation.sections
+
+use_directory_urls: false
+
+plugins:
+  - search
+  - section-index
+  # Plugins to auto generate the API reference
+  - gen-files:
+      scripts:
+        - docs/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - mkdocstrings:
+      handlers:
+        python:
+
+          # Where to find your sources, see "Finding modules".
+          paths: [../backend/src]
+
+          # Load object inventories to enable cross-references to other projects.
+          inventories:
+          - https://docs.python.org/3/objects.inv
+          # Also load inventories of your dependencies, generally served at
+          # https://docs-url-for-your-dependency/objects.inv.
+
+          options:
+
+            # DOCSTRINGS -------------------------------------------------------------
+            docstring_options:
+              # Discard first line of `__init__` method docstrings,
+              # useful when merging such docstrings into their parent class'.
+              ignore_init_summary: true
+
+            # Tables are generally too large, lists will fix this.
+            docstring_section_style: spacy
+
+            # CROSS-REFERENCES -------------------------------------------------------
+            # Enable cross-references in signatures.
+            signature_crossrefs: true
+
+            # Unwrap actual types from `Annotated` type annotations.
+            unwrap_annotated: true
+
+            # MEMBERS ----------------------------------------------------------------
+            # Show class inherited members.
+            inherited_members: true
+
+            # Render auto-generated summaries of attributes, functions, etc.
+            # at the start of each symbol's documentation.
+            summary: true
+
+            # HEADINGS ---------------------------------------------------------------
+            # For auto-generated pages, one module per page,
+            # make the module heading be the H1 heading of the page.
+            heading_level: 1
+
+            # Show source code
+            show_source: false
+
+            # Always show the heading for the symbol you render with `::: id`.
+            show_root_heading: true
+
+            # Only show the name of the symbols you inject render `::: id`.
+            show_root_full_path: false
+
+            # Show the type of symbol (class, function, etc.) in the heading.
+            show_symbol_type_heading: true
+
+            # Show the type of symbol (class, function, etc.) in the table of contents.
+            show_symbol_type_toc: true
+
+            # SIGNATURES -------------------------------------------------------------
+            # Format code to 80 + 10% margin (Black and Ruff defaults)
+            # in signatures and attribute value code blocks.
+            line_length: 88
+
+            # Merge signature and docstring of `__init__` methods
+            # into their parent class signature and docstring.
+            merge_init_into_class: true
+
+            # Render signatures and attribute values in a separate code block,
+            # below the symbol heading.
+            separate_signature: true
+
+            # Show type annotations in signatures.
+            show_signature_annotations: true
+
+            # Show type parameters in signatures.
+            show_signature_type_parameters: true
+
+            # OTHER ------------------------------------------------------------------
+            # Show base classes OR inheritance diagram.
+            show_bases: false
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - sane_lists
+
+nav:
+  - Introduction: index.md
+  - API reference: reference/  # note that reference is a folder created by mkdocstrings
