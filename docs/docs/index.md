@@ -1,4 +1,12 @@
-# miam
+# miam { #miam }
+
+<style>
+.md-content .md-typeset h1 { display: none; }
+</style>
+
+<div style="text-align: center;">
+  <img src="./assets/images/logo.png" alt="Logo" width="50%">
+</div>
 
 ## Install
 
