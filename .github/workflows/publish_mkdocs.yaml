@@ -18,9 +18,9 @@ jobs:
           python-version: 3.13
 
       - name: 📘 Install mkdocs dependencies
-        working_directory: docs
+        working-directory: docs
         run: pip install .
 
       - name: 🚀 Build and deploy updated documentation to gh-pages branch
-        working_directory: docs
+        working-directory: docs
         run: mkdocs gh-deploy --force
