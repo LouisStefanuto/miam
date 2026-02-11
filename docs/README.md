@@ -6,7 +6,7 @@
 
 **Documentation of `miam`**
 
-[**Install**](#install) • [**Run**](#run) • [**Documentation**]()
+[**Install**](#install) • [**Documentation**]()
 
 </div>
 
