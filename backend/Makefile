@@ -28,11 +28,7 @@ help: ## Show this help message
 .PHONY: create-environment
 create-environment: ## Set up Python environment using uv
 	uv venv --python $(PYTHON_VERSION)
-
-.PHONY: install-requirements
-install-requirements: ## Install dependencies
 	uv sync --all-extras
-	uv lock
 
 .PHONY: lint
 lint: ## Lint using ruff (use `make format` to do formatting)
@@ -55,8 +51,8 @@ clean: ## Delete all compiled Python files
 
 .PHONY: docker
 docker: ## Build Docker image and run a container
-	chmod +x ./scripts/build_run_docker.sh
-	./scripts/build_run_docker.sh
+	docker build -t miam-backend:latest .
+	docker run --name my-container -p 8000:8000 miam-backend:latest
 
 .PHONY: sql
 sql: ## Test connexion to the sql server
