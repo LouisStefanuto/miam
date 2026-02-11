@@ -4,7 +4,7 @@ from miam.domain.schemas import RecipeCreate
 from miam.infra.db.base import Image, Recipe, RecipeIngredient, Source
 from miam.infra.exporter_markdown import MarkdownExporter
 from miam.infra.repositories import RecipeRepository
-from miam.infra.exporter_word import RecipeWordExporter
+from miam.infra.exporter_word import WordExporter
 
 
 class RecipeService:
@@ -72,6 +72,6 @@ class RecipeService:
         return markdown_exporter.to_string(recipes)
 
     def export_to_word(self) -> bytes:
-        word_exporter = RecipeWordExporter()
+        word_exporter = WordExporter()
         recipes = self.search_recipes()
         return word_exporter.to_bytes(recipes)
