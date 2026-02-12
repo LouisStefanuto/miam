@@ -1,4 +1,4 @@
-"""Define how the domain interacts with primary ports (e.g., HTTP API, CLI)."""
+"""Define how services can be used by external consumers (e.g., HTTP API, CLI)."""
 
 from abc import ABC, abstractmethod
 from uuid import UUID

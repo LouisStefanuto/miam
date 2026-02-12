@@ -59,7 +59,8 @@ plugins:
 
             # Render auto-generated summaries of attributes, functions, etc.
             # at the start of each symbol's documentation.
-            summary: false
+            summary:
+              modules: true
 
             # HEADINGS ---------------------------------------------------------------
             # For auto-generated pages, one module per page,

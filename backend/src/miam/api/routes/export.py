@@ -1,3 +1,5 @@
+"""API routes for exporting recipes in various formats."""
+
 import io
 
 from fastapi import APIRouter, Depends, Response

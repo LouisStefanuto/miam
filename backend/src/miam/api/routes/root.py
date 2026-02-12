@@ -1,3 +1,5 @@
+"""API routes for the root endpoint."""
+
 from fastapi import APIRouter, status
 
 router = APIRouter()

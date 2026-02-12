@@ -1,3 +1,5 @@
+"""Entrypoint for the FastAPI application."""
+
 from fastapi import APIRouter, FastAPI
 
 from miam import __version__

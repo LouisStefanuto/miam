@@ -1,3 +1,5 @@
+"""Dependency injection for FastAPI routes."""
+
 from collections.abc import Generator
 
 from fastapi import Depends

@@ -1,3 +1,5 @@
+"""API routes for managing recipes (CRUD operations)."""
+
 from typing import Optional
 from uuid import UUID
 
