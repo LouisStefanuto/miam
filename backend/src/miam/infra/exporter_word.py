@@ -4,6 +4,7 @@ import io
 from typing import Any
 
 from docx import Document
+from docx.document import Document as DocxDocument  # actual type
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt
 
@@ -17,21 +18,21 @@ class WordExporter(WordExporterPort):
     def __init__(self, title: str = "My Recipe Book"):
         self.title = title  # Store title, not document
 
-    def _create_fresh_document(self) -> Document:
+    def _create_fresh_document(self) -> DocxDocument:
         """Create a fresh document with title and styles."""
         doc = Document()
         self._setup_styles_for_doc(doc)
         self._add_title_to_doc(doc, self.title)
         return doc
 
-    def _setup_styles_for_doc(self, doc: Document) -> None:
+    def _setup_styles_for_doc(self, doc: DocxDocument) -> None:
         """Configure document text styles."""
         style = doc.styles["Normal"]
         font = style.font
         font.name = "Calibri"
         font.size = Pt(11)
 
-    def _add_title_to_doc(self, doc: Document, title: str) -> None:
+    def _add_title_to_doc(self, doc: DocxDocument, title: str) -> None:
         """Add a centered heading at the document start."""
         heading = doc.add_heading(title, level=0)
         heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -41,7 +42,7 @@ class WordExporter(WordExporterPort):
         self.document = self._create_fresh_document()
         for recipe in recipes:
             self._add_recipe(recipe)
-            self.document.add_page_break()
+            self.document.add_page_break()  # type: ignore[no-untyped-call]
         self.document.save(output_path)
 
     def to_bytes(self, recipes: list[Recipe]) -> bytes:
@@ -49,7 +50,7 @@ class WordExporter(WordExporterPort):
         self.document = self._create_fresh_document()
         for recipe in recipes:
             self._add_recipe(recipe)
-            self.document.add_page_break()
+            self.document.add_page_break()  # type: ignore[no-untyped-call]
 
         buffer = io.BytesIO()
         self.document.save(buffer)
