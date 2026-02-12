@@ -11,31 +11,39 @@ from miam.infra.db.base import Recipe
 
 class WordExporter(WordExporterPort):
     def __init__(self, title: str = "My Recipe Book"):
-        self.document = Document()
-        self._setup_styles()
-        self._add_title(title)
+        self.title = title  # Store title, not document
 
-    def _setup_styles(self) -> None:
-        style = self.document.styles["Normal"]
+    def _create_fresh_document(self) -> Document:
+        """Create a fresh document with title and styles."""
+        doc = Document()
+        self._setup_styles_for_doc(doc)
+        self._add_title_to_doc(doc, self.title)
+        return doc
+
+    def _setup_styles_for_doc(self, doc: Document) -> None:
+        """Configure document text styles."""
+        style = doc.styles["Normal"]
         font = style.font
         font.name = "Calibri"
         font.size = Pt(11)
 
-    def _add_title(self, title: str) -> None:
-        heading = self.document.add_heading(title, level=0)
+    def _add_title_to_doc(self, doc: Document, title: str) -> None:
+        """Add a centered heading at the document start."""
+        heading = doc.add_heading(title, level=0)
         heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     def export(self, recipes: list[Recipe], output_path: str) -> None:
+        self.document = self._create_fresh_document()
         for recipe in recipes:
             self._add_recipe(recipe)
-            self.document.add_page_break()  # type: ignore[no-untyped-call]
-
+            self.document.add_page_break()
         self.document.save(output_path)
 
     def to_bytes(self, recipes: list[Recipe]) -> bytes:
+        self.document = self._create_fresh_document()
         for recipe in recipes:
             self._add_recipe(recipe)
-            self.document.add_page_break()  # type: ignore[no-untyped-call]
+            self.document.add_page_break()
 
         buffer = io.BytesIO()
         self.document.save(buffer)
