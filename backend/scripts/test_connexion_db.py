@@ -1,6 +1,7 @@
-from miam.infra.db.session import AlembicConfig
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
+
+from miam.infra.db.session import AlembicConfig
 
 DATABASE_URL = AlembicConfig().database_url
 

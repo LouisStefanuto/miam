@@ -1,35 +1,53 @@
+"""Handles exporting recipes to Word format."""
+
 import io
 from typing import Any
+
 from docx import Document
-from docx.shared import Pt
+from docx.document import Document as DocxDocument  # actual type
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Pt
+
+from miam.domain.ports_secondary import WordExporterPort
 from miam.infra.db.base import Recipe
 
 
-class RecipeWordExporter:
-    def __init__(self, title: str = "My Recipe Book"):
-        self.document = Document()
-        self._setup_styles()
-        self._add_title(title)
+class WordExporter(WordExporterPort):
+    """Secondary adapter that implements WordExporterPort."""
 
-    def _setup_styles(self) -> None:
-        style = self.document.styles["Normal"]
+    def __init__(self, title: str = "My Recipe Book"):
+        self.title = title  # Store title, not document
+
+    def _create_fresh_document(self) -> DocxDocument:
+        """Create a fresh document with title and styles."""
+        doc = Document()
+        self._setup_styles_for_doc(doc)
+        self._add_title_to_doc(doc, self.title)
+        return doc
+
+    def _setup_styles_for_doc(self, doc: DocxDocument) -> None:
+        """Configure document text styles."""
+        style = doc.styles["Normal"]
         font = style.font
         font.name = "Calibri"
         font.size = Pt(11)
 
-    def _add_title(self, title: str) -> None:
-        heading = self.document.add_heading(title, level=0)
+    def _add_title_to_doc(self, doc: DocxDocument, title: str) -> None:
+        """Add a centered heading at the document start."""
+        heading = doc.add_heading(title, level=0)
         heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    def export(self, recipes: list[Recipe], output_path: str) -> None:
+    def save(self, recipes: list[Recipe], output_path: str) -> None:
+        """Export a list of Recipe objects to a Word document."""
+        self.document = self._create_fresh_document()
         for recipe in recipes:
             self._add_recipe(recipe)
             self.document.add_page_break()  # type: ignore[no-untyped-call]
-
         self.document.save(output_path)
 
     def to_bytes(self, recipes: list[Recipe]) -> bytes:
+        """Export a list of Recipe objects to a Word document as bytes."""
+        self.document = self._create_fresh_document()
         for recipe in recipes:
             self._add_recipe(recipe)
             self.document.add_page_break()  # type: ignore[no-untyped-call]

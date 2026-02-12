@@ -1,4 +1,6 @@
-from fastapi import FastAPI, APIRouter
+"""Entrypoint for the FastAPI application."""
+
+from fastapi import APIRouter, FastAPI
 
 from miam import __version__
 from miam.api.routes import export, recipes, root

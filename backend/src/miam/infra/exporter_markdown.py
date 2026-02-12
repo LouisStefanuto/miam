@@ -1,10 +1,15 @@
-from typing import List
+"""Handles exporting recipes to Markdown format."""
+
 from pathlib import Path
+
+from miam.domain.ports_secondary import MarkdownExporterPort
 from miam.infra.db.base import Recipe
 
 
-class MarkdownExporter:
-    def to_string(self, recipes: List[Recipe]) -> str:
+class MarkdownExporter(MarkdownExporterPort):
+    """Secondary adapter that implements MarkdownExporterPort."""
+
+    def to_string(self, recipes: list[Recipe]) -> str:
         """Convert a list of Recipe objects to a Markdown string."""
 
         def recipe_md(recipe: Recipe) -> str:
@@ -41,7 +46,7 @@ class MarkdownExporter:
 
         return "\n".join(recipe_md(r) for r in recipes)
 
-    def to_markdown(self, recipes: List[Recipe], output_file: str) -> None:
+    def save(self, recipes: list[Recipe], output_file: str) -> None:
         """Export a list of Recipe objects to a Markdown file."""
         content = self.to_string(recipes)
         Path(output_file).write_text(content, encoding="utf-8")

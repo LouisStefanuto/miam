@@ -1,3 +1,8 @@
+"""Database schema models using SQLAlchemy ORM.
+
+Defines all tables, relationships, and enums for the recipe management system.
+"""
+
 import uuid
 from enum import Enum as PyEnum
 
@@ -30,6 +35,8 @@ class Base(DeclarativeBase):
 
 
 class Image(Base):
+    """Stores recipe images with metadata."""
+
     __tablename__ = "images"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
@@ -45,6 +52,8 @@ class Image(Base):
 
 
 class Ingredient(Base):
+    """Stores ingredient names."""
+
     __tablename__ = "ingredients"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
@@ -58,6 +67,8 @@ class Ingredient(Base):
 
 
 class RecipeIngredient(Base):
+    """Junction table linking recipes to ingredients with quantities."""
+
     __tablename__ = "recipe_ingredients"
 
     recipe_id: Mapped[uuid.UUID] = mapped_column(
@@ -77,6 +88,8 @@ class RecipeIngredient(Base):
 
 
 class Season(PyEnum):
+    """Recipe seasonal availability."""
+
     winter = "winter"
     spring = "spring"
     summer = "summer"
@@ -84,6 +97,8 @@ class Season(PyEnum):
 
 
 class Category(PyEnum):
+    """Recipe course categories."""
+
     apero = "apero"
     entree = "entree"
     plat = "plat"
@@ -91,6 +106,8 @@ class Category(PyEnum):
 
 
 class Recipe(Base):
+    """Stores recipe data with timing, ingredients, images, and sources."""
+
     __tablename__ = "recipes"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
@@ -127,6 +144,8 @@ class Recipe(Base):
 
 
 class SourceType(PyEnum):
+    """Recipe source origin types."""
+
     manual = "manual"
     instagram = "instagram"
     url = "url"
@@ -134,6 +153,8 @@ class SourceType(PyEnum):
 
 
 class Source(Base):
+    """Stores recipe source information and references."""
+
     __tablename__ = "sources"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)

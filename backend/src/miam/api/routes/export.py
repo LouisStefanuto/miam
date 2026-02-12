@@ -1,18 +1,21 @@
-import io
-from fastapi import APIRouter, Depends, Response
-from miam.api.deps import get_recipe_service
+"""API routes for exporting recipes in various formats."""
 
+import io
+
+from fastapi import APIRouter, Depends, Response
 from fastapi.responses import StreamingResponse
-from miam.domain.services import RecipeService
+
+from miam.api.deps import get_recipe_export_service
+from miam.domain.services import RecipeExportService
 
 router = APIRouter(prefix="/export", tags=["export"])
 
 
 @router.post("/markdown")
 async def export_to_markdown(
-    service: RecipeService = Depends(get_recipe_service),
+    service: RecipeExportService = Depends(get_recipe_export_service),
 ) -> Response:
-    content = service.export_to_markdown()
+    content = service.export_recipes_to_markdown()
     return Response(
         content=content,
         media_type="text/markdown",
@@ -22,9 +25,9 @@ async def export_to_markdown(
 
 @router.post("/word")
 async def export_to_docx(
-    service: RecipeService = Depends(get_recipe_service),
+    service: RecipeExportService = Depends(get_recipe_export_service),
 ) -> StreamingResponse:
-    word_bytes = service.export_to_word()
+    word_bytes = service.export_recipes_to_word()
     return StreamingResponse(
         io.BytesIO(word_bytes),
         media_type=(

@@ -42,3 +42,7 @@ stop: ## Stop
 .PHONY: pre-commit
 pre-commit: ## Run pre-commit
 	uv --directory backend run pre-commit run --all-files
+
+.PHONY: docs
+docs: ## Serve documentation locally
+	uv --directory docs run mkdocs serve -a 0.0.0.0:8001

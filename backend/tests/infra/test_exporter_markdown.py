@@ -1,14 +1,16 @@
-import pytest
 import uuid
+
+import pytest
+
 from miam.infra.db.base import (
+    Category,
+    Image,
+    Ingredient,
     Recipe,
     RecipeIngredient,
-    Ingredient,
-    Image,
+    Season,
     Source,
     SourceType,
-    Category,
-    Season,
 )
 from miam.infra.exporter_markdown import MarkdownExporter
 
@@ -84,7 +86,7 @@ def test_exporter_to_markdown(tmp_path, sample_recipes):
     exporter = MarkdownExporter()
     output_file = tmp_path / "recipes.md"
 
-    exporter.to_markdown(sample_recipes, output_file=str(output_file))
+    exporter.save(sample_recipes, output_file=str(output_file))
 
     # Check file was created
     assert output_file.exists()
