@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from miam.domain.ports_primary import RecipeServicePort
+from miam.domain.ports_primary import RecipeExportServicePort, RecipeServicePort
 from miam.domain.ports_secondary import (
     MarkdownExporterPort,
     RecipeRepositoryPort,
@@ -12,16 +12,11 @@ from miam.domain.schemas import RecipeCreate
 from miam.infra.db.base import Image, Recipe, RecipeIngredient, Source
 
 
-class RecipeService(RecipeServicePort):
-    def __init__(
-        self,
-        repository: RecipeRepositoryPort,
-        word_exporter: WordExporterPort,
-        markdown_exporter: MarkdownExporterPort,
-    ):
+class RecipeManagementService(RecipeServicePort):
+    """Service for recipe creation, retrieval, and search operations."""
+
+    def __init__(self, repository: RecipeRepositoryPort):
         self.repository = repository
-        self.word_exporter = word_exporter
-        self.markdown_exporter = markdown_exporter
 
     def create_recipe(self, data: RecipeCreate) -> Recipe:
         """Create a new recipe with ingredients, images, and sources."""
@@ -81,12 +76,26 @@ class RecipeService(RecipeServicePort):
             season=season,
         )
 
-    def export_to_markdown(self) -> str:
+
+class RecipeExportService(RecipeExportServicePort):
+    """Service for exporting recipes to different formats."""
+
+    def __init__(
+        self,
+        repository: RecipeRepositoryPort,
+        word_exporter: WordExporterPort,
+        markdown_exporter: MarkdownExporterPort,
+    ):
+        self.repository = repository
+        self.word_exporter = word_exporter
+        self.markdown_exporter = markdown_exporter
+
+    def export_recipes_to_markdown(self) -> str:
         """Export all recipes as Markdown string."""
-        recipes = self.search_recipes()
+        recipes = self.repository.search_recipes()
         return self.markdown_exporter.to_string(recipes)
 
-    def export_to_word(self) -> bytes:
+    def export_recipes_to_word(self) -> bytes:
         """Export all recipes as Word binary format (in-memory)."""
-        recipes = self.search_recipes()
+        recipes = self.repository.search_recipes()
         return self.word_exporter.to_bytes(recipes)

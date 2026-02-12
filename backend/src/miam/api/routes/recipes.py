@@ -4,9 +4,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from pydantic import BaseModel
 
-from miam.api.deps import get_recipe_service
+from miam.api.deps import get_recipe_management_service
 from miam.domain.schemas import RecipeCreate
-from miam.domain.services import RecipeService
+from miam.domain.services import RecipeManagementService
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
 
@@ -18,7 +18,7 @@ class RecipeResponse(BaseModel):
 @router.post("", response_model=RecipeResponse, status_code=status.HTTP_201_CREATED)
 def create_recipe(
     recipe_in: RecipeCreate,
-    service: RecipeService = Depends(get_recipe_service),
+    service: RecipeManagementService = Depends(get_recipe_management_service),
 ) -> RecipeResponse:
     """
     Create a new recipe.
@@ -77,7 +77,7 @@ def search_recipes(
     category: Optional[str] = Query(None),
     is_veggie: Optional[bool] = Query(None),
     season: Optional[str] = Query(None),
-    service: RecipeService = Depends(get_recipe_service),
+    service: RecipeManagementService = Depends(get_recipe_management_service),
 ) -> list[RecipeDetailResponse]:
     """
     Search recipes with optional filters.
@@ -98,7 +98,7 @@ def search_recipes(
 @router.get("/{recipe_id}", response_model=RecipeDetailResponse)
 def get_recipe(
     recipe_id: UUID = Path(..., description="The ID of the recipe to retrieve"),
-    service: RecipeService = Depends(get_recipe_service),
+    service: RecipeManagementService = Depends(get_recipe_management_service),
 ) -> RecipeDetailResponse:
     recipe = service.get_recipe_by_id(recipe_id)
     if not recipe:
@@ -112,7 +112,7 @@ def get_recipe(
 
 @router.get("", response_model=list[RecipeDetailResponse])
 def get_recipes(
-    service: RecipeService = Depends(get_recipe_service),
+    service: RecipeManagementService = Depends(get_recipe_management_service),
 ) -> list[RecipeDetailResponse]:
     """
     Retrieve all recipes.

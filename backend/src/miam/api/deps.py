@@ -3,7 +3,7 @@ from collections.abc import Generator
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from miam.domain.services import RecipeService
+from miam.domain.services import RecipeExportService, RecipeManagementService
 from miam.infra.db.session import SessionLocal
 from miam.infra.exporter_markdown import MarkdownExporter
 from miam.infra.exporter_word import WordExporter
@@ -18,8 +18,17 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
-def get_recipe_service(db: Session = Depends(get_db)) -> RecipeService:
+def get_recipe_management_service(
+    db: Session = Depends(get_db),
+) -> RecipeManagementService:
+    repo = RecipeRepository(db)
+    return RecipeManagementService(repo)
+
+
+def get_recipe_export_service(
+    db: Session = Depends(get_db),
+) -> RecipeExportService:
     repo = RecipeRepository(db)
     word_exporter = WordExporter()
     markdown_exporter = MarkdownExporter()
-    return RecipeService(repo, word_exporter, markdown_exporter)
+    return RecipeExportService(repo, word_exporter, markdown_exporter)
