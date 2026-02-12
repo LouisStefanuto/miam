@@ -1,4 +1,5 @@
-from typing import Optional
+"""Handles all database-specific logic using SQLAlchemy."""
+
 from uuid import UUID
 
 from sqlalchemy import select
@@ -9,16 +10,21 @@ from miam.infra.db.base import Ingredient, Recipe, RecipeIngredient
 
 
 class RecipeRepository(RecipeRepositoryPort):
+    """Concrete implementation of RecipeRepositoryPort using SQLAlchemy."""
+
     def __init__(self, session: Session):
+        """Initialize with a database session."""
         self.session = session
 
     def add_recipe(self, recipe: Recipe) -> Recipe:
+        """Persist a recipe and return it with generated IDs."""
         self.session.add(recipe)
         self.session.commit()
         self.session.refresh(recipe)
         return recipe
 
     def get_or_create_ingredient(self, name: str) -> Ingredient:
+        """Get existing ingredient or create+flush in current transaction."""
         stmt = select(Ingredient).where(Ingredient.name == name)
         ingredient = self.session.execute(stmt).scalars().first()
 
@@ -30,6 +36,7 @@ class RecipeRepository(RecipeRepositoryPort):
         return ingredient
 
     def get_recipe_by_id(self, recipe_id: UUID) -> Recipe | None:
+        """Retrieve a recipe with all relationships loaded."""
         stmt = (
             select(Recipe)
             .options(
@@ -45,15 +52,13 @@ class RecipeRepository(RecipeRepositoryPort):
 
     def search_recipes(
         self,
-        recipe_id: Optional[UUID] = None,
-        title: Optional[str] = None,
-        category: Optional[str] = None,
-        is_veggie: Optional[bool] = None,
-        season: Optional[str] = None,
+        recipe_id: UUID | None = None,
+        title: str | None = None,
+        category: str | None = None,
+        is_veggie: bool | None = None,
+        season: str | None = None,
     ) -> list[Recipe]:
-        """
-        Search recipes with dynamic filters.
-        """
+        """Search recipes with dynamic filtering."""
         stmt = select(Recipe).options(
             joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
             joinedload(Recipe.images),

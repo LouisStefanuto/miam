@@ -1,3 +1,5 @@
+"""Handles exporting recipes to Word format."""
+
 import io
 from typing import Any
 
@@ -10,6 +12,8 @@ from miam.infra.db.base import Recipe
 
 
 class WordExporter(WordExporterPort):
+    """Secondary adapter that implements WordExporterPort."""
+
     def __init__(self, title: str = "My Recipe Book"):
         self.title = title  # Store title, not document
 
@@ -32,7 +36,8 @@ class WordExporter(WordExporterPort):
         heading = doc.add_heading(title, level=0)
         heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    def export(self, recipes: list[Recipe], output_path: str) -> None:
+    def save(self, recipes: list[Recipe], output_path: str) -> None:
+        """Export a list of Recipe objects to a Word document."""
         self.document = self._create_fresh_document()
         for recipe in recipes:
             self._add_recipe(recipe)
@@ -40,6 +45,7 @@ class WordExporter(WordExporterPort):
         self.document.save(output_path)
 
     def to_bytes(self, recipes: list[Recipe]) -> bytes:
+        """Export a list of Recipe objects to a Word document as bytes."""
         self.document = self._create_fresh_document()
         for recipe in recipes:
             self._add_recipe(recipe)

@@ -1,3 +1,5 @@
+"""Domain services that orchestrate recipe operations."""
+
 from uuid import UUID
 
 from miam.domain.ports_primary import RecipeServicePort
@@ -22,6 +24,7 @@ class RecipeService(RecipeServicePort):
         self.markdown_exporter = markdown_exporter
 
     def create_recipe(self, data: RecipeCreate) -> Recipe:
+        """Create a new recipe with ingredients, images, and sources."""
         recipe = Recipe(
             title=data.title,
             description=data.description,
@@ -58,6 +61,7 @@ class RecipeService(RecipeServicePort):
         return self.repository.add_recipe(recipe)
 
     def get_recipe_by_id(self, recipe_id: UUID) -> Recipe | None:
+        """Retrieve a recipe by ID via the persistence abstraction."""
         return self.repository.get_recipe_by_id(recipe_id)
 
     def search_recipes(
@@ -68,6 +72,7 @@ class RecipeService(RecipeServicePort):
         is_veggie: bool | None = None,
         season: str | None = None,
     ) -> list[Recipe]:
+        """Search/filter recipes via the repository abstraction."""
         return self.repository.search_recipes(
             recipe_id=recipe_id,
             title=title,
@@ -77,9 +82,11 @@ class RecipeService(RecipeServicePort):
         )
 
     def export_to_markdown(self) -> str:
+        """Export all recipes as Markdown string."""
         recipes = self.search_recipes()
         return self.markdown_exporter.to_string(recipes)
 
     def export_to_word(self) -> bytes:
+        """Export all recipes as Word binary format (in-memory)."""
         recipes = self.search_recipes()
         return self.word_exporter.to_bytes(recipes)
