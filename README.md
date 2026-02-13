@@ -36,6 +36,16 @@ Stop project.
 make stop
 ```
 
+## Documentation
+
+The project's documentation is available on [**GitHub Pages**](https://louisstefanuto.github.io/miam/).
+
+To preview your documentation in real-time while editing, run:
+
+```bash
+make docs
+```
+
 ## Dev
 
 Run pre-commit checks over the entire repo.
