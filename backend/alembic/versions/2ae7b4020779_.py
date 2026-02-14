@@ -1,8 +1,8 @@
-"""initial schema
+"""empty message
 
-Revision ID: a80f10581c30
+Revision ID: 2ae7b4020779
 Revises:
-Create Date: 2026-01-24 00:22:38.472508
+Create Date: 2026-02-14 14:58:45.802115
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "a80f10581c30"
+revision: str = "2ae7b4020779"
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -54,7 +54,6 @@ def upgrade() -> None:
         "images",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("recipe_id", sa.Uuid(), nullable=False),
-        sa.Column("storage_path", sa.String(length=500), nullable=False),
         sa.Column("caption", sa.String(length=200), nullable=True),
         sa.Column("display_order", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
@@ -115,7 +114,3 @@ def downgrade() -> None:
     op.drop_table("recipes")
     op.drop_table("ingredients")
     # ### end Alembic commands ###
-
-    op.execute("DROP TYPE season")
-    op.execute("DROP TYPE category")
-    op.execute("DROP TYPE sourcetype")

@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from miam.domain.ports_secondary import RecipeRepositoryPort
-from miam.infra.db.base import Ingredient, Recipe, RecipeIngredient
+from miam.infra.db.base import Image, Ingredient, Recipe, RecipeIngredient
 
 
 class RecipeRepository(RecipeRepositoryPort):
@@ -78,3 +78,21 @@ class RecipeRepository(RecipeRepositoryPort):
             stmt = stmt.where(Recipe.season == season)
 
         return list(self.session.execute(stmt).unique().scalars().all())
+
+    def add_image(
+        self,
+        recipe_id: UUID,
+        caption: str | None = None,
+        display_order: int | None = 0,
+    ) -> Image:
+        """Create and persist an Image linked to a recipe."""
+        image = Image(
+            recipe_id=recipe_id,
+            caption=caption,
+            display_order=display_order or 0,
+        )
+
+        self.session.add(image)
+        self.session.commit()
+        self.session.refresh(image)
+        return image

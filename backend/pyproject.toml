@@ -28,6 +28,7 @@ dev = [
   "pre-commit>=4.2.0",
   "pre-commit-hooks>=5.0.0",
   "mypy>=1.18.2",
+  "ty>=0.0.17",
 ]
 
 [tool.pytest.ini_options]
@@ -55,3 +56,6 @@ packages = ["src/miam"]
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+# [tool.ty.src]
+# exclude = ["docs/docs/gen_ref_pages.py"]

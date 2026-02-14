@@ -37,16 +37,6 @@ repos:
       args: ['--fix=lf']
       exclude: ^docs/
     - id: detect-private-key
-# FIXME I think it would be better to use the mypy precommit hook, to not rely on uv. But I didn't manage to use the venv when using the mypy hook.
-- repo: local
-  hooks:
-    - id: mypy-python-backend
-      name: mypy
-      entry: uv --project backend run mypy --config-file=backend/pyproject.toml .
-      args: []
-      language: system
-      types: [python]
-      pass_filenames: false
 - repo: https://github.com/kynan/nbstripout
   rev: 0.8.1
   hooks:
@@ -60,6 +50,24 @@ repos:
       args: [ --fix ]
     # Run the formatter.
     - id: ruff-format
+- repo: local
+  hooks:
+    - id: ty-python-backend
+      name: ty (alternative to mypy, currently testing it out)
+      entry: uv --directory backend run ty check . --output-format=concise
+      args: []
+      language: system
+      types: [python]
+      pass_filenames: false
+- repo: local
+  hooks:
+    - id: mypy-python-backend
+      name: mypy
+      entry: uv --directory backend run mypy --config-file=pyproject.toml .
+      args: []
+      language: system
+      types: [python]
+      pass_filenames: false
 - repo: https://github.com/PyCQA/bandit
   rev: 1.8.6
   hooks:

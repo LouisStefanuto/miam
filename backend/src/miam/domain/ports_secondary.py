@@ -4,7 +4,8 @@ from abc import ABC, abstractmethod
 from typing import Optional
 from uuid import UUID
 
-from miam.infra.db.base import Ingredient, Recipe
+from miam.domain.schemas import ImageResponse
+from miam.infra.db.base import Image, Ingredient, Recipe
 
 
 class RecipeRepositoryPort(ABC):
@@ -39,6 +40,43 @@ class RecipeRepositoryPort(ABC):
         season: Optional[str] = None,
     ) -> list[Recipe]:
         """Query recipes with dynamic filtering."""
+        pass
+
+    @abstractmethod
+    def add_image(
+        self,
+        recipe_id: UUID,
+        caption: Optional[str] = None,
+        display_order: int | None = 0,
+    ) -> Image:
+        """Persist an Image record for a recipe and return the created Image.
+
+        Implementations should commit the change and return the ORM Image instance
+        (or at least its identifier).
+        """
+        pass
+
+
+class ImageStoragePort(ABC):
+    @abstractmethod
+    def add_recipe_image(
+        self,
+        recipe_id: UUID,
+        image: bytes,
+        filename: str,
+        image_id: UUID,
+    ) -> UUID:
+        """Add an image to storage and return its image ID.
+
+        The `filename` argument is a string that the caller provides (for example
+        derived from the original filename or content-type). Implementations can use it
+        to choose the stored filename.
+        """
+        pass
+
+    @abstractmethod
+    def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
+        """Retrieve image bytes from storage by image ID."""
         pass
 
 

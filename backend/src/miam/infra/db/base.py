@@ -44,7 +44,6 @@ class Image(Base):
         ForeignKey("recipes.id", ondelete="CASCADE")
     )
 
-    storage_path: Mapped[str] = mapped_column(String(500), nullable=False)
     caption: Mapped[str | None] = mapped_column(String(200))
     display_order: Mapped[int] = mapped_column(Integer, default=0)
 

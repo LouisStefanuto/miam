@@ -41,7 +41,7 @@ class IngredientResponse(BaseModel):
 
 
 class ImageResponse(BaseModel):
-    storage_path: str
+    id: UUID
     caption: Optional[str]
     display_order: int
 
@@ -91,9 +91,6 @@ def search_recipes(
         is_veggie=is_veggie,
         season=season,
     )
-    if not recipes:
-        raise HTTPException(status_code=404, detail="No recipes found")
-
     return [RecipeDetailResponse.model_validate(r) for r in recipes]
 
 
@@ -120,6 +117,4 @@ def get_recipes(
     Retrieve all recipes.
     """
     recipes = service.search_recipes()
-    if not recipes:
-        raise HTTPException(status_code=404, detail="No recipes found")
     return [RecipeDetailResponse.model_validate(r) for r in recipes]

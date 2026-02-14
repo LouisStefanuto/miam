@@ -42,7 +42,7 @@ class WordExporter(WordExporterPort):
         self.document = self._create_fresh_document()
         for recipe in recipes:
             self._add_recipe(recipe)
-            self.document.add_page_break()  # type: ignore[no-untyped-call]
+            self.document.add_page_break()  # type: ignore[no-untyped-call] # ty: ignore[unused-ignore-comment]
         self.document.save(output_path)
 
     def to_bytes(self, recipes: list[Recipe]) -> bytes:
@@ -50,7 +50,7 @@ class WordExporter(WordExporterPort):
         self.document = self._create_fresh_document()
         for recipe in recipes:
             self._add_recipe(recipe)
-            self.document.add_page_break()  # type: ignore[no-untyped-call]
+            self.document.add_page_break()  # type: ignore[no-untyped-call] # ty: ignore[unused-ignore-comment
 
         buffer = io.BytesIO()
         self.document.save(buffer)

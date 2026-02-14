@@ -48,7 +48,6 @@ def sample_recipes():
     recipe.images = [
         Image(
             id=uuid.uuid4(),
-            storage_path="path/to/image.jpg",
             caption="Yummy",
             recipe=recipe,
         )

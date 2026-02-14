@@ -12,7 +12,6 @@ class IngredientCreate(BaseModel):
 
 
 class ImageCreate(BaseModel):
-    storage_path: str
     caption: Optional[str] = None
     display_order: Optional[int] = 0
 
@@ -34,3 +33,8 @@ class RecipeCreate(BaseModel):
     ingredients: list[IngredientCreate] = []
     images: list[ImageCreate] = []
     sources: list[SourceCreate] = []
+
+
+class ImageResponse(BaseModel):
+    media_type: str
+    content: bytes
