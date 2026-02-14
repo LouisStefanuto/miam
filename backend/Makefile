@@ -57,3 +57,7 @@ docker: ## Build Docker image and run a container
 .PHONY: sql
 sql: ## Test connexion to the sql server
 	uv run scripts/test_connexion_db.py
+
+.PHONY: api
+api: ## Run the API server
+	uv run uvicorn miam.api.main:app --host 0.0.0.0 --port 8000 --reload
