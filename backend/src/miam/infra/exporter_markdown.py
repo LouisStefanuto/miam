@@ -34,7 +34,7 @@ class MarkdownExporter(MarkdownExporterPort):
             if recipe.images:
                 lines.append("\n## Images")
                 for img in recipe.images:
-                    lines.append(f"![{img.caption or 'Image'}]({img.storage_path})")
+                    lines.append(f"![{img.caption or 'Image'}]({img.id})")
 
             if recipe.sources:
                 lines.append("\n## Sources")

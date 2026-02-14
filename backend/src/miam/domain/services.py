@@ -48,7 +48,6 @@ class RecipeManagementService(RecipeServicePort):
         # images
         for img in data.images:
             image = Image(
-                storage_path=img.storage_path,
                 caption=img.caption,
                 display_order=img.display_order or 0,
             )
@@ -84,7 +83,15 @@ class RecipeManagementService(RecipeServicePort):
 
     def add_recipe_image(self, recipe_id: UUID, image: bytes, filename: str) -> UUID:
         """Add an image to a recipe and return its image ID."""
-        return self.image_storage.add_recipe_image(recipe_id, image, filename)
+        # Persist image record in DB and return DB-generated image id
+        img = self.repository.add_image(
+            recipe_id=recipe_id, caption=None, display_order=0
+        )
+
+        # Save bytes to storage and get a storage path suitable for DB
+        self.image_storage.add_recipe_image(recipe_id, image, filename)
+
+        return img.id
 
 
 class RecipeExportService(RecipeExportServicePort):

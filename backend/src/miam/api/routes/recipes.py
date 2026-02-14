@@ -41,7 +41,7 @@ class IngredientResponse(BaseModel):
 
 
 class ImageResponse(BaseModel):
-    storage_path: str
+    id: UUID
     caption: Optional[str]
     display_order: int
 

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from miam.infra.db.base import Category, Season, SourceType
 
@@ -12,7 +12,6 @@ class IngredientCreate(BaseModel):
 
 
 class ImageCreate(BaseModel):
-    storage_path: str
     caption: Optional[str] = None
     display_order: Optional[int] = 0
 
@@ -31,6 +30,6 @@ class RecipeCreate(BaseModel):
     season: Optional[Season]
     category: Category
     is_veggie: Optional[bool] = False
-    ingredients: list[IngredientCreate] = []
-    images: list[ImageCreate] = []
-    sources: list[SourceCreate] = []
+    ingredients: list[IngredientCreate] = Field(default_factory=list)
+    images: list[ImageCreate] = Field(default_factory=list)
+    sources: list[SourceCreate] = Field(default_factory=list)
