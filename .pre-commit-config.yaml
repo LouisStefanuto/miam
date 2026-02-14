@@ -28,7 +28,7 @@ repos:
     - id: end-of-file-fixer
       exclude: ^docs/
     - id: pretty-format-json
-      exclude: ^(notebooks/|package-lock\.json$|frontend/tsconfig.node.json|frontend/tsconfig.app.json)
+      exclude: (^notebooks/|(^|/)package-lock\.json$|frontend/tsconfig.node.json|frontend/tsconfig.app.json)
       args: ['--autofix', '--indent', '4']
     - id: trailing-whitespace
       exclude: ^docs/
