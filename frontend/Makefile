@@ -26,23 +26,14 @@ help: ## Show this help message
 #################################################################################
 
 .PHONY: install
-install: ## Setup your project by installing dependencies and venv
-	cd backend
-	uv sync --all-extras
-	cd ..
+install: ## Setup your project by installing frontend dependencies
+	npm install
 
-.PHONY: start
-start: ## Start all containers
-	docker compose up --build
+.PHONY: run
+run: ## Run frontend locally
+	npm run dev
 
-.PHONY: stop
-stop: ## Stop all containers
-	docker compose stop
-
-.PHONY: pre-commit
-pre-commit: ## Run pre-commit
-	uv --directory backend run pre-commit run --all-files
-
-.PHONY: docs
-docs: ## Serve documentation locally
-	uv --directory docs run mkdocs serve -a 0.0.0.0:8001
+.PHONY: docker
+docker: ## Build Docker image and run a container
+	docker build -t miam-frontend:latest .
+	docker run --name my-container -p 8080:80 miam-frontend:latest

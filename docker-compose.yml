@@ -23,5 +23,16 @@ services:
     depends_on:
       - db
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+      - backend
+    restart: unless-stopped
+
 volumes:
   pgdata:

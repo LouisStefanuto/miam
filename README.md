@@ -58,4 +58,4 @@ make pre-commit
 
 - Containerization: Docker Compose
 - Backend: PostgreSQL, FastAPI, SqlAlchemy, Alembic, Python
-- Frontend: WIP
+- Frontend (vide-coded): Vite, TypeScript, React, shadcn-ui, Tailwind CSS
