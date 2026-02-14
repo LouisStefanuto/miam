@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from miam.api.deps import get_recipe_management_service
 from miam.domain.schemas import RecipeCreate
 from miam.domain.services import RecipeManagementService
+from miam.infra.db.base import Recipe
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
 
@@ -63,13 +64,37 @@ class RecipeDetailResponse(BaseModel):
     cook_time_minutes: Optional[int]
     rest_time_minutes: Optional[int]
     season: Optional[str]
-    category: str
+    category: Optional[str]
     is_veggie: bool
     ingredients: list[IngredientResponse]
     images: list[ImageResponse]
     sources: list[SourceResponse]
 
     model_config = {"from_attributes": True}
+
+
+def map_recipe_to_response(recipe: Recipe) -> RecipeDetailResponse:
+    return RecipeDetailResponse(
+        id=recipe.id,
+        title=recipe.title,
+        description=recipe.description,
+        prep_time_minutes=recipe.prep_time_minutes,
+        cook_time_minutes=recipe.cook_time_minutes,
+        rest_time_minutes=recipe.rest_time_minutes,
+        season=recipe.season.value if recipe.season else None,
+        category=recipe.category.value,
+        is_veggie=recipe.is_veggie,
+        ingredients=[
+            IngredientResponse(
+                name=ri.ingredient.name,
+                quantity=ri.quantity,
+                unit=ri.unit,
+            )
+            for ri in recipe.ingredients
+        ],
+        images=[ImageResponse.model_validate(img) for img in recipe.images],
+        sources=[SourceResponse.model_validate(src) for src in recipe.sources],
+    )
 
 
 @router.get("/search", response_model=list[RecipeDetailResponse])
@@ -91,7 +116,7 @@ def search_recipes(
         is_veggie=is_veggie,
         season=season,
     )
-    return [RecipeDetailResponse.model_validate(r) for r in recipes]
+    return [map_recipe_to_response(r) for r in recipes]
 
 
 @router.get("/{recipe_id}", response_model=RecipeDetailResponse)
@@ -106,7 +131,7 @@ def get_recipe(
             detail=f"Recipe with id {recipe_id} not found",
         )
 
-    return RecipeDetailResponse.model_validate(recipe)
+    return map_recipe_to_response(recipe)
 
 
 @router.get("", response_model=list[RecipeDetailResponse])
@@ -117,4 +142,4 @@ def get_recipes(
     Retrieve all recipes.
     """
     recipes = service.search_recipes()
-    return [RecipeDetailResponse.model_validate(r) for r in recipes]
+    return [map_recipe_to_response(r) for r in recipes]
