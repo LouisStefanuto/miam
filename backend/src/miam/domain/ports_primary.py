@@ -30,6 +30,11 @@ class RecipeServicePort(ABC):
         """Search for recipes using dynamic filters and return matching Recipe objects."""
         pass
 
+    @abstractmethod
+    def add_recipe_image(self, recipe_id: UUID, image: bytes, filename: str) -> UUID:
+        """Add an image to a recipe and return its image ID."""
+        pass
+
 
 class RecipeExportServicePort(ABC):
     @abstractmethod

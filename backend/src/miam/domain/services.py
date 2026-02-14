@@ -4,6 +4,7 @@ from uuid import UUID
 
 from miam.domain.ports_primary import RecipeExportServicePort, RecipeServicePort
 from miam.domain.ports_secondary import (
+    ImageStoragePort,
     MarkdownExporterPort,
     RecipeRepositoryPort,
     WordExporterPort,
@@ -15,8 +16,13 @@ from miam.infra.db.base import Image, Recipe, RecipeIngredient, Source
 class RecipeManagementService(RecipeServicePort):
     """Service for recipe creation, retrieval, and search operations."""
 
-    def __init__(self, repository: RecipeRepositoryPort):
+    def __init__(
+        self,
+        repository: RecipeRepositoryPort,
+        image_storage: ImageStoragePort,
+    ):
         self.repository = repository
+        self.image_storage = image_storage
 
     def create_recipe(self, data: RecipeCreate) -> Recipe:
         """Create a new recipe with ingredients, images, and sources."""
@@ -75,6 +81,10 @@ class RecipeManagementService(RecipeServicePort):
             is_veggie=is_veggie,
             season=season,
         )
+
+    def add_recipe_image(self, recipe_id: UUID, image: bytes, filename: str) -> UUID:
+        """Add an image to a recipe and return its image ID."""
+        return self.image_storage.add_recipe_image(recipe_id, image, filename)
 
 
 class RecipeExportService(RecipeExportServicePort):

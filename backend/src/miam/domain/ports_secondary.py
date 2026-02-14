@@ -42,6 +42,18 @@ class RecipeRepositoryPort(ABC):
         pass
 
 
+class ImageStoragePort(ABC):
+    @abstractmethod
+    def add_recipe_image(self, recipe_id: UUID, image: bytes, filename: str) -> UUID:
+        """Add an image to a recipe and return its image ID.
+
+        The `filename` argument is a string that the caller provides (for example
+        derived from the original filename or content-type). Implementations can use it
+        to choose the stored filename.
+        """
+        pass
+
+
 class WordExporterPort(ABC):
     """Secondary port for Word format export."""
 

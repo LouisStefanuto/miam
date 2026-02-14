@@ -54,7 +54,7 @@ repos:
   hooks:
     - id: ty-python-backend
       name: ty (alternative to mypy, currently testing it out)
-      entry: uv --directory backend run ty check .
+      entry: uv --directory backend run ty check . --output-format=concise
       args: []
       language: system
       types: [python]
