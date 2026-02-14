@@ -37,7 +37,7 @@ async def upload_image(
     # Save image via service
     image_id = service.add_recipe_image(
         recipe_id=recipe_id,
-        image=content,
+        content=content,
         filename=image.filename,
     )
 
@@ -46,9 +46,15 @@ async def upload_image(
     )
 
 
-@router.get("{image_id}")
-async def get_image(image_id: str) -> Response:
-    # Placeholder for image retrieval logic
+@router.get("/{image_id}")
+async def get_image(
+    image_id: UUID,
+    service: RecipeManagementService = Depends(get_recipe_management_service),
+) -> Response:
+    image_response = service.get_recipe_image(image_id)
+    if not image_response:
+        raise HTTPException(status_code=404, detail="Image not found")
+
     return Response(
-        content=f"Image data for {image_id}", media_type="application/octet-stream"
+        content=image_response.content, media_type=image_response.media_type
     )

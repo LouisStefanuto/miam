@@ -9,7 +9,7 @@ from miam.domain.ports_secondary import (
     RecipeRepositoryPort,
     WordExporterPort,
 )
-from miam.domain.schemas import RecipeCreate
+from miam.domain.schemas import ImageResponse, RecipeCreate
 from miam.infra.db.base import Image, Recipe, RecipeIngredient, Source
 
 
@@ -81,17 +81,22 @@ class RecipeManagementService(RecipeServicePort):
             season=season,
         )
 
-    def add_recipe_image(self, recipe_id: UUID, image: bytes, filename: str) -> UUID:
+    def add_recipe_image(self, recipe_id: UUID, content: bytes, filename: str) -> UUID:
         """Add an image to a recipe and return its image ID."""
         # Persist image record in DB and return DB-generated image id
         img = self.repository.add_image(
-            recipe_id=recipe_id, caption=None, display_order=0
+            recipe_id=recipe_id,
+            caption=None,
+            display_order=0,
         )
 
         # Save bytes to storage and get a storage path suitable for DB
-        self.image_storage.add_recipe_image(recipe_id, image, filename)
-
+        self.image_storage.add_recipe_image(recipe_id, content, filename, img.id)
         return img.id
+
+    def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
+        """Retrieve image bytes from storage by image ID."""
+        return self.image_storage.get_recipe_image(image_id)
 
 
 class RecipeExportService(RecipeExportServicePort):

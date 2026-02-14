@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from miam.infra.db.base import Category, Season, SourceType
 
@@ -30,6 +30,11 @@ class RecipeCreate(BaseModel):
     season: Optional[Season]
     category: Category
     is_veggie: Optional[bool] = False
-    ingredients: list[IngredientCreate] = Field(default_factory=list)
-    images: list[ImageCreate] = Field(default_factory=list)
-    sources: list[SourceCreate] = Field(default_factory=list)
+    ingredients: list[IngredientCreate] = []
+    images: list[ImageCreate] = []
+    sources: list[SourceCreate] = []
+
+
+class ImageResponse(BaseModel):
+    media_type: str
+    content: bytes

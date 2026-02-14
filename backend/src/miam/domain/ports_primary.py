@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from miam.domain.schemas import RecipeCreate
+from miam.domain.schemas import ImageResponse, RecipeCreate
 from miam.infra.db.base import Recipe
 
 
@@ -31,8 +31,13 @@ class RecipeServicePort(ABC):
         pass
 
     @abstractmethod
-    def add_recipe_image(self, recipe_id: UUID, image: bytes, filename: str) -> UUID:
+    def add_recipe_image(self, recipe_id: UUID, content: bytes, filename: str) -> UUID:
         """Add an image to a recipe and return its image ID."""
+        pass
+
+    @abstractmethod
+    def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
+        """Retrieve image bytes for a given image ID."""
         pass
 
 
