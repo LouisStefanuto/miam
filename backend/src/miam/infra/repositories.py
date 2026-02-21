@@ -12,7 +12,12 @@ from miam.domain.entities import (
     SourceEntity,
 )
 from miam.domain.ports_secondary import RecipeRepositoryPort
-from miam.domain.schemas import RecipeCreate
+from miam.domain.schemas import (
+    IngredientCreate,
+    RecipeCreate,
+    RecipeUpdate,
+    SourceCreate,
+)
 from miam.infra.db.base import Image, Ingredient, Recipe, RecipeIngredient, Source
 
 
@@ -122,6 +127,69 @@ class RecipeRepository(RecipeRepositoryPort):
             self.session.flush()
 
         return ingredient
+
+    def _load_recipe(self, recipe_id: UUID) -> Recipe | None:
+        """Load a recipe ORM object with all relationships eagerly loaded."""
+        stmt = (
+            select(Recipe)
+            .options(
+                joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
+                joinedload(Recipe.images),
+                joinedload(Recipe.sources),
+            )
+            .where(Recipe.id == recipe_id)
+        )
+        return self.session.execute(stmt).unique().scalars().first()
+
+    def _replace_ingredients(
+        self, recipe: Recipe, ingredients: list[IngredientCreate]
+    ) -> None:
+        """Clear existing ingredients and re-create from data."""
+        recipe.ingredients.clear()
+        self.session.flush()
+        for ing in ingredients:
+            ingredient = self._get_or_create_ingredient(ing.name)
+            ri = RecipeIngredient(
+                ingredient=ingredient, quantity=ing.quantity, unit=ing.unit
+            )
+            recipe.ingredients.append(ri)
+
+    def _replace_sources(self, recipe: Recipe, sources: list[SourceCreate]) -> None:
+        """Delete existing sources and re-create from data."""
+        for src in list(recipe.sources):
+            self.session.delete(src)
+        recipe.sources.clear()
+        self.session.flush()
+        for src in sources:
+            source = Source(type=src.type, raw_content=src.raw_content)
+            recipe.sources.append(source)
+
+    def update_recipe(self, recipe_id: UUID, data: RecipeUpdate) -> RecipeEntity | None:
+        recipe = self._load_recipe(recipe_id)
+        if recipe is None:
+            return None
+
+        recipe.title = data.title
+        recipe.description = data.description
+        recipe.prep_time_minutes = data.prep_time_minutes
+        recipe.cook_time_minutes = data.cook_time_minutes
+        recipe.rest_time_minutes = data.rest_time_minutes
+        recipe.season = data.season
+        recipe.category = data.category
+        recipe.is_veggie = data.is_veggie or False
+        recipe.difficulty = data.difficulty
+        recipe.number_of_people = data.number_of_people
+        recipe.rate = data.rate
+        recipe.tested = data.tested
+        recipe.tags = data.tags
+        recipe.preparation = data.preparation
+
+        self._replace_ingredients(recipe, data.ingredients)
+        self._replace_sources(recipe, data.sources)
+
+        self.session.commit()
+        self.session.refresh(recipe)
+        return self._to_entity(recipe)
 
     def get_recipe_by_id(self, recipe_id: UUID) -> RecipeEntity | None:
         """Retrieve a recipe with all relationships loaded."""

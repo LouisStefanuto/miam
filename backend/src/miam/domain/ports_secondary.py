@@ -5,7 +5,7 @@ from typing import Optional
 from uuid import UUID
 
 from miam.domain.entities import ImageEntity, RecipeEntity
-from miam.domain.schemas import ImageResponse, RecipeCreate
+from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
 
 
 class RecipeRepositoryPort(ABC):
@@ -35,6 +35,11 @@ class RecipeRepositoryPort(ABC):
         season: Optional[str] = None,
     ) -> list[RecipeEntity]:
         """Query recipes with dynamic filtering."""
+        pass
+
+    @abstractmethod
+    def update_recipe(self, recipe_id: UUID, data: RecipeUpdate) -> RecipeEntity | None:
+        """Full replacement of a recipe. Returns None if not found."""
         pass
 
     @abstractmethod

@@ -41,6 +41,27 @@ class RecipeCreate(BaseModel):
     sources: list[SourceCreate] = []
 
 
+class RecipeUpdate(BaseModel):
+    """Full replacement of a recipe (PUT). Images excluded — separate upload flow."""
+
+    title: str
+    description: str
+    prep_time_minutes: Optional[int] = None
+    cook_time_minutes: Optional[int] = None
+    rest_time_minutes: Optional[int] = None
+    season: Optional[Season] = None
+    category: Category
+    is_veggie: Optional[bool] = False
+    difficulty: Optional[int] = Field(None, ge=1, le=3)
+    number_of_people: Optional[int] = Field(None, ge=1)
+    rate: Optional[int] = Field(None, ge=1, le=5)
+    tested: bool = False
+    tags: list[str] = []
+    preparation: list[str] = []
+    ingredients: list[IngredientCreate] = []
+    sources: list[SourceCreate] = []
+
+
 class ImageResponse(BaseModel):
     media_type: str
     content: bytes
