@@ -1,4 +1,4 @@
-import { useState, KeyboardEvent } from 'react';
+import { KeyboardEvent } from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -6,17 +6,17 @@ import { Badge } from '@/components/ui/badge';
 interface SearchBarProps {
   tags: string[];
   onTagsChange: (tags: string[]) => void;
+  query: string;
+  onQueryChange: (query: string) => void;
 }
 
-export default function SearchBar({ tags, onTagsChange }: SearchBarProps) {
-  const [input, setInput] = useState('');
-
+export default function SearchBar({ tags, onTagsChange, query, onQueryChange }: SearchBarProps) {
   const addTag = () => {
-    const tag = input.trim().toLowerCase();
+    const tag = query.trim().toLowerCase();
     if (tag && !tags.includes(tag)) {
       onTagsChange([...tags, tag]);
     }
-    setInput('');
+    onQueryChange('');
   };
 
   const removeTag = (tag: string) => {
@@ -28,7 +28,7 @@ export default function SearchBar({ tags, onTagsChange }: SearchBarProps) {
       e.preventDefault();
       addTag();
     }
-    if (e.key === 'Backspace' && !input && tags.length > 0) {
+    if (e.key === 'Backspace' && !query && tags.length > 0) {
       onTagsChange(tags.slice(0, -1));
     }
   };
@@ -38,10 +38,10 @@ export default function SearchBar({ tags, onTagsChange }: SearchBarProps) {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
         <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
+          value={query}
+          onChange={(e) => onQueryChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Rechercher un ingrédient, un tag… puis Entrée"
+          placeholder="Rechercher un ingrédient, un tag…"
           className="pl-10 pr-4 h-11 bg-card border-border font-body text-sm rounded-lg"
         />
       </div>
@@ -55,7 +55,7 @@ export default function SearchBar({ tags, onTagsChange }: SearchBarProps) {
               </button>
             </Badge>
           ))}
-          <button onClick={() => onTagsChange([])} className="text-xs text-muted-foreground hover:text-foreground font-body transition-colors px-1">
+          <button onClick={() => { onTagsChange([]); onQueryChange(''); }} className="text-xs text-muted-foreground hover:text-foreground font-body transition-colors px-1">
             Tout effacer
           </button>
         </div>

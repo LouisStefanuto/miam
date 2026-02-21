@@ -1,10 +1,8 @@
 import { useState, useRef } from 'react';
-import { Upload, Loader2, X, Check, ChefHat, ImageIcon, ArrowLeft } from 'lucide-react';
+import { Upload, X, Check, ChefHat, ImageIcon, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
-import { supabase } from '@/integrations/supabase/client';
 
 interface DishImage {
   detected: boolean;
@@ -38,8 +36,6 @@ interface RecipeImportOCRProps {
 export default function RecipeImportOCR({ onBack, onImportRecipes }: RecipeImportOCRProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [parsedRecipes, setParsedRecipes] = useState<ParsedRecipe[]>([]);
   const [selectedRecipes, setSelectedRecipes] = useState<Set<number>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
@@ -65,58 +61,9 @@ export default function RecipeImportOCR({ onBack, onImportRecipes }: RecipeImpor
     setPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const fileToBase64 = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        resolve(result.split(',')[1]);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
   const runOCR = async () => {
-    if (files.length === 0) return;
-    setLoading(true);
-    setProgress(10);
-    setParsedRecipes([]);
-
-    try {
-      setProgress(20);
-      const images = await Promise.all(
-        files.map(async (f) => ({
-          data: await fileToBase64(f),
-          mimeType: f.type,
-        }))
-      );
-
-      setProgress(40);
-
-      const { data, error } = await supabase.functions.invoke('ocr-recipe', {
-        body: { images },
-      });
-
-      setProgress(80);
-
-      if (error) throw new Error(error.message || "Erreur lors de l'analyse");
-      if (data?.error) throw new Error(data.error);
-
-      const recipes: ParsedRecipe[] = data?.recipes || [];
-      if (recipes.length === 0) {
-        toast({ title: 'Aucune recette détectée', description: "L'IA n'a pas pu identifier de recette dans les images.", variant: 'destructive' });
-      } else {
-        setParsedRecipes(recipes);
-        setSelectedRecipes(new Set(recipes.map((_, i) => i)));
-        toast({ title: `${recipes.length} recette${recipes.length > 1 ? 's' : ''} détectée${recipes.length > 1 ? 's' : ''} !` });
-      }
-    } catch (err: any) {
-      console.error('OCR error:', err);
-      toast({ title: 'Erreur OCR', description: err.message || "Impossible d'analyser les images.", variant: 'destructive' });
-    } finally {
-      setProgress(100);
-      setLoading(false);
-    }
+    // TODO: No backend OCR endpoint yet
+    toast({ title: 'Bientôt disponible', description: "L'import par photo n'est pas encore connecté au backend.", variant: 'destructive' });
   };
 
   const toggleRecipe = (index: number) => {
@@ -202,10 +149,9 @@ export default function RecipeImportOCR({ onBack, onImportRecipes }: RecipeImpor
         {/* Analyze button */}
         {files.length > 0 && parsedRecipes.length === 0 && (
           <div className="space-y-3">
-            <Button onClick={runOCR} disabled={loading} className="w-full gradient-warm text-primary-foreground font-body font-semibold h-12" size="lg">
-              {loading ? (<><Loader2 size={18} className="animate-spin mr-2" />Analyse en cours…</>) : (<><ChefHat size={18} className="mr-2" />Analyser {files.length} image{files.length > 1 ? 's' : ''}</>) }
+            <Button onClick={runOCR} className="w-full gradient-warm text-primary-foreground font-body font-semibold h-12" size="lg">
+              <ChefHat size={18} className="mr-2" />Analyser {files.length} image{files.length > 1 ? 's' : ''}
             </Button>
-            {loading && <Progress value={progress} className="h-2" />}
           </div>
         )}
 
