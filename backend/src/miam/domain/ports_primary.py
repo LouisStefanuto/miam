@@ -3,18 +3,18 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
+from miam.domain.entities import RecipeEntity
 from miam.domain.schemas import ImageResponse, RecipeCreate
-from miam.infra.db.base import Recipe
 
 
 class RecipeServicePort(ABC):
     @abstractmethod
-    def create_recipe(self, data: RecipeCreate) -> Recipe:
+    def create_recipe(self, data: RecipeCreate) -> RecipeEntity:
         """Persist a new recipe with all related entities and return the created Recipe."""
         pass
 
     @abstractmethod
-    def get_recipe_by_id(self, recipe_id: UUID) -> Recipe | None:
+    def get_recipe_by_id(self, recipe_id: UUID) -> RecipeEntity | None:
         """Retrieve a recipe by its ID, including all related entities."""
         pass
 
@@ -26,7 +26,7 @@ class RecipeServicePort(ABC):
         category: str | None = None,
         is_veggie: bool | None = None,
         season: str | None = None,
-    ) -> list[Recipe]:
+    ) -> list[RecipeEntity]:
         """Search for recipes using dynamic filters and return matching Recipe objects."""
         pass
 

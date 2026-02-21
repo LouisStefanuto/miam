@@ -4,7 +4,6 @@ Defines all tables, relationships, and enums for the recipe management system.
 """
 
 import uuid
-from enum import Enum as PyEnum
 
 from sqlalchemy import (
     Boolean,
@@ -16,7 +15,14 @@ from sqlalchemy import (
     String,
     Text,
 )
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+from miam.domain.entities import (
+    Category,
+    Season,
+    SourceType,
+)
 
 # Naming convention helps Alembic migrations
 convention = {
@@ -86,24 +92,6 @@ class RecipeIngredient(Base):
     ingredient = relationship("Ingredient", back_populates="recipes")
 
 
-class Season(PyEnum):
-    """Recipe seasonal availability."""
-
-    winter = "winter"
-    spring = "spring"
-    summer = "summer"
-    autumn = "autumn"
-
-
-class Category(PyEnum):
-    """Recipe course categories."""
-
-    apero = "apero"
-    entree = "entree"
-    plat = "plat"
-    dessert = "dessert"
-
-
 class Recipe(Base):
     """Stores recipe data with timing, ingredients, images, and sources."""
 
@@ -123,6 +111,12 @@ class Recipe(Base):
     )
 
     is_veggie: Mapped[bool] = mapped_column(Boolean, default=False)
+    difficulty: Mapped[int | None] = mapped_column(Integer)
+    number_of_people: Mapped[int | None] = mapped_column(Integer)
+    rate: Mapped[int | None] = mapped_column(Integer)
+    tested: Mapped[bool] = mapped_column(Boolean, default=False)
+    tags: Mapped[list[str] | None] = mapped_column(JSON, default=list)
+    preparation: Mapped[list[str] | None] = mapped_column(JSON, default=list)
 
     ingredients = relationship(
         "RecipeIngredient",
@@ -140,15 +134,6 @@ class Recipe(Base):
         "Source",
         back_populates="recipe",
     )
-
-
-class SourceType(PyEnum):
-    """Recipe source origin types."""
-
-    manual = "manual"
-    instagram = "instagram"
-    url = "url"
-    photo = "photo"
 
 
 class Source(Base):

@@ -2,6 +2,7 @@
 
 from uuid import UUID
 
+from miam.domain.entities import ImageEntity, RecipeEntity
 from miam.domain.ports_primary import RecipeExportServicePort, RecipeServicePort
 from miam.domain.ports_secondary import (
     ImageStoragePort,
@@ -10,7 +11,6 @@ from miam.domain.ports_secondary import (
     WordExporterPort,
 )
 from miam.domain.schemas import ImageResponse, RecipeCreate
-from miam.infra.db.base import Image, Recipe, RecipeIngredient, Source
 
 
 class RecipeManagementService(RecipeServicePort):
@@ -24,43 +24,11 @@ class RecipeManagementService(RecipeServicePort):
         self.repository = repository
         self.image_storage = image_storage
 
-    def create_recipe(self, data: RecipeCreate) -> Recipe:
+    def create_recipe(self, data: RecipeCreate) -> RecipeEntity:
         """Create a new recipe with ingredients, images, and sources."""
-        recipe = Recipe(
-            title=data.title,
-            description=data.description,
-            prep_time_minutes=data.prep_time_minutes,
-            cook_time_minutes=data.cook_time_minutes,
-            rest_time_minutes=data.rest_time_minutes,
-            season=data.season,
-            category=data.category,
-            is_veggie=data.is_veggie,
-        )
+        return self.repository.add_recipe(data)
 
-        # ingredients
-        for ing in data.ingredients:
-            ingredient = self.repository.get_or_create_ingredient(ing.name)
-            ri = RecipeIngredient(
-                ingredient=ingredient, quantity=ing.quantity, unit=ing.unit
-            )
-            recipe.ingredients.append(ri)
-
-        # images
-        for img in data.images:
-            image = Image(
-                caption=img.caption,
-                display_order=img.display_order or 0,
-            )
-            recipe.images.append(image)
-
-        # sources
-        for src in data.sources:
-            source = Source(type=src.type, raw_content=src.raw_content)
-            recipe.sources.append(source)
-
-        return self.repository.add_recipe(recipe)
-
-    def get_recipe_by_id(self, recipe_id: UUID) -> Recipe | None:
+    def get_recipe_by_id(self, recipe_id: UUID) -> RecipeEntity | None:
         """Retrieve a recipe by ID via the persistence abstraction."""
         return self.repository.get_recipe_by_id(recipe_id)
 
@@ -71,7 +39,7 @@ class RecipeManagementService(RecipeServicePort):
         category: str | None = None,
         is_veggie: bool | None = None,
         season: str | None = None,
-    ) -> list[Recipe]:
+    ) -> list[RecipeEntity]:
         """Search/filter recipes via the repository abstraction."""
         return self.repository.search_recipes(
             recipe_id=recipe_id,
@@ -83,14 +51,12 @@ class RecipeManagementService(RecipeServicePort):
 
     def add_recipe_image(self, recipe_id: UUID, content: bytes, filename: str) -> UUID:
         """Add an image to a recipe and return its image ID."""
-        # Persist image record in DB and return DB-generated image id
-        img = self.repository.add_image(
+        img: ImageEntity = self.repository.add_image(
             recipe_id=recipe_id,
             caption=None,
             display_order=0,
         )
 
-        # Save bytes to storage and get a storage path suitable for DB
         self.image_storage.add_recipe_image(recipe_id, content, filename, img.id)
         return img.id
 

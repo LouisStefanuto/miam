@@ -1,8 +1,8 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from miam.infra.db.base import Category, Season, SourceType
+from miam.domain.entities import Category, Season, SourceType
 
 
 class IngredientCreate(BaseModel):
@@ -24,12 +24,18 @@ class SourceCreate(BaseModel):
 class RecipeCreate(BaseModel):
     title: str
     description: str
-    prep_time_minutes: Optional[int]
-    cook_time_minutes: Optional[int]
-    rest_time_minutes: Optional[int]
-    season: Optional[Season]
+    prep_time_minutes: Optional[int] = None
+    cook_time_minutes: Optional[int] = None
+    rest_time_minutes: Optional[int] = None
+    season: Optional[Season] = None
     category: Category
     is_veggie: Optional[bool] = False
+    difficulty: Optional[int] = Field(None, ge=1, le=3)
+    number_of_people: Optional[int] = Field(None, ge=1)
+    rate: Optional[int] = Field(None, ge=1, le=5)
+    tested: bool = False
+    tags: list[str] = []
+    preparation: list[str] = []
     ingredients: list[IngredientCreate] = []
     images: list[ImageCreate] = []
     sources: list[SourceCreate] = []
