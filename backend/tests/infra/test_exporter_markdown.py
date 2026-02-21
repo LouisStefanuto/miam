@@ -2,15 +2,11 @@ import uuid
 
 import pytest
 
-from miam.infra.db.base import (
-    Category,
-    Image,
-    Ingredient,
-    Recipe,
-    RecipeIngredient,
-    Season,
-    Source,
-    SourceType,
+from miam.domain.entities import (
+    ImageEntity,
+    IngredientEntity,
+    RecipeEntity,
+    SourceEntity,
 )
 from miam.infra.exporter_markdown import MarkdownExporter
 
@@ -20,48 +16,33 @@ from miam.infra.exporter_markdown import MarkdownExporter
 # -----------------------------
 @pytest.fixture
 def sample_recipes():
-    ingredient1 = Ingredient(id=uuid.uuid4(), name="Flour")
-    ingredient2 = Ingredient(id=uuid.uuid4(), name="Sugar")
-
-    recipe = Recipe(
+    recipe = RecipeEntity(
         id=uuid.uuid4(),
         title="Test Cake",
         description="Delicious test cake.",
         prep_time_minutes=10,
         cook_time_minutes=30,
         rest_time_minutes=5,
-        season=Season.summer,
-        category=Category.dessert,
+        season="summer",
+        category="dessert",
         is_veggie=True,
+        difficulty=2,
+        number_of_people=4,
+        rate=5,
+        tested=True,
+        tags=["sweet", "baking"],
+        preparation=["Mix flour and sugar", "Bake at 180C for 30 min"],
+        ingredients=[
+            IngredientEntity(name="Flour", quantity=200, unit="g"),
+            IngredientEntity(name="Sugar", quantity=100, unit="g"),
+        ],
+        images=[
+            ImageEntity(id=uuid.uuid4(), caption="Yummy"),
+        ],
+        sources=[
+            SourceEntity(type="manual", raw_content="Grandma's recipe"),
+        ],
     )
-
-    # Add ingredients
-    ri1 = RecipeIngredient(
-        recipe=recipe, ingredient=ingredient1, quantity=200, unit="g"
-    )
-    ri2 = RecipeIngredient(
-        recipe=recipe, ingredient=ingredient2, quantity=100, unit="g"
-    )
-    recipe.ingredients = [ri1, ri2]
-
-    # Add image
-    recipe.images = [
-        Image(
-            id=uuid.uuid4(),
-            caption="Yummy",
-            recipe=recipe,
-        )
-    ]
-
-    # Add source
-    recipe.sources = [
-        Source(
-            id=uuid.uuid4(),
-            type=SourceType.manual,
-            raw_content="Grandma's recipe",
-            recipe=recipe,
-        )
-    ]
 
     return [recipe]
 
@@ -79,6 +60,12 @@ def test_exporter_to_string(sample_recipes):
     assert "Sugar" in output
     assert "Yummy" in output
     assert "Grandma's recipe" in output
+    assert "*Difficulty:* 2/3" in output
+    assert "*Serves:* 4" in output
+    assert "*Rating:* 5/5" in output
+    assert "sweet, baking" in output
+    assert "Mix flour and sugar" in output
+    assert "Bake at 180C for 30 min" in output
 
 
 def test_exporter_to_markdown(tmp_path, sample_recipes):

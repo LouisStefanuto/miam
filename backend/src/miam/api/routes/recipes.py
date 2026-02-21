@@ -7,9 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from pydantic import BaseModel
 
 from miam.api.deps import get_recipe_management_service
+from miam.domain.entities import RecipeEntity
 from miam.domain.schemas import RecipeCreate
 from miam.domain.services import RecipeManagementService
-from miam.infra.db.base import Recipe
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
 
@@ -35,45 +35,43 @@ def create_recipe(
 
 class IngredientResponse(BaseModel):
     name: str
-    quantity: Optional[float]
-    unit: Optional[str]
-
-    model_config = {"from_attributes": True}
+    quantity: Optional[float] = None
+    unit: Optional[str] = None
 
 
-class ImageResponse(BaseModel):
+class ImageDetailResponse(BaseModel):
     id: UUID
-    caption: Optional[str]
-    display_order: int
-
-    model_config = {"from_attributes": True}
+    caption: Optional[str] = None
+    display_order: int = 0
 
 
 class SourceResponse(BaseModel):
     type: str
     raw_content: str
 
-    model_config = {"from_attributes": True}
-
 
 class RecipeDetailResponse(BaseModel):
     id: UUID
     title: str
     description: str
-    prep_time_minutes: Optional[int]
-    cook_time_minutes: Optional[int]
-    rest_time_minutes: Optional[int]
-    season: Optional[str]
-    category: Optional[str]
+    prep_time_minutes: Optional[int] = None
+    cook_time_minutes: Optional[int] = None
+    rest_time_minutes: Optional[int] = None
+    season: Optional[str] = None
+    category: str
     is_veggie: bool
+    difficulty: Optional[int] = None
+    number_of_people: Optional[int] = None
+    rate: Optional[int] = None
+    tested: bool
+    tags: list[str]
+    preparation: list[str]
     ingredients: list[IngredientResponse]
-    images: list[ImageResponse]
+    images: list[ImageDetailResponse]
     sources: list[SourceResponse]
 
-    model_config = {"from_attributes": True}
 
-
-def map_recipe_to_response(recipe: Recipe) -> RecipeDetailResponse:
+def map_recipe_to_response(recipe: RecipeEntity) -> RecipeDetailResponse:
     return RecipeDetailResponse(
         id=recipe.id,
         title=recipe.title,
@@ -81,19 +79,38 @@ def map_recipe_to_response(recipe: Recipe) -> RecipeDetailResponse:
         prep_time_minutes=recipe.prep_time_minutes,
         cook_time_minutes=recipe.cook_time_minutes,
         rest_time_minutes=recipe.rest_time_minutes,
-        season=recipe.season.value if recipe.season else None,
-        category=recipe.category.value,
+        season=recipe.season,
+        category=recipe.category,
         is_veggie=recipe.is_veggie,
+        difficulty=recipe.difficulty,
+        number_of_people=recipe.number_of_people,
+        rate=recipe.rate,
+        tested=recipe.tested,
+        tags=recipe.tags,
+        preparation=recipe.preparation,
         ingredients=[
             IngredientResponse(
-                name=ri.ingredient.name,
-                quantity=ri.quantity,
-                unit=ri.unit,
+                name=ing.name,
+                quantity=ing.quantity,
+                unit=ing.unit,
             )
-            for ri in recipe.ingredients
+            for ing in recipe.ingredients
         ],
-        images=[ImageResponse.model_validate(img) for img in recipe.images],
-        sources=[SourceResponse.model_validate(src) for src in recipe.sources],
+        images=[
+            ImageDetailResponse(
+                id=img.id,
+                caption=img.caption,
+                display_order=img.display_order,
+            )
+            for img in recipe.images
+        ],
+        sources=[
+            SourceResponse(
+                type=src.type,
+                raw_content=src.raw_content,
+            )
+            for src in recipe.sources
+        ],
     )
 
 
