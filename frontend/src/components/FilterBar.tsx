@@ -76,6 +76,7 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
         icon={<Zap size={13} />}
         label="Rapido"
         activeClass="bg-primary/10 border-primary/30 text-primary"
+        title="Préparation + cuisson ≤ 20 min"
       />
 
       {activeCount > 0 && (
@@ -103,16 +104,18 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
   );
 }
 
-function ToggleChip({ active, onClick, icon, label, activeClass }: {
+function ToggleChip({ active, onClick, icon, label, activeClass, title }: {
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   label: string;
   activeClass: string;
+  title?: string;
 }) {
   return (
     <button
       onClick={onClick}
+      title={title}
       className={`flex items-center gap-1.5 h-9 px-3 rounded-md border text-xs font-body font-medium transition-colors ${
         active ? activeClass : 'bg-card border-input text-muted-foreground hover:bg-secondary'
       }`}

@@ -57,7 +57,7 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
   return (
     <button
       onClick={onClick}
-      className="group text-left w-full bg-card rounded-lg overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 animate-fade-in"
+      className="group text-left w-full h-full flex flex-col bg-card rounded-lg overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 animate-fade-in"
     >
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
@@ -96,14 +96,16 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-2">
+      <div className="p-4 flex flex-col flex-1">
         <h3 className="font-display text-lg font-semibold text-card-foreground leading-tight line-clamp-2 group-hover:text-primary transition-colors">
           {recipe.title}
         </h3>
 
-        <StarRating rating={recipe.rating} />
+        <div className="mt-2">
+          <StarRating rating={recipe.rating} />
+        </div>
 
-        <div className="flex items-center gap-3 text-xs text-muted-foreground font-body">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground font-body mt-2">
           <span className="flex items-center gap-1">
             <Clock size={13} />
             {totalTime} min
@@ -118,15 +120,13 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
           </span>
         </div>
 
-        {recipe.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 pt-1">
-            {recipe.tags.slice(0, 3).map((tag) => (
-              <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-body">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
+        <div className="flex flex-wrap gap-1 pt-1 mt-auto min-h-[24px]">
+          {recipe.tags.slice(0, 3).map((tag) => (
+            <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-body">
+              {tag}
+            </span>
+          ))}
+        </div>
       </div>
     </button>
   );
