@@ -148,13 +148,18 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
     <div className="animate-fade-in">
       {/* Sticky save/cancel bar when editing */}
       {editing && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-card px-4 py-3 flex justify-end gap-2">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-card px-4 py-3 flex items-center justify-between">
+          <button onClick={onBack} className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground font-body transition-colors">
+            <ArrowLeft size={16} /> Menu
+          </button>
+          <div className="flex gap-2">
           <Button size="sm" variant="outline" className="font-body gap-1.5" onClick={cancelEdit}>
             <X size={14} /> Annuler
           </Button>
           <Button size="sm" className="gradient-warm text-primary-foreground font-body gap-1.5" onClick={saveEdit}>
             <Save size={14} /> Sauvegarder
           </Button>
+          </div>
         </div>
       )}
 
@@ -166,12 +171,14 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           <div className="w-full h-full bg-muted" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 to-transparent" />
-        <button
-          onClick={onBack}
-          className="absolute top-4 left-4 bg-card/80 backdrop-blur-sm rounded-full p-2 hover:bg-card transition-colors"
-        >
-          <ArrowLeft size={20} className="text-card-foreground" />
-        </button>
+        {!editing && (
+          <button
+            onClick={onBack}
+            className="absolute top-4 left-4 bg-card/80 backdrop-blur-sm rounded-full p-2 hover:bg-card transition-colors"
+          >
+            <ArrowLeft size={20} className="text-card-foreground" />
+          </button>
+        )}
         {/* Action buttons top right */}
         <div className="absolute top-4 right-4 flex gap-2">
           {!editing && (
@@ -465,7 +472,7 @@ function EditInfoCard({ icon, label, value, onChange }: { icon: string; label: s
   return (
     <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
       <img src={icon} alt={label} className="w-8 h-8" />
-      <Input type="number" min={0} value={value} onChange={(e) => onChange(e.target.value)} className="h-7 w-16 text-center text-sm font-body font-semibold" />
+      <Input type="number" min={0} value={value} onChange={(e) => onChange(e.target.value)} className="h-7 w-16 text-center text-sm font-body font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
       <span className="text-xs text-muted-foreground font-body">{label}</span>
     </div>
   );
