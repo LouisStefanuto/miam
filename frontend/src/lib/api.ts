@@ -207,8 +207,8 @@ function downloadBlob(blob: Blob, filename: string) {
 export async function exportToMarkdown(): Promise<void> {
   const res = await fetch(`${API_BASE}/export/markdown`, { method: 'POST' });
   if (!res.ok) throw new Error(`Failed to export: ${res.status}`);
-  const text = await res.text();
-  downloadBlob(new Blob([text], { type: 'text/markdown' }), 'recipes.md');
+  const blob = await res.blob();
+  downloadBlob(blob, 'recipes.zip');
 }
 
 export async function exportToWord(): Promise<void> {

@@ -53,8 +53,8 @@ class RecipeServicePort(ABC):
 
 class RecipeExportServicePort(ABC):
     @abstractmethod
-    def export_recipes_to_markdown(self) -> str:
-        """Export all recipes as Markdown"""
+    def export_recipes_to_markdown(self) -> bytes:
+        """Export all recipes as a ZIP archive containing Markdown and images."""
         pass
 
     @abstractmethod
