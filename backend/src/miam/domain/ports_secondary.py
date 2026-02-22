@@ -107,3 +107,8 @@ class MarkdownExporterPort(ABC):
     def to_string(self, recipes: list[RecipeEntity]) -> str:
         """Serialize recipes to Markdown string format."""
         pass
+
+    @abstractmethod
+    def to_zip_bytes(self, recipes: list[RecipeEntity]) -> bytes:
+        """Serialize recipes to a ZIP archive containing the Markdown file and images."""
+        pass

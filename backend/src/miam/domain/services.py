@@ -89,10 +89,10 @@ class RecipeExportService(RecipeExportServicePort):
         self.word_exporter = word_exporter
         self.markdown_exporter = markdown_exporter
 
-    def export_recipes_to_markdown(self) -> str:
-        """Export all recipes as Markdown string."""
+    def export_recipes_to_markdown(self) -> bytes:
+        """Export all recipes as a ZIP archive containing Markdown and images."""
         recipes = self.repository.search_recipes()
-        return self.markdown_exporter.to_string(recipes)
+        return self.markdown_exporter.to_zip_bytes(recipes)
 
     def export_recipes_to_word(self) -> bytes:
         """Export all recipes as Word binary format (in-memory)."""
