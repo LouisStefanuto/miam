@@ -1,4 +1,5 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ArrowUpDown, X, Leaf, Check, Zap } from 'lucide-react';
 
 export interface Filters {
@@ -76,7 +77,7 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
         icon={<Zap size={13} />}
         label="Rapido"
         activeClass="bg-primary/10 border-primary/30 text-primary"
-        title="Préparation + cuisson ≤ 20 min"
+        tooltip="Préparation + cuisson ≤ 20 min"
       />
 
       {activeCount > 0 && (
@@ -104,18 +105,17 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
   );
 }
 
-function ToggleChip({ active, onClick, icon, label, activeClass, title }: {
+function ToggleChip({ active, onClick, icon, label, activeClass, tooltip }: {
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   label: string;
   activeClass: string;
-  title?: string;
+  tooltip?: string;
 }) {
-  return (
+  const chip = (
     <button
       onClick={onClick}
-      title={title}
       className={`flex items-center gap-1.5 h-9 px-3 rounded-md border text-xs font-body font-medium transition-colors ${
         active ? activeClass : 'bg-card border-input text-muted-foreground hover:bg-secondary'
       }`}
@@ -123,6 +123,19 @@ function ToggleChip({ active, onClick, icon, label, activeClass, title }: {
       {icon}
       {label}
     </button>
+  );
+
+  if (!tooltip) return chip;
+
+  return (
+    <TooltipProvider delayDuration={800}>
+      <Tooltip>
+        <TooltipTrigger asChild>{chip}</TooltipTrigger>
+        <TooltipContent side="bottom">
+          <p>{tooltip}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
