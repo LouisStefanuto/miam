@@ -28,10 +28,11 @@ class LocalImageStorage(ImageStoragePort):
         filename: str,
         image_id: UUID,
     ) -> UUID:
-        """Save image to local filesystem under a folder named by recipe_id."""
+        """Save image to local filesystem using predictable path {image_id}{ext}."""
         try:
             self.base_folder.mkdir(parents=True, exist_ok=True)
-            image_path = self.base_folder / f"{image_id}_{filename}"
+            ext = Path(filename).suffix
+            image_path = self.base_folder / f"{image_id}{ext}"
             with open(image_path, "wb") as f:
                 f.write(image)
             logger.info(f"Saved image for recipe {recipe_id} at {image_path}")
@@ -42,28 +43,38 @@ class LocalImageStorage(ImageStoragePort):
             )
             raise
 
+    def _find_image(self, image_id: UUID) -> Path | None:
+        """Find image file by ID using glob instead of full directory scan."""
+        matches = list(self.base_folder.glob(f"{image_id}.*"))
+        if matches:
+            return matches[0]
+        # Fallback: file with no extension
+        exact = self.base_folder / str(image_id)
+        if exact.is_file():
+            return exact
+        return None
+
     def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
         """Retrieve image bytes from storage by image ID."""
-        for file in self.base_folder.iterdir():
-            if file.name.startswith(f"{image_id}_"):
-                media_type = mimetypes.guess_type(file.name)[0]
-                if not media_type:
-                    logger.warning(
-                        f"Could not determine media type for image {file.name}, defaulting to application/octet-stream"
-                    )
-                    media_type = "application/octet-stream"
-                with open(file, "rb") as f:
-                    return ImageResponse(content=f.read(), media_type=media_type)
-
-        logger.warning(f"Image with ID {image_id} not found in storage")
-        return None
+        file = self._find_image(image_id)
+        if file is None:
+            logger.warning(f"Image with ID {image_id} not found in storage")
+            return None
+        media_type = mimetypes.guess_type(file.name)[0]
+        if not media_type:
+            logger.warning(
+                f"Could not determine media type for image {file.name}, defaulting to application/octet-stream"
+            )
+            media_type = "application/octet-stream"
+        with open(file, "rb") as f:
+            return ImageResponse(content=f.read(), media_type=media_type)
 
     def delete_image(self, image_id: UUID) -> bool:
         """Delete an image file from local storage by image ID."""
-        for file in self.base_folder.iterdir():
-            if file.name.startswith(f"{image_id}_"):
-                file.unlink()
-                logger.info(f"Deleted image file {file.name}")
-                return True
-        logger.warning(f"Image file with ID {image_id} not found for deletion")
-        return False
+        file = self._find_image(image_id)
+        if file is None:
+            logger.warning(f"Image file with ID {image_id} not found for deletion")
+            return False
+        file.unlink()
+        logger.info(f"Deleted image file {file.name}")
+        return True

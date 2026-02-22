@@ -1,6 +1,7 @@
 """Pure domain entities and enums, independent of any framework or infrastructure."""
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from uuid import UUID
 
@@ -75,6 +76,7 @@ class RecipeEntity:
     ingredients: list[IngredientEntity] = field(default_factory=list)
     images: list[ImageEntity] = field(default_factory=list)
     sources: list[SourceEntity] = field(default_factory=list)
+    created_at: datetime | None = None
 
 
 @dataclass

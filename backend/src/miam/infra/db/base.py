@@ -4,9 +4,11 @@ Defines all tables, relationships, and enums for the recipe management system.
 """
 
 import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy import (
     Boolean,
+    DateTime,
     Enum,
     Float,
     ForeignKey,
@@ -117,6 +119,11 @@ class Recipe(Base):
     tested: Mapped[bool] = mapped_column(Boolean, default=False)
     tags: Mapped[list[str] | None] = mapped_column(JSON, default=list)
     preparation: Mapped[list[str] | None] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
 
     ingredients = relationship(
         "RecipeIngredient",

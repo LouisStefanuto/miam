@@ -1,5 +1,6 @@
 """API routes for managing recipes (CRUD operations)."""
 
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -88,6 +89,7 @@ class RecipeDetailResponse(BaseModel):
     ingredients: list[IngredientResponse]
     images: list[ImageDetailResponse]
     sources: list[SourceResponse]
+    created_at: Optional[datetime] = None
 
 
 class PaginatedRecipeResponse(BaseModel):
@@ -137,6 +139,7 @@ def map_recipe_to_response(recipe: RecipeEntity) -> RecipeDetailResponse:
             )
             for src in recipe.sources
         ],
+        created_at=recipe.created_at,
     )
 
 

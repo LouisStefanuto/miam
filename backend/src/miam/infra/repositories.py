@@ -71,6 +71,7 @@ class RecipeRepository(RecipeRepositoryPort):
                 )
                 for src in recipe.sources
             ],
+            created_at=recipe.created_at,
         )
 
     def add_recipe(self, data: RecipeCreate) -> RecipeEntity:
@@ -326,7 +327,7 @@ class RecipeRepository(RecipeRepositoryPort):
             joinedload(Recipe.sources),
         )
         stmt = self._apply_filters(stmt, recipe_id, title, category, is_veggie, season)
-        stmt = stmt.order_by(Recipe.id)
+        stmt = stmt.order_by(Recipe.created_at.desc())
         if offset:
             stmt = stmt.offset(offset)
         if limit is not None:
