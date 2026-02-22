@@ -175,6 +175,14 @@ export async function updateRecipe(recipe: Recipe): Promise<Recipe> {
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`Failed to update recipe: ${res.status}`);
+
+  // Upload new image if present (base64 data URL)
+  if (recipe.image?.startsWith('data:')) {
+    await uploadImage(recipe.id!, recipe.image);
+    // Re-fetch to include the newly uploaded image
+    return fetchRecipe(recipe.id!);
+  }
+
   const data: BackendRecipe = await res.json();
   return backendToFrontend(data);
 }
