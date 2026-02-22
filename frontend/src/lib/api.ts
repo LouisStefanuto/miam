@@ -193,6 +193,31 @@ export async function deleteRecipe(id: string): Promise<void> {
   if (!res.ok) throw new Error(`Failed to delete recipe: ${res.status}`);
 }
 
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+export async function exportToMarkdown(): Promise<void> {
+  const res = await fetch(`${API_BASE}/export/markdown`, { method: 'POST' });
+  if (!res.ok) throw new Error(`Failed to export: ${res.status}`);
+  const text = await res.text();
+  downloadBlob(new Blob([text], { type: 'text/markdown' }), 'recipes.md');
+}
+
+export async function exportToWord(): Promise<void> {
+  const res = await fetch(`${API_BASE}/export/word`, { method: 'POST' });
+  if (!res.ok) throw new Error(`Failed to export: ${res.status}`);
+  const blob = await res.blob();
+  downloadBlob(blob, 'recipes.docx');
+}
+
 async function uploadImage(recipeId: string, dataUrl: string): Promise<void> {
   const blob = await fetch(dataUrl).then((r) => r.blob());
   const ext = blob.type.split('/')[1] || 'jpg';

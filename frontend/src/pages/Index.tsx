@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, PenLine, Camera, Instagram } from 'lucide-react';
+import { Plus, PenLine, Camera, Instagram, Download } from 'lucide-react';
 import { Recipe } from '@/data/recipes';
 import { fetchRecipes, createRecipe as apiCreateRecipe, updateRecipe as apiUpdateRecipe, deleteRecipe as apiDeleteRecipe } from '@/lib/api';
 import HeroSection from '@/components/HeroSection';
@@ -9,11 +9,12 @@ import RecipeCard from '@/components/RecipeCard';
 import RecipeDetail from '@/components/RecipeDetail';
 import RecipeForm from '@/components/RecipeForm';
 import RecipeImportOCR from '@/components/RecipeImportOCR';
+import RecipeExport from '@/components/RecipeExport';
 import { toast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 
-type View = 'catalog' | 'detail' | 'create' | 'import-ocr';
+type View = 'catalog' | 'detail' | 'create' | 'import-ocr' | 'export';
 
 const Index = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -193,6 +194,10 @@ const Index = () => {
     );
   }
 
+  if (view === 'export') {
+    return <RecipeExport onBack={() => setView('catalog')} />;
+  }
+
   if (view === 'create') {
     return <RecipeForm onBack={() => setView('catalog')} onSave={saveRecipe} allTags={allTags} onAddTag={handleAddTag} onDeleteTag={handleDeleteTag} />;
   }
@@ -205,9 +210,13 @@ const Index = () => {
         {/* Search + Add button on same line */}
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
           <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
+          <Button onClick={() => setView('export')} variant="outline" className="font-body font-semibold gap-2 ml-auto shrink-0">
+            <Download size={18} />
+            Exporter
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 ml-auto shrink-0">
+              <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 shrink-0">
                 <Plus size={18} />
                 Ajouter une recette
               </Button>
