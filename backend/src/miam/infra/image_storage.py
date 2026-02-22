@@ -57,3 +57,13 @@ class LocalImageStorage(ImageStoragePort):
 
         logger.warning(f"Image with ID {image_id} not found in storage")
         return None
+
+    def delete_image(self, image_id: UUID) -> bool:
+        """Delete an image file from local storage by image ID."""
+        for file in self.base_folder.iterdir():
+            if file.name.startswith(f"{image_id}_"):
+                file.unlink()
+                logger.info(f"Deleted image file {file.name}")
+                return True
+        logger.warning(f"Image file with ID {image_id} not found for deletion")
+        return False

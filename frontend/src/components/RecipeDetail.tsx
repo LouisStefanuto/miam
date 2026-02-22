@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import seasonSpring from '@/assets/icons/season-spring.png';
 import seasonSummer from '@/assets/icons/season-summer.png';
 import seasonFall from '@/assets/icons/season-fall.png';
@@ -61,9 +62,10 @@ interface RecipeDetailProps {
   allTags: string[];
   onAddTag?: (tag: string) => void;
   onDeleteTag?: (tag: string) => void;
+  onDelete?: () => void;
 }
 
-export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, onTestedToggle, allTags, onAddTag, onDeleteTag }: RecipeDetailProps) {
+export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, onTestedToggle, allTags, onAddTag, onDeleteTag, onDelete }: RecipeDetailProps) {
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState<Recipe>(recipe);
   const [displayServings, setDisplayServings] = useState(recipe.servings);
@@ -182,9 +184,32 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         {/* Action buttons top right */}
         <div className="absolute top-4 right-4 flex gap-2">
           {!editing && (
-            <Button size="sm" variant="outline" className="bg-card/80 backdrop-blur-sm font-body gap-1.5" onClick={startEdit}>
-              <Pencil size={14} /> Modifier
-            </Button>
+            <>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button className="flex items-center gap-1.5 bg-card/80 backdrop-blur-sm rounded-md px-3 py-1.5 text-sm font-body text-destructive hover:bg-red-100 transition-colors">
+                    <Trash2 size={14} /> Supprimer
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="font-display">Supprimer cette recette ?</AlertDialogTitle>
+                    <AlertDialogDescription className="font-body">
+                      La recette « {recipe.title} » sera supprimée définitivement. Cette action est irréversible.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
+                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body" onClick={() => onDelete?.()}>
+                      Supprimer
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <button className="flex items-center gap-1.5 bg-card/80 backdrop-blur-sm rounded-md px-3 py-1.5 text-sm font-body text-card-foreground hover:bg-card transition-colors" onClick={startEdit}>
+                <Pencil size={14} /> Modifier
+              </button>
+            </>
           )}
         </div>
         {/* Image upload overlay when editing */}

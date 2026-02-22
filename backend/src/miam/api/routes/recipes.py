@@ -151,6 +151,20 @@ def get_recipe(
     return map_recipe_to_response(recipe)
 
 
+@router.delete("/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_recipe(
+    recipe_id: UUID = Path(..., description="The ID of the recipe to delete"),
+    service: RecipeManagementService = Depends(get_recipe_management_service),
+) -> None:
+    """Delete a recipe by ID."""
+    deleted = service.delete_recipe(recipe_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Recipe with id {recipe_id} not found",
+        )
+
+
 @router.put("/{recipe_id}", response_model=RecipeDetailResponse)
 def update_recipe(
     recipe_in: RecipeUpdate,

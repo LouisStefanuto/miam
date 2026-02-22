@@ -43,6 +43,10 @@ stop: ## Stop all containers
 pre-commit: ## Run pre-commit
 	uv --directory backend run pre-commit run --all-files
 
+.PHONY: clean
+clean: ## Kill all containers and remove pgdata volume
+	docker compose down -v
+
 .PHONY: docs
 docs: ## Serve documentation locally
 	uv --directory docs run mkdocs serve -a 0.0.0.0:8001

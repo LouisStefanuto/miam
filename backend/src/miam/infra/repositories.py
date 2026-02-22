@@ -259,3 +259,12 @@ class RecipeRepository(RecipeRepositoryPort):
             caption=image.caption,
             display_order=image.display_order,
         )
+
+    def delete_recipe(self, recipe_id: UUID) -> bool:
+        """Delete a recipe and all related entities (via cascade)."""
+        recipe = self._load_recipe(recipe_id)
+        if recipe is None:
+            return False
+        self.session.delete(recipe)
+        self.session.commit()
+        return True

@@ -52,6 +52,14 @@ class RecipeManagementService(RecipeServicePort):
     def update_recipe(self, recipe_id: UUID, data: RecipeUpdate) -> RecipeEntity | None:
         return self.repository.update_recipe(recipe_id, data)
 
+    def delete_recipe(self, recipe_id: UUID) -> bool:
+        recipe = self.repository.get_recipe_by_id(recipe_id)
+        if recipe is None:
+            return False
+        for image in recipe.images:
+            self.image_storage.delete_image(image.id)
+        return self.repository.delete_recipe(recipe_id)
+
     def add_recipe_image(self, recipe_id: UUID, content: bytes, filename: str) -> UUID:
         """Add an image to a recipe and return its image ID."""
         img: ImageEntity = self.repository.add_image(

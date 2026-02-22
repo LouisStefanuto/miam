@@ -188,6 +188,11 @@ export async function createRecipe(recipe: Recipe): Promise<{ id: string }> {
   return result;
 }
 
+export async function deleteRecipe(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/recipes/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`Failed to delete recipe: ${res.status}`);
+}
+
 async function uploadImage(recipeId: string, dataUrl: string): Promise<void> {
   const blob = await fetch(dataUrl).then((r) => r.blob());
   const ext = blob.type.split('/')[1] || 'jpg';

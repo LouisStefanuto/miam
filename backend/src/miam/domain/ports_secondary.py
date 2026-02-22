@@ -43,6 +43,11 @@ class RecipeRepositoryPort(ABC):
         pass
 
     @abstractmethod
+    def delete_recipe(self, recipe_id: UUID) -> bool:
+        """Delete a recipe by ID. Returns True if deleted, False if not found."""
+        pass
+
+    @abstractmethod
     def add_image(
         self,
         recipe_id: UUID,
@@ -68,6 +73,11 @@ class ImageStoragePort(ABC):
     @abstractmethod
     def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
         """Retrieve image bytes from storage by image ID."""
+        pass
+
+    @abstractmethod
+    def delete_image(self, image_id: UUID) -> bool:
+        """Delete an image file from storage. Returns True if deleted, False if not found."""
         pass
 
 
