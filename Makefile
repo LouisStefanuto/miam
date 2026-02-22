@@ -46,6 +46,7 @@ pre-commit: ## Run pre-commit
 .PHONY: clean
 clean: ## Kill all containers and remove pgdata volume
 	docker compose down -v
+	rm -rf ./backend/images
 
 .PHONY: docs
 docs: ## Serve documentation locally
