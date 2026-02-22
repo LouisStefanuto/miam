@@ -65,6 +65,9 @@ def upgrade() -> None:
         sa.Column("preparation", JSON(), nullable=True),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_recipes")),
     )
+    op.create_index(op.f("ix_recipes_category"), "recipes", ["category"])
+    op.create_index(op.f("ix_recipes_season"), "recipes", ["season"])
+    op.create_index(op.f("ix_recipes_is_veggie"), "recipes", ["is_veggie"])
     op.create_table(
         "images",
         sa.Column("id", sa.Uuid(), nullable=False),
@@ -79,6 +82,7 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_images")),
     )
+    op.create_index(op.f("ix_images_recipe_id"), "images", ["recipe_id"])
     op.create_table(
         "recipe_ingredients",
         sa.Column("recipe_id", sa.Uuid(), nullable=False),
@@ -99,6 +103,11 @@ def upgrade() -> None:
             "recipe_id", "ingredient_id", name=op.f("pk_recipe_ingredients")
         ),
     )
+    op.create_index(
+        op.f("ix_recipe_ingredients_ingredient_id"),
+        "recipe_ingredients",
+        ["ingredient_id"],
+    )
     op.create_table(
         "sources",
         sa.Column("id", sa.Uuid(), nullable=False),
@@ -117,12 +126,21 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_sources")),
     )
+    op.create_index(op.f("ix_sources_recipe_id"), "sources", ["recipe_id"])
 
 
 def downgrade() -> None:
     """Downgrade schema."""
+    op.drop_index(op.f("ix_sources_recipe_id"), table_name="sources")
     op.drop_table("sources")
+    op.drop_index(
+        op.f("ix_recipe_ingredients_ingredient_id"), table_name="recipe_ingredients"
+    )
     op.drop_table("recipe_ingredients")
+    op.drop_index(op.f("ix_images_recipe_id"), table_name="images")
     op.drop_table("images")
+    op.drop_index(op.f("ix_recipes_is_veggie"), table_name="recipes")
+    op.drop_index(op.f("ix_recipes_season"), table_name="recipes")
+    op.drop_index(op.f("ix_recipes_category"), table_name="recipes")
     op.drop_table("recipes")
     op.drop_table("ingredients")
