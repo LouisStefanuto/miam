@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Plus, PenLine, Camera, Instagram } from 'lucide-react';
 import { Recipe } from '@/data/recipes';
-import { fetchRecipes, createRecipe as apiCreateRecipe } from '@/lib/api';
+import { fetchRecipes, createRecipe as apiCreateRecipe, updateRecipe as apiUpdateRecipe, deleteRecipe as apiDeleteRecipe } from '@/lib/api';
 import HeroSection from '@/components/HeroSection';
 import SearchBar from '@/components/SearchBar';
 import FilterBar, { Filters } from '@/components/FilterBar';
@@ -99,10 +99,15 @@ const Index = () => {
   const saveRecipe = async (recipe: Recipe) => {
     const exists = recipes.some((r) => r.id === recipe.id);
     if (exists) {
-      // TODO: No PUT endpoint yet — update local state only
-      setRecipes((prev) => prev.map((r) => (r.id === recipe.id ? recipe : r)));
-      setSelectedRecipe(recipe);
-      toast({ title: 'Recette modifiée !', description: recipe.title });
+      try {
+        const updated = await apiUpdateRecipe(recipe);
+        setRecipes((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+        setSelectedRecipe(updated);
+        toast({ title: 'Recette modifiée !', description: updated.title });
+      } catch (err) {
+        console.error('Failed to update recipe:', err);
+        toast({ title: 'Erreur', description: 'Impossible de modifier la recette.', variant: 'destructive' });
+      }
     } else {
       try {
         const { id } = await apiCreateRecipe(recipe);
@@ -136,6 +141,20 @@ const Index = () => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!selectedRecipe) return;
+    try {
+      await apiDeleteRecipe(selectedRecipe.id);
+      setRecipes((prev) => prev.filter((r) => r.id !== selectedRecipe.id));
+      setSelectedRecipe(null);
+      setView('catalog');
+      toast({ title: 'Recette supprimée', description: selectedRecipe.title });
+    } catch (err) {
+      console.error('Failed to delete recipe:', err);
+      toast({ title: 'Erreur', description: 'Impossible de supprimer la recette.', variant: 'destructive' });
+    }
+  };
+
   const handleDeleteTag = (tag: string) => {
     setCustomTags((prev) => prev.filter((t) => t !== tag));
     setRecipes((prev) => prev.map((r) => ({ ...r, tags: r.tags.filter((t) => t !== tag) })));
@@ -156,6 +175,7 @@ const Index = () => {
         allTags={allTags}
         onAddTag={handleAddTag}
         onDeleteTag={handleDeleteTag}
+        onDelete={handleDelete}
       />
     );
   }

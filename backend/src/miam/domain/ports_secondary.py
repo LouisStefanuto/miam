@@ -5,7 +5,7 @@ from typing import Optional
 from uuid import UUID
 
 from miam.domain.entities import ImageEntity, RecipeEntity
-from miam.domain.schemas import ImageResponse, RecipeCreate
+from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
 
 
 class RecipeRepositoryPort(ABC):
@@ -38,6 +38,16 @@ class RecipeRepositoryPort(ABC):
         pass
 
     @abstractmethod
+    def update_recipe(self, recipe_id: UUID, data: RecipeUpdate) -> RecipeEntity | None:
+        """Full replacement of a recipe. Returns None if not found."""
+        pass
+
+    @abstractmethod
+    def delete_recipe(self, recipe_id: UUID) -> bool:
+        """Delete a recipe by ID. Returns True if deleted, False if not found."""
+        pass
+
+    @abstractmethod
     def add_image(
         self,
         recipe_id: UUID,
@@ -63,6 +73,11 @@ class ImageStoragePort(ABC):
     @abstractmethod
     def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
         """Retrieve image bytes from storage by image ID."""
+        pass
+
+    @abstractmethod
+    def delete_image(self, image_id: UUID) -> bool:
+        """Delete an image file from storage. Returns True if deleted, False if not found."""
         pass
 
 

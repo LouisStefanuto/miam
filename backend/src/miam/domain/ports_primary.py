@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 from miam.domain.entities import RecipeEntity
-from miam.domain.schemas import ImageResponse, RecipeCreate
+from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
 
 
 class RecipeServicePort(ABC):
@@ -28,6 +28,16 @@ class RecipeServicePort(ABC):
         season: str | None = None,
     ) -> list[RecipeEntity]:
         """Search for recipes using dynamic filters and return matching Recipe objects."""
+        pass
+
+    @abstractmethod
+    def update_recipe(self, recipe_id: UUID, data: RecipeUpdate) -> RecipeEntity | None:
+        """Full replacement of a recipe (PUT semantics). Returns None if not found."""
+        pass
+
+    @abstractmethod
+    def delete_recipe(self, recipe_id: UUID) -> bool:
+        """Delete a recipe by ID. Returns True if deleted, False if not found."""
         pass
 
     @abstractmethod

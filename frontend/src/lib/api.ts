@@ -158,6 +158,18 @@ export async function fetchRecipe(id: string): Promise<Recipe> {
   return backendToFrontend(data);
 }
 
+export async function updateRecipe(recipe: Recipe): Promise<Recipe> {
+  const body = frontendToBackendCreate(recipe);
+  const res = await fetch(`${API_BASE}/recipes/${recipe.id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Failed to update recipe: ${res.status}`);
+  const data: BackendRecipe = await res.json();
+  return backendToFrontend(data);
+}
+
 export async function createRecipe(recipe: Recipe): Promise<{ id: string }> {
   const body = frontendToBackendCreate(recipe);
   const res = await fetch(`${API_BASE}/recipes`, {
@@ -174,6 +186,11 @@ export async function createRecipe(recipe: Recipe): Promise<{ id: string }> {
   }
 
   return result;
+}
+
+export async function deleteRecipe(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/recipes/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`Failed to delete recipe: ${res.status}`);
 }
 
 async function uploadImage(recipeId: string, dataUrl: string): Promise<void> {

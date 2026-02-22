@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from miam.api.deps import get_recipe_management_service
 from miam.domain.entities import RecipeEntity
-from miam.domain.schemas import RecipeCreate
+from miam.domain.schemas import RecipeCreate, RecipeUpdate
 from miam.domain.services import RecipeManagementService
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
@@ -148,6 +148,38 @@ def get_recipe(
             detail=f"Recipe with id {recipe_id} not found",
         )
 
+    return map_recipe_to_response(recipe)
+
+
+@router.delete("/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_recipe(
+    recipe_id: UUID = Path(..., description="The ID of the recipe to delete"),
+    service: RecipeManagementService = Depends(get_recipe_management_service),
+) -> None:
+    """Delete a recipe by ID."""
+    deleted = service.delete_recipe(recipe_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Recipe with id {recipe_id} not found",
+        )
+
+
+@router.put("/{recipe_id}", response_model=RecipeDetailResponse)
+def update_recipe(
+    recipe_in: RecipeUpdate,
+    recipe_id: UUID = Path(..., description="The ID of the recipe to replace"),
+    service: RecipeManagementService = Depends(get_recipe_management_service),
+) -> RecipeDetailResponse:
+    try:
+        recipe = service.update_recipe(recipe_id, recipe_in)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    if recipe is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Recipe with id {recipe_id} not found",
+        )
     return map_recipe_to_response(recipe)
 
 
