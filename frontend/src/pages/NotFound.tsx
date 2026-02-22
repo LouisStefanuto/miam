@@ -23,7 +23,7 @@ const NotFound = () => {
         className="mb-8 w-full max-w-md rounded-3xl"
       />
       <h1 className="mb-3 font-display text-4xl font-bold text-foreground md:text-5xl">
-        Page introuvable
+        Oups, vous vous êtes perdus !
       </h1>
       <p className="mb-8 max-w-md text-center text-lg text-muted-foreground">
         La page <span className="font-medium text-foreground">{location.pathname}</span> n'existe
