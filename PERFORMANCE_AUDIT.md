@@ -2,13 +2,6 @@
 
 ## Critical Issues
 
-### ~~1. No Pagination (Backend + Frontend)~~ DONE
-
-Pagination implemented across the full stack:
-
-- **Backend**: `limit`/`offset` params threaded through port → service → repository. SQL `LIMIT`/`OFFSET` + `COUNT` query. `PaginatedResult` domain entity. `PaginatedRecipeResponse` API model on `GET /recipes` and `GET /recipes/search`.
-- **Frontend**: Catalog renders 20 recipes per page. Pagination UI with page numbers, prev/next. Page resets on filter/search change. Page state persisted in `CatalogFilterContext`.
-
 ### 2. Missing Database Indexes
 Zero indexes beyond PKs. Every filter (`category`, `season`, `is_veggie`) and every FK join (`images.recipe_id`, `recipe_ingredients.recipe_id`, `sources.recipe_id`) does a full table scan.
 
@@ -16,12 +9,9 @@ Zero indexes beyond PKs. Every filter (`category`, `season`, `is_veggie`) and ev
 
 **Fix:** Add an Alembic migration with indexes on `recipes.category`, `recipes.season`, `recipes.is_veggie`, and all FK columns. Consider a `pg_trgm` GIN index on `recipes.title` for `ILIKE` searches.
 
-### 3. N+1 Queries on Ingredient Lookup
-`_get_or_create_ingredient` fires one `SELECT` per ingredient name. A 50-recipe batch import with 10 ingredients each = ~500 queries.
+### ~~3. N+1 Queries on Ingredient Lookup~~ DONE
 
-**File:** `infra/repositories.py:167-177`
-
-**Fix:** Bulk-fetch existing ingredients with `WHERE name IN (...)` before the loop, then only INSERT the new ones.
+Replaced per-ingredient `_get_or_create_ingredient` (1 SELECT per name) with bulk `_get_or_create_ingredients`: single `SELECT ... WHERE name IN (...)` + batch-create missing ones. Applied to `add_recipe`, `add_recipes`, and `_replace_ingredients`.
 
 ---
 
@@ -82,12 +72,9 @@ All 6 pages are eagerly imported. Import/Export/OCR pages load even when never v
 
 **Fix:** Use `React.lazy()` + `Suspense` for non-catalog routes.
 
-### 11. Batch Import Flushes Per Recipe
-`add_recipes` calls `session.flush()` after each recipe instead of batching.
+### ~~11. Batch Import Flushes Per Recipe~~ DONE
 
-**File:** `infra/repositories.py:119-165`
-
-**Fix:** Remove per-iteration `flush()`, flush once before `commit()`.
+Removed per-recipe `session.flush()` in `add_recipes`. Recipes are now flushed once at `commit()` time.
 
 ---
 
@@ -99,9 +86,9 @@ All 6 pages are eagerly imported. Import/Export/OCR pages load even when never v
 | ~~2~~ | ~~Add pagination (backend + frontend)~~ | ~~Done~~ |
 | 3 | Lightweight list response (no ingredients/steps) | Low |
 | ~~4~~ | ~~Fix RecipeCard expensive CSS~~ | ~~Done~~ |
-| 5 | Fix N+1 ingredient queries | Low |
+| ~~5~~ | ~~Fix N+1 ingredient queries~~ | ~~Done~~ |
 | 6 | Set TanStack Query `staleTime` | Trivial |
 | 7 | Dedicated `/api/tags` endpoint | Low |
 | 8 | Fix image storage linear scan | Low |
 | 9 | `React.lazy` code splitting | Low |
-| 10 | Fix batch flush + double-fetch | Low |
+| ~~10~~ | ~~Fix batch flush~~ + double-fetch | ~~Low~~ |

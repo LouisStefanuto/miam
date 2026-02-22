@@ -93,10 +93,14 @@ class RecipeRepository(RecipeRepositoryPort):
         )
 
         # ingredients
+        ingredient_map = self._get_or_create_ingredients(
+            {ing.name for ing in data.ingredients}
+        )
         for ing in data.ingredients:
-            ingredient = self._get_or_create_ingredient(ing.name)
             ri = RecipeIngredient(
-                ingredient=ingredient, quantity=ing.quantity, unit=ing.unit
+                ingredient=ingredient_map[ing.name],
+                quantity=ing.quantity,
+                unit=ing.unit,
             )
             recipe.ingredients.append(ri)
 
@@ -120,6 +124,12 @@ class RecipeRepository(RecipeRepositoryPort):
 
     def add_recipes(self, data: list[RecipeCreate]) -> list[RecipeEntity]:
         """Persist multiple recipes in a single atomic transaction."""
+        # Bulk-fetch/create all ingredients in one pass
+        all_ingredient_names = {
+            ing.name for recipe_data in data for ing in recipe_data.ingredients
+        }
+        ingredient_map = self._get_or_create_ingredients(all_ingredient_names)
+
         recipes = []
         for recipe_data in data:
             recipe = Recipe(
@@ -140,9 +150,10 @@ class RecipeRepository(RecipeRepositoryPort):
             )
 
             for ing in recipe_data.ingredients:
-                ingredient = self._get_or_create_ingredient(ing.name)
                 ri = RecipeIngredient(
-                    ingredient=ingredient, quantity=ing.quantity, unit=ing.unit
+                    ingredient=ingredient_map[ing.name],
+                    quantity=ing.quantity,
+                    unit=ing.unit,
                 )
                 recipe.ingredients.append(ri)
 
@@ -158,7 +169,6 @@ class RecipeRepository(RecipeRepositoryPort):
                 recipe.sources.append(source)
 
             self.session.add(recipe)
-            self.session.flush()
             recipes.append(recipe)
 
         self.session.commit()
@@ -166,17 +176,24 @@ class RecipeRepository(RecipeRepositoryPort):
             self.session.refresh(recipe)
         return [self._to_entity(recipe) for recipe in recipes]
 
-    def _get_or_create_ingredient(self, name: str) -> Ingredient:
-        """Get existing ingredient or create+flush in current transaction."""
-        stmt = select(Ingredient).where(Ingredient.name == name)
-        ingredient = self.session.execute(stmt).scalars().first()
+    def _get_or_create_ingredients(self, names: set[str]) -> dict[str, Ingredient]:
+        """Bulk-fetch existing ingredients and create missing ones in a single pass."""
+        if not names:
+            return {}
 
-        if ingredient is None:
+        stmt = select(Ingredient).where(Ingredient.name.in_(names))
+        existing = {ing.name: ing for ing in self.session.execute(stmt).scalars().all()}
+
+        missing_names = names - existing.keys()
+        for name in missing_names:
             ingredient = Ingredient(name=name)
             self.session.add(ingredient)
+            existing[name] = ingredient
+
+        if missing_names:
             self.session.flush()
 
-        return ingredient
+        return existing
 
     def _load_recipe(self, recipe_id: UUID) -> Recipe | None:
         """Load a recipe ORM object with all relationships eagerly loaded."""
@@ -197,10 +214,14 @@ class RecipeRepository(RecipeRepositoryPort):
         """Clear existing ingredients and re-create from data."""
         recipe.ingredients.clear()
         self.session.flush()
+        ingredient_map = self._get_or_create_ingredients(
+            {ing.name for ing in ingredients}
+        )
         for ing in ingredients:
-            ingredient = self._get_or_create_ingredient(ing.name)
             ri = RecipeIngredient(
-                ingredient=ingredient, quantity=ing.quantity, unit=ing.unit
+                ingredient=ingredient_map[ing.name],
+                quantity=ing.quantity,
+                unit=ing.unit,
             )
             recipe.ingredients.append(ri)
 
