@@ -14,7 +14,13 @@ const ImportJSONPage = lazy(() => import("./pages/ImportJSONPage"));
 const ExportPage = lazy(() => import("./pages/ExportPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5min
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

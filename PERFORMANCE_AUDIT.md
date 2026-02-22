@@ -36,13 +36,6 @@ Cards only need title, image, category, season — but every recipe comes with f
 
 **Fix:** Create a dedicated `/api/tags` endpoint or compute tags only in the catalog.
 
-### 8. No TanStack Query Cache Tuning
-`staleTime` defaults to `0` — every window focus triggers a background refetch of all recipes.
-
-**File:** `frontend/src/App.tsx:15`
-
-**Fix:** Set `staleTime: 5 * 60 * 1000` (5 min) on the query client defaults.
-
 ### 9. Double-Fetch on Recipe Delete
 Service loads the recipe, then `repository.delete_recipe` loads it again internally.
 
@@ -61,7 +54,7 @@ Service loads the recipe, then `repository.delete_recipe` loads it again interna
 | 3 | Lightweight list response (no ingredients/steps) | Low |
 | ~~4~~ | ~~Fix RecipeCard expensive CSS~~ | ~~Done~~ |
 | ~~5~~ | ~~Fix N+1 ingredient queries~~ | ~~Done~~ |
-| 6 | Set TanStack Query `staleTime` | Trivial |
+| ~~6~~ | ~~Set TanStack Query `staleTime`~~ | ~~Done~~ |
 | 7 | Dedicated `/api/tags` endpoint | Low |
 | 8 | Fix image storage linear scan | Low |
 | 9 | `React.lazy` code splitting | Low |
