@@ -90,6 +90,13 @@ class RecipeDetailResponse(BaseModel):
     sources: list[SourceResponse]
 
 
+class PaginatedRecipeResponse(BaseModel):
+    items: list[RecipeDetailResponse]
+    total: int
+    limit: Optional[int] = None
+    offset: int = 0
+
+
 def map_recipe_to_response(recipe: RecipeEntity) -> RecipeDetailResponse:
     return RecipeDetailResponse(
         id=recipe.id,
@@ -133,26 +140,35 @@ def map_recipe_to_response(recipe: RecipeEntity) -> RecipeDetailResponse:
     )
 
 
-@router.get("/search", response_model=list[RecipeDetailResponse])
+@router.get("/search", response_model=PaginatedRecipeResponse)
 def search_recipes(
     recipe_id: Optional[UUID] = Query(None),
     title: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     is_veggie: Optional[bool] = Query(None),
     season: Optional[str] = Query(None),
+    limit: Optional[int] = Query(None, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     service: RecipeManagementService = Depends(get_recipe_management_service),
-) -> list[RecipeDetailResponse]:
+) -> PaginatedRecipeResponse:
     """
-    Search recipes with optional filters.
+    Search recipes with optional filters and pagination.
     """
-    recipes = service.search_recipes(
+    result = service.search_recipes(
         recipe_id=recipe_id,
         title=title,
         category=category,
         is_veggie=is_veggie,
         season=season,
+        limit=limit,
+        offset=offset,
     )
-    return [map_recipe_to_response(r) for r in recipes]
+    return PaginatedRecipeResponse(
+        items=[map_recipe_to_response(r) for r in result.items],
+        total=result.total,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @router.get("/{recipe_id}", response_model=RecipeDetailResponse)
@@ -202,12 +218,19 @@ def update_recipe(
     return map_recipe_to_response(recipe)
 
 
-@router.get("", response_model=list[RecipeDetailResponse])
+@router.get("", response_model=PaginatedRecipeResponse)
 def get_recipes(
+    limit: Optional[int] = Query(None, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     service: RecipeManagementService = Depends(get_recipe_management_service),
-) -> list[RecipeDetailResponse]:
+) -> PaginatedRecipeResponse:
     """
-    Retrieve all recipes.
+    Retrieve recipes with optional pagination.
     """
-    recipes = service.search_recipes()
-    return [map_recipe_to_response(r) for r in recipes]
+    result = service.search_recipes(limit=limit, offset=offset)
+    return PaginatedRecipeResponse(
+        items=[map_recipe_to_response(r) for r in result.items],
+        total=result.total,
+        limit=limit,
+        offset=offset,
+    )

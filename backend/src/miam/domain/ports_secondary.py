@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 from uuid import UUID
 
-from miam.domain.entities import ImageEntity, RecipeEntity
+from miam.domain.entities import ImageEntity, PaginatedResult, RecipeEntity
 from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
 
 
@@ -38,8 +38,10 @@ class RecipeRepositoryPort(ABC):
         category: Optional[str] = None,
         is_veggie: Optional[bool] = None,
         season: Optional[str] = None,
-    ) -> list[RecipeEntity]:
-        """Query recipes with dynamic filtering."""
+        limit: Optional[int] = None,
+        offset: int = 0,
+    ) -> PaginatedResult:
+        """Query recipes with dynamic filtering and pagination."""
         pass
 
     @abstractmethod

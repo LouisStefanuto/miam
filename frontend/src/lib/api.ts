@@ -142,13 +142,22 @@ function frontendToBackendCreate(r: Recipe) {
   };
 }
 
+// --- Backend paginated response ---
+
+interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  limit: number | null;
+  offset: number;
+}
+
 // --- API functions ---
 
 export async function fetchRecipes(): Promise<Recipe[]> {
   const res = await fetch(`${API_BASE}/recipes`);
   if (!res.ok) throw new Error(`Failed to fetch recipes: ${res.status}`);
-  const data: BackendRecipe[] = await res.json();
-  return data.map(backendToFrontend);
+  const data: PaginatedResponse<BackendRecipe> = await res.json();
+  return data.items.map(backendToFrontend);
 }
 
 export async function fetchRecipe(id: string): Promise<Recipe> {

@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from miam.domain.entities import ImageEntity, RecipeEntity
+from miam.domain.entities import ImageEntity, PaginatedResult, RecipeEntity
 from miam.domain.ports_primary import RecipeExportServicePort, RecipeServicePort
 from miam.domain.ports_secondary import (
     ImageStoragePort,
@@ -43,7 +43,9 @@ class RecipeManagementService(RecipeServicePort):
         category: str | None = None,
         is_veggie: bool | None = None,
         season: str | None = None,
-    ) -> list[RecipeEntity]:
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> PaginatedResult:
         """Search/filter recipes via the repository abstraction."""
         return self.repository.search_recipes(
             recipe_id=recipe_id,
@@ -51,6 +53,8 @@ class RecipeManagementService(RecipeServicePort):
             category=category,
             is_veggie=is_veggie,
             season=season,
+            limit=limit,
+            offset=offset,
         )
 
     def update_recipe(self, recipe_id: UUID, data: RecipeUpdate) -> RecipeEntity | None:
@@ -95,10 +99,10 @@ class RecipeExportService(RecipeExportServicePort):
 
     def export_recipes_to_markdown(self) -> bytes:
         """Export all recipes as a ZIP archive containing Markdown and images."""
-        recipes = self.repository.search_recipes()
-        return self.markdown_exporter.to_zip_bytes(recipes)
+        result = self.repository.search_recipes()
+        return self.markdown_exporter.to_zip_bytes(result.items)
 
     def export_recipes_to_word(self) -> bytes:
         """Export all recipes as Word binary format (in-memory)."""
-        recipes = self.repository.search_recipes()
-        return self.word_exporter.to_bytes(recipes)
+        result = self.repository.search_recipes()
+        return self.word_exporter.to_bytes(result.items)
