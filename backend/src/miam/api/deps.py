@@ -33,6 +33,7 @@ def get_recipe_export_service(
     db: Session = Depends(get_db),
 ) -> RecipeExportService:
     repo = RecipeRepository(db)
-    word_exporter = WordExporter()
+    image_storage = LocalImageStorage("images")
+    word_exporter = WordExporter(image_storage=image_storage)
     markdown_exporter = MarkdownExporter()
     return RecipeExportService(repo, word_exporter, markdown_exporter)

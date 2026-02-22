@@ -6,17 +6,23 @@ from typing import Any
 from docx import Document
 from docx.document import Document as DocxDocument  # actual type
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.shared import Pt
+from docx.shared import Inches, Pt
+from loguru import logger
 
 from miam.domain.entities import RecipeEntity
-from miam.domain.ports_secondary import WordExporterPort
+from miam.domain.ports_secondary import ImageStoragePort, WordExporterPort
 
 
 class WordExporter(WordExporterPort):
     """Secondary adapter that implements WordExporterPort."""
 
-    def __init__(self, title: str = "My Recipe Book"):
+    def __init__(
+        self,
+        title: str = "My Recipe Book",
+        image_storage: ImageStoragePort | None = None,
+    ):
         self.title = title  # Store title, not document
+        self.image_storage = image_storage
 
     def _create_fresh_document(self) -> DocxDocument:
         """Create a fresh document with title and styles."""
@@ -60,6 +66,23 @@ class WordExporter(WordExporterPort):
     def _add_recipe(self, recipe: RecipeEntity) -> None:
         # Title
         self.document.add_heading(recipe.title, level=1)
+
+        # Images
+        if self.image_storage and recipe.images:
+            sorted_images = sorted(recipe.images, key=lambda img: img.display_order)
+            for image in sorted_images:
+                try:
+                    resp = self.image_storage.get_recipe_image(image.id)
+                    if resp is None:
+                        continue
+                    image_stream = io.BytesIO(resp.content)
+                    self.document.add_picture(image_stream, width=Inches(5))
+                    if image.caption:
+                        caption_p = self.document.add_paragraph(image.caption)
+                        caption_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        caption_p.runs[0].italic = True
+                except Exception:
+                    logger.warning(f"Failed to embed image {image.id}, skipping")
 
         # Meta info line
         meta_parts = [
