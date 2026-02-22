@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from miam.api.deps import get_recipe_management_service
 from miam.domain.entities import RecipeEntity
-from miam.domain.schemas import RecipeCreate, RecipeUpdate
+from miam.domain.schemas import BatchRecipeCreate, RecipeCreate, RecipeUpdate
 from miam.domain.services import RecipeManagementService
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
@@ -16,6 +16,25 @@ router = APIRouter(prefix="/recipes", tags=["recipes"])
 
 class RecipeResponse(BaseModel):
     id: UUID
+
+
+class BatchRecipeResponse(BaseModel):
+    ids: list[UUID]
+
+
+@router.post(
+    "/batch", response_model=BatchRecipeResponse, status_code=status.HTTP_201_CREATED
+)
+def create_recipes(
+    batch_in: BatchRecipeCreate,
+    service: RecipeManagementService = Depends(get_recipe_management_service),
+) -> BatchRecipeResponse:
+    """Create multiple recipes in a single atomic operation."""
+    try:
+        recipes = service.create_recipes(batch_in.recipes)
+        return BatchRecipeResponse(ids=[r.id for r in recipes])
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
 
 @router.post("", response_model=RecipeResponse, status_code=status.HTTP_201_CREATED)

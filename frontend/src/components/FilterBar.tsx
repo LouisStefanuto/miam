@@ -67,7 +67,7 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
         onClick={() => toggleFilter('vegetarian')}
         icon={<Leaf size={13} />}
         label="Végé"
-        activeClass="bg-accent/15 border-accent/40 text-accent"
+        activeClass="bg-success/15 border-success/40 text-success"
       />
 
       {/* Toggle: Rapido */}

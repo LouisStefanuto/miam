@@ -218,6 +218,19 @@ export async function exportToWord(): Promise<void> {
   downloadBlob(blob, 'recipes.docx');
 }
 
+export async function importRecipesBatch(jsonPayload: { recipes: unknown[] }): Promise<{ ids: string[] }> {
+  const res = await fetch(`${API_BASE}/recipes/batch`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(jsonPayload),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Failed to import recipes: ${res.status} – ${detail}`);
+  }
+  return res.json();
+}
+
 async function uploadImage(recipeId: string, dataUrl: string): Promise<void> {
   const blob = await fetch(dataUrl).then((r) => r.blob());
   const ext = blob.type.split('/')[1] || 'jpg';
