@@ -1,4 +1,5 @@
-import { Clock, Flame, Star, Users, Check } from 'lucide-react';
+import { Clock, Star, Users, Check } from 'lucide-react';
+import beaverIcon from '/icon.png';
 import { Recipe } from '@/data/recipes';
 import { Badge } from '@/components/ui/badge';
 import seasonSpring from '@/assets/icons/season-spring.png';
@@ -70,7 +71,7 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
           />
         ) : (
           <div className="w-full h-full bg-muted flex items-center justify-center">
-            <Flame className="text-muted-foreground" size={40} />
+            <img src={beaverIcon} alt="Pas d'image" className="w-10 h-10 opacity-50 grayscale" />
           </div>
         )}
         {/* Season + végé badges top right */}
