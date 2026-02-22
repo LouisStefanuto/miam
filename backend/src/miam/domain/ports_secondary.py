@@ -21,6 +21,11 @@ class RecipeRepositoryPort(ABC):
         pass
 
     @abstractmethod
+    def add_recipes(self, data: list[RecipeCreate]) -> list[RecipeEntity]:
+        """Persist multiple recipes atomically and return them as domain entities."""
+        pass
+
+    @abstractmethod
     def get_recipe_by_id(self, recipe_id: UUID) -> RecipeEntity | None:
         """Retrieve a recipe by ID with all relationships loaded."""
         pass

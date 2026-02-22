@@ -14,6 +14,11 @@ class RecipeServicePort(ABC):
         pass
 
     @abstractmethod
+    def create_recipes(self, data: list[RecipeCreate]) -> list[RecipeEntity]:
+        """Persist multiple recipes atomically and return all created Recipe entities."""
+        pass
+
+    @abstractmethod
     def get_recipe_by_id(self, recipe_id: UUID) -> RecipeEntity | None:
         """Retrieve a recipe by its ID, including all related entities."""
         pass

@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from miam.domain.entities import Category, Season, SourceType
 
@@ -23,7 +23,7 @@ class SourceCreate(BaseModel):
 
 class RecipeCreate(BaseModel):
     title: str
-    description: str
+    description: str = ""
     prep_time_minutes: Optional[int] = None
     cook_time_minutes: Optional[int] = None
     rest_time_minutes: Optional[int] = None
@@ -39,6 +39,14 @@ class RecipeCreate(BaseModel):
     ingredients: list[IngredientCreate] = []
     images: list[ImageCreate] = []
     sources: list[SourceCreate] = []
+
+    @field_validator("season", mode="before")
+    @classmethod
+    def coerce_season(cls, v: Any) -> Any:
+        """Treat empty string as None."""
+        if v == "":
+            return None
+        return v
 
 
 class RecipeUpdate(BaseModel):
@@ -60,6 +68,10 @@ class RecipeUpdate(BaseModel):
     preparation: list[str] = []
     ingredients: list[IngredientCreate] = []
     sources: list[SourceCreate] = []
+
+
+class BatchRecipeCreate(BaseModel):
+    recipes: list[RecipeCreate]
 
 
 class ImageResponse(BaseModel):

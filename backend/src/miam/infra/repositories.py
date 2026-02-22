@@ -116,6 +116,54 @@ class RecipeRepository(RecipeRepositoryPort):
         self.session.refresh(recipe)
         return self._to_entity(recipe)
 
+    def add_recipes(self, data: list[RecipeCreate]) -> list[RecipeEntity]:
+        """Persist multiple recipes in a single atomic transaction."""
+        recipes = []
+        for recipe_data in data:
+            recipe = Recipe(
+                title=recipe_data.title,
+                description=recipe_data.description,
+                prep_time_minutes=recipe_data.prep_time_minutes,
+                cook_time_minutes=recipe_data.cook_time_minutes,
+                rest_time_minutes=recipe_data.rest_time_minutes,
+                season=recipe_data.season,
+                category=recipe_data.category,
+                is_veggie=recipe_data.is_veggie,
+                difficulty=recipe_data.difficulty,
+                number_of_people=recipe_data.number_of_people,
+                rate=recipe_data.rate,
+                tested=recipe_data.tested,
+                tags=recipe_data.tags,
+                preparation=recipe_data.preparation,
+            )
+
+            for ing in recipe_data.ingredients:
+                ingredient = self._get_or_create_ingredient(ing.name)
+                ri = RecipeIngredient(
+                    ingredient=ingredient, quantity=ing.quantity, unit=ing.unit
+                )
+                recipe.ingredients.append(ri)
+
+            for img in recipe_data.images:
+                image = Image(
+                    caption=img.caption,
+                    display_order=img.display_order or 0,
+                )
+                recipe.images.append(image)
+
+            for src in recipe_data.sources:
+                source = Source(type=src.type, raw_content=src.raw_content)
+                recipe.sources.append(source)
+
+            self.session.add(recipe)
+            self.session.flush()
+            recipes.append(recipe)
+
+        self.session.commit()
+        for recipe in recipes:
+            self.session.refresh(recipe)
+        return [self._to_entity(recipe) for recipe in recipes]
+
     def _get_or_create_ingredient(self, name: str) -> Ingredient:
         """Get existing ingredient or create+flush in current transaction."""
         stmt = select(Ingredient).where(Ingredient.name == name)

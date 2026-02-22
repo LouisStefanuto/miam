@@ -407,13 +407,10 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
             </div>
           </div>
         ) : (
-          (current.tags.length > 0 || current.diets.length > 0) && (
+          current.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {current.tags.map((tag) => (
                 <Badge key={tag} variant="secondary" className="font-body capitalize">{tag}</Badge>
-              ))}
-              {current.diets.map((diet) => (
-                <Badge key={diet} variant="outline" className="font-body capitalize text-accent border-accent">{diet}</Badge>
               ))}
             </div>
           )
