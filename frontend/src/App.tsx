@@ -34,7 +34,7 @@ const App = () => (
             <Route path="/" element={<CatalogPage />} />
             <Route path="/recipes/new" element={<CreateRecipePage />} />
             <Route path="/recipes/:id" element={<RecipeDetailPage />} />
-            <Route path="/import" element={<ImportOCRPage />} />
+            <Route path="/import/ocr" element={<ImportOCRPage />} />
             <Route path="/import/json" element={<ImportJSONPage />} />
             <Route path="/export" element={<ExportPage />} />
             <Route path="*" element={<NotFound />} />

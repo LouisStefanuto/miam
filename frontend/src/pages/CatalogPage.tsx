@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, PenLine, Camera, Instagram, Download } from 'lucide-react';
+import { Plus, PenLine, Camera, Instagram, Download, FileJson } from 'lucide-react';
 import { useRecipes } from '@/hooks/use-recipes';
 import { useCatalogFilters } from '@/contexts/CatalogFilterContext';
 import HeroSection from '@/components/HeroSection';
@@ -129,9 +129,13 @@ const CatalogPage = () => {
                 <PenLine size={16} />
                 Créer manuellement
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/import')} className="gap-2 cursor-pointer">
+              <DropdownMenuItem onClick={() => navigate('/import/ocr')} className="gap-2 cursor-pointer">
                 <Camera size={16} />
                 Importer depuis des photos
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/import/json')} className="gap-2 cursor-pointer">
+                <FileJson size={16} />
+                Importer depuis un JSON
               </DropdownMenuItem>
               <DropdownMenuItem disabled className="gap-2 cursor-pointer opacity-50">
                 <Instagram size={16} />
