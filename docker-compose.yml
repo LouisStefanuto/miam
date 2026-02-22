@@ -12,7 +12,7 @@ services:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d recipes"]
-      interval: 2s
+      interval: 1s
       timeout: 5s
       retries: 10
 
