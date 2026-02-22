@@ -63,6 +63,12 @@ def upgrade() -> None:
         sa.Column("tested", sa.Boolean(), nullable=False),
         sa.Column("tags", JSON(), nullable=True),
         sa.Column("preparation", JSON(), nullable=True),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.func.now(),
+        ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_recipes")),
     )
     op.create_index(op.f("ix_recipes_category"), "recipes", ["category"])
