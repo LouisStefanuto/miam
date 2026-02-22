@@ -9,22 +9,7 @@ Zero indexes beyond PKs. Every filter (`category`, `season`, `is_veggie`) and ev
 
 **Fix:** Add an Alembic migration with indexes on `recipes.category`, `recipes.season`, `recipes.is_veggie`, and all FK columns. Consider a `pg_trgm` GIN index on `recipes.title` for `ILIKE` searches.
 
-### ~~3. N+1 Queries on Ingredient Lookup~~ DONE
-
-Replaced per-ingredient `_get_or_create_ingredient` (1 SELECT per name) with bulk `_get_or_create_ingredients`: single `SELECT ... WHERE name IN (...)` + batch-create missing ones. Applied to `add_recipe`, `add_recipes`, and `_replace_ingredients`.
-
----
-
 ## High-Impact Issues
-
-### ~~4. RecipeCard Expensive CSS + No Search Debounce~~ DONE
-
-Fixed expensive CSS properties on RecipeCard that caused scroll jank:
-
-- **`transition-all`** → scoped to `transition-[box-shadow,transform]` (only the 2 properties that animate)
-- **`backdrop-blur-sm`** removed from all badge overlays (4 per card × 20 cards = 80 GPU blur ops) → replaced with opaque `bg-white/90` / `bg-card/95`
-- **`drop-shadow-md`** (CSS filter, rasterized per frame) → `shadow-sm` (compositor-friendly box-shadow)
-- **`animate-fade-in`** removed (20 simultaneous translateY + opacity animations on every page render)
 
 ### 5. Full Recipe Payloads on List Endpoint
 Cards only need title, image, category, season — but every recipe comes with full `ingredients[]` and `steps[]`. Wastes bandwidth and memory.
@@ -64,17 +49,6 @@ Service loads the recipe, then `repository.delete_recipe` loads it again interna
 **Files:** `domain/services.py:59-65`, `infra/repositories.py:311-313`
 
 **Fix:** Pass the already-loaded entity to the repository delete method.
-
-### 10. No Code Splitting
-All 6 pages are eagerly imported. Import/Export/OCR pages load even when never visited.
-
-**File:** `frontend/src/App.tsx:7-13`
-
-**Fix:** Use `React.lazy()` + `Suspense` for non-catalog routes.
-
-### ~~11. Batch Import Flushes Per Recipe~~ DONE
-
-Removed per-recipe `session.flush()` in `add_recipes`. Recipes are now flushed once at `commit()` time.
 
 ---
 
