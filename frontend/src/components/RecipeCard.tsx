@@ -57,7 +57,7 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
   return (
     <button
       onClick={onClick}
-      className="group text-left w-full h-full flex flex-col bg-card rounded-lg overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 animate-fade-in"
+      className="group text-left w-full h-full flex flex-col bg-card rounded-lg overflow-hidden shadow-card hover:shadow-card-hover transition-[box-shadow,transform] duration-300 hover:-translate-y-1"
     >
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
@@ -76,19 +76,19 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
         {/* Season + végé badges top right */}
         <div className="absolute top-2 right-2 flex gap-1.5">
           {isVegetarian && (
-            <div className="w-8 h-8 rounded-full border-2 border-white/50 bg-white/80 backdrop-blur-sm flex items-center justify-center drop-shadow-md">
+            <div className="w-8 h-8 rounded-full border-2 border-white/50 bg-white/90 flex items-center justify-center shadow-sm">
               <img src={veganIcon} alt="Végétarien" className="w-5 h-5 object-contain" />
             </div>
           )}
-          <img src={seasonIcons[recipe.season]} alt={recipe.season} className="w-8 h-8 rounded-full border-2 border-white/50 bg-white/80 backdrop-blur-sm object-cover drop-shadow-md grayscale" />
+          <img src={seasonIcons[recipe.season]} alt={recipe.season} className="w-8 h-8 rounded-full border-2 border-white/50 bg-white/90 object-cover shadow-sm grayscale" />
         </div>
         {/* Type badge */}
         <div className="absolute top-2 left-2 flex gap-1.5">
-          <Badge variant="secondary" className="bg-card/90 backdrop-blur-sm text-card-foreground font-body text-xs capitalize">
+          <Badge variant="secondary" className="bg-card/95 text-card-foreground font-body text-xs capitalize">
             {recipe.type}
           </Badge>
           {!recipe.tested && (
-            <Badge variant="outline" className="bg-card/90 backdrop-blur-sm text-muted-foreground font-body text-xs border-muted-foreground/30">
+            <Badge variant="outline" className="bg-card/95 text-muted-foreground font-body text-xs border-muted-foreground/30">
               À tester
             </Badge>
           )}
