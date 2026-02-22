@@ -10,6 +10,11 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d recipes"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
 
   backend:
     build:
@@ -21,7 +26,8 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./backend/images:/app/images
 
@@ -32,8 +38,10 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - db
-      - backend
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
     restart: unless-stopped
 
 volumes:
