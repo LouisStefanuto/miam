@@ -1,13 +1,15 @@
 """Handles all database-specific logic using SQLAlchemy."""
 
+from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
 from miam.domain.entities import (
     ImageEntity,
     IngredientEntity,
+    PaginatedResult,
     RecipeEntity,
     SourceEntity,
 )
@@ -256,22 +258,16 @@ class RecipeRepository(RecipeRepositoryPort):
             return None
         return self._to_entity(recipe)
 
-    def search_recipes(
+    def _apply_filters(
         self,
-        recipe_id: UUID | None = None,
-        title: str | None = None,
-        category: str | None = None,
-        is_veggie: bool | None = None,
-        season: str | None = None,
-    ) -> list[RecipeEntity]:
-        """Search recipes with dynamic filtering."""
-        stmt = select(Recipe).options(
-            joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
-            joinedload(Recipe.images),
-            joinedload(Recipe.sources),
-        )
-
-        # Apply filters dynamically
+        stmt: Any,
+        recipe_id: UUID | None,
+        title: str | None,
+        category: str | None,
+        is_veggie: bool | None,
+        season: str | None,
+    ) -> Any:
+        """Apply dynamic filters to a query statement."""
         if recipe_id:
             stmt = stmt.where(Recipe.id == recipe_id)
         if title:
@@ -282,9 +278,44 @@ class RecipeRepository(RecipeRepositoryPort):
             stmt = stmt.where(Recipe.is_veggie == is_veggie)
         if season:
             stmt = stmt.where(Recipe.season == season)
+        return stmt
+
+    def search_recipes(
+        self,
+        recipe_id: UUID | None = None,
+        title: str | None = None,
+        category: str | None = None,
+        is_veggie: bool | None = None,
+        season: str | None = None,
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> PaginatedResult:
+        """Search recipes with dynamic filtering and pagination."""
+        # Count total matching recipes
+        count_stmt = select(func.count(Recipe.id))
+        count_stmt = self._apply_filters(
+            count_stmt, recipe_id, title, category, is_veggie, season
+        )
+        total = self.session.execute(count_stmt).scalar_one()
+
+        # Fetch recipes with eager loading
+        stmt = select(Recipe).options(
+            joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
+            joinedload(Recipe.images),
+            joinedload(Recipe.sources),
+        )
+        stmt = self._apply_filters(stmt, recipe_id, title, category, is_veggie, season)
+        stmt = stmt.order_by(Recipe.id)
+        if offset:
+            stmt = stmt.offset(offset)
+        if limit is not None:
+            stmt = stmt.limit(limit)
 
         recipes = self.session.execute(stmt).unique().scalars().all()
-        return [self._to_entity(r) for r in recipes]
+        return PaginatedResult(
+            items=[self._to_entity(r) for r in recipes],
+            total=total,
+        )
 
     def add_image(
         self,

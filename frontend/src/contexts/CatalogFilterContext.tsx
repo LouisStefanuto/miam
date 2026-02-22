@@ -8,6 +8,8 @@ interface CatalogFilterState {
   setSearchTags: (tags: string[]) => void;
   filters: Filters;
   setFilters: (f: Filters) => void;
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
 }
 
 const defaultFilters: Filters = {
@@ -26,10 +28,11 @@ export function CatalogFilterProvider({ children }: { children: ReactNode }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchTags, setSearchTags] = useState<string[]>([]);
   const [filters, setFilters] = useState<Filters>(defaultFilters);
+  const [currentPage, setCurrentPage] = useState(1);
 
   return (
     <CatalogFilterContext.Provider
-      value={{ searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters }}
+      value={{ searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage }}
     >
       {children}
     </CatalogFilterContext.Provider>

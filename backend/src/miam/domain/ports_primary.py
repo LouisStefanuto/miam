@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from miam.domain.entities import RecipeEntity
+from miam.domain.entities import PaginatedResult, RecipeEntity
 from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
 
 
@@ -31,8 +31,10 @@ class RecipeServicePort(ABC):
         category: str | None = None,
         is_veggie: bool | None = None,
         season: str | None = None,
-    ) -> list[RecipeEntity]:
-        """Search for recipes using dynamic filters and return matching Recipe objects."""
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> PaginatedResult:
+        """Search for recipes using dynamic filters with pagination."""
         pass
 
     @abstractmethod

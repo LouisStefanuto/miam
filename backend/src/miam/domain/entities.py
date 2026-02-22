@@ -75,3 +75,9 @@ class RecipeEntity:
     ingredients: list[IngredientEntity] = field(default_factory=list)
     images: list[ImageEntity] = field(default_factory=list)
     sources: list[SourceEntity] = field(default_factory=list)
+
+
+@dataclass
+class PaginatedResult:
+    items: list[RecipeEntity]
+    total: int

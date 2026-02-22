@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, PenLine, Camera, Instagram, Download } from 'lucide-react';
 import { useRecipes } from '@/hooks/use-recipes';
@@ -9,11 +9,22 @@ import FilterBar from '@/components/FilterBar';
 import RecipeCard from '@/components/RecipeCard';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
+
+const RECIPES_PER_PAGE = 20;
 
 const CatalogPage = () => {
   const navigate = useNavigate();
   const { data: recipes = [], isLoading } = useRecipes();
-  const { searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters } = useCatalogFilters();
+  const { searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage } = useCatalogFilters();
   const [customTags] = useState<string[]>([]);
 
   const allTags = useMemo(() => {
@@ -66,6 +77,34 @@ const CatalogPage = () => {
     return result;
   }, [recipes, searchQuery, searchTags, filters]);
 
+  // Reset to page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, searchTags, filters, setCurrentPage]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / RECIPES_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedRecipes = filtered.slice(
+    (safePage - 1) * RECIPES_PER_PAGE,
+    safePage * RECIPES_PER_PAGE,
+  );
+
+  const getPageNumbers = () => {
+    const pages: (number | 'ellipsis')[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (safePage > 3) pages.push('ellipsis');
+      for (let i = Math.max(2, safePage - 1); i <= Math.min(totalPages - 1, safePage + 1); i++) {
+        pages.push(i);
+      }
+      if (safePage < totalPages - 2) pages.push('ellipsis');
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <HeroSection />
@@ -115,9 +154,9 @@ const CatalogPage = () => {
           <div className="text-center py-20">
             <p className="font-body text-muted-foreground">Chargement des recettes…</p>
           </div>
-        ) : filtered.length > 0 ? (
+        ) : paginatedRecipes.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filtered.map((recipe) => (
+            {paginatedRecipes.map((recipe) => (
               <RecipeCard key={recipe.id} recipe={recipe} onClick={() => navigate(`/recipes/${recipe.id}`)} />
             ))}
           </div>
@@ -126,6 +165,43 @@ const CatalogPage = () => {
             <p className="font-display text-2xl text-muted-foreground mb-2">Aucune recette trouvée</p>
             <p className="font-body text-muted-foreground">Essayez de modifier vos filtres ou votre recherche</p>
           </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Pagination className="pt-4">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+                  className={safePage <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              {getPageNumbers().map((page, idx) =>
+                page === 'ellipsis' ? (
+                  <PaginationItem key={`ellipsis-${idx}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                ) : (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      isActive={page === safePage}
+                      onClick={() => setCurrentPage(page)}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ),
+              )}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
+                  className={safePage >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         )}
       </main>
     </div>
