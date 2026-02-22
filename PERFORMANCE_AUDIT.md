@@ -27,12 +27,14 @@ Zero indexes beyond PKs. Every filter (`category`, `season`, `is_veggie`) and ev
 
 ## High-Impact Issues
 
-### 4. RecipeCard Not Memoized + No Search Debounce
-Every keystroke in the search bar re-renders all 200+ cards. `RecipeCard` has no `React.memo`, and `onClick` creates a new function ref each render. Search also scans `ingredients[]` per recipe with no debounce.
+### ~~4. RecipeCard Expensive CSS + No Search Debounce~~ DONE
 
-**Files:** `frontend/src/components/RecipeCard.tsx:52`, `frontend/src/components/SearchBar.tsx:43`, `frontend/src/pages/CatalogPage.tsx:29-67,121`
+Fixed expensive CSS properties on RecipeCard that caused scroll jank:
 
-**Fix:** Wrap `RecipeCard` in `React.memo`, stabilize `onClick` with `useCallback`, add 200-300ms debounce on search input.
+- **`transition-all`** → scoped to `transition-[box-shadow,transform]` (only the 2 properties that animate)
+- **`backdrop-blur-sm`** removed from all badge overlays (4 per card × 20 cards = 80 GPU blur ops) → replaced with opaque `bg-white/90` / `bg-card/95`
+- **`drop-shadow-md`** (CSS filter, rasterized per frame) → `shadow-sm` (compositor-friendly box-shadow)
+- **`animate-fade-in`** removed (20 simultaneous translateY + opacity animations on every page render)
 
 ### 5. Full Recipe Payloads on List Endpoint
 Cards only need title, image, category, season — but every recipe comes with full `ingredients[]` and `steps[]`. Wastes bandwidth and memory.
@@ -96,7 +98,7 @@ All 6 pages are eagerly imported. Import/Export/OCR pages load even when never v
 | 1 | Add DB indexes (migration) | Low |
 | ~~2~~ | ~~Add pagination (backend + frontend)~~ | ~~Done~~ |
 | 3 | Lightweight list response (no ingredients/steps) | Low |
-| 4 | Memo `RecipeCard` + debounce search | Low |
+| ~~4~~ | ~~Fix RecipeCard expensive CSS~~ | ~~Done~~ |
 | 5 | Fix N+1 ingredient queries | Low |
 | 6 | Set TanStack Query `staleTime` | Trivial |
 | 7 | Dedicated `/api/tags` endpoint | Low |
