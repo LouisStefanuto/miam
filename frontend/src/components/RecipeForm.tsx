@@ -349,7 +349,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
           </div>
         </div>
 
-        <div className="grid md:grid-cols-[2fr_3fr] gap-8">
+        <div className="space-y-8">
           {/* Ingredients */}
           <div className="bg-card rounded-lg p-4 shadow-card">
             <h2 className="font-display text-xl font-semibold mb-4 text-card-foreground">Ingrédients</h2>

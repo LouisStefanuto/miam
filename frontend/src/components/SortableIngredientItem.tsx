@@ -66,14 +66,14 @@ export function SortableIngredientItem({
         onChange={(e) => onUpdate(index, 'quantity', e.target.value)}
         onKeyDown={(e) => onKeyDown(e, index)}
         placeholder="Qté"
-        className="font-body text-sm w-12 h-8"
+        className="font-body text-sm w-16 h-8"
       />
       <Input
         value={ingredient.unit}
         onChange={(e) => onUpdate(index, 'unit', e.target.value)}
         onKeyDown={(e) => onKeyDown(e, index)}
         placeholder="Unité"
-        className="font-body text-sm w-12 h-8"
+        className="font-body text-sm w-16 h-8"
       />
       {canRemove && (
         <button type="button" onClick={() => onRemove(index)} className="text-destructive hover:text-destructive/80">

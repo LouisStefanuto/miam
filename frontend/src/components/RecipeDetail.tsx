@@ -511,7 +511,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           )
         )}
 
-        <div className="grid md:grid-cols-[2fr_3fr] gap-8">
+        <div className={editing ? "space-y-8" : "grid md:grid-cols-[2fr_3fr] gap-8"}>
           {/* Ingredients */}
           <div className="bg-card rounded-lg p-4 shadow-card">
             <h2 className="font-display text-xl font-semibold mb-4 text-card-foreground">Ingrédients</h2>
