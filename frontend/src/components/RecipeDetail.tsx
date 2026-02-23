@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { ArrowLeft, Star, Pencil, Save, X, Plus, Trash2, Minus, Camera, Check, ImagePlus, ImageMinus } from 'lucide-react';
+import { ArrowLeft, Star, Pencil, Save, X, Plus, Trash2, Minus, Camera, Check, ImagePlus, ImageMinus, Copy, ClipboardCheck } from 'lucide-react';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,8 @@ import veganIcon from '@/assets/icons/vegetalien.png';
 import cuissonIcon from '@/assets/icons/cuisson.png';
 import melangeIcon from '@/assets/icons/melange.png';
 import servingsIcon from '@/assets/icons/servings.png';
+import { recipeToMarkdown } from '@/lib/recipe-to-markdown';
+import { useToast } from '@/hooks/use-toast';
 
 const DifficultyBars = ({ level }: { level: number }) => (
   <div className="flex gap-0.5 items-end">
@@ -72,7 +74,17 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const [displayServings, setDisplayServings] = useState(recipe.servings);
   const [newTag, setNewTag] = useState('');
   const [hoveredStar, setHoveredStar] = useState(0);
+  const [copied, setCopied] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  const copyAsMarkdown = async () => {
+    const md = recipeToMarkdown(recipe);
+    await navigator.clipboard.writeText(md);
+    setCopied(true);
+    toast({ title: 'Recette copiée !', description: 'Collez-la avec Ctrl+V.' });
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const servingsRatio = displayServings / recipe.servings;
 
@@ -189,8 +201,8 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
             <>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <button className="flex items-center gap-1.5 bg-card/80 backdrop-blur-sm rounded-md px-3 py-1.5 text-sm font-body text-destructive hover:bg-red-100 transition-colors">
-                    <Trash2 size={14} /> Supprimer
+                  <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-destructive hover:bg-red-100 transition-colors">
+                    <Trash2 size={16} />
                   </button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
@@ -208,8 +220,11 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-              <button className="flex items-center gap-1.5 bg-card/80 backdrop-blur-sm rounded-md px-3 py-1.5 text-sm font-body text-card-foreground hover:bg-card transition-colors" onClick={startEdit}>
-                <Pencil size={14} /> Modifier
+              <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-card-foreground hover:bg-card transition-colors" onClick={startEdit}>
+                <Pencil size={16} />
+              </button>
+              <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-card-foreground hover:bg-card transition-colors" onClick={copyAsMarkdown}>
+                {copied ? <ClipboardCheck size={16} /> : <Copy size={16} />}
               </button>
             </>
           )}
