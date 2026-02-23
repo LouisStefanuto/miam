@@ -1,6 +1,9 @@
 import React, { useState, useMemo, useRef } from 'react';
+import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { ArrowLeft, Star, Pencil, Save, X, Plus, Trash2, Minus, Camera, Check, ImagePlus, ImageMinus, Copy, ClipboardCheck } from 'lucide-react';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
+import { SortableIngredientItem } from './SortableIngredientItem';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,7 +78,15 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const [newTag, setNewTag] = useState('');
   const [hoveredStar, setHoveredStar] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [ingredientIds, setIngredientIds] = useState<string[]>(
+    () => recipe.ingredients.map(() => crypto.randomUUID())
+  );
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
   const { toast } = useToast();
 
   const copyAsMarkdown = async () => {
@@ -97,6 +108,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
 
   const startEdit = () => {
     setEditData({ ...recipe });
+    setIngredientIds(recipe.ingredients.map(() => crypto.randomUUID()));
     setEditing(true);
   };
 
@@ -116,8 +128,54 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
     setEditData({ ...editData, ingredients: updated });
   };
 
-  const addIngredient = () => setEditData({ ...editData, ingredients: [...editData.ingredients, { name: '', quantity: '', unit: '' }] });
-  const removeIngredient = (i: number) => setEditData({ ...editData, ingredients: editData.ingredients.filter((_, idx) => idx !== i) });
+  const addIngredient = () => {
+    setEditData({ ...editData, ingredients: [...editData.ingredients, { name: '', quantity: '', unit: '' }] });
+    setIngredientIds((ids) => [...ids, crypto.randomUUID()]);
+  };
+  const removeIngredient = (i: number) => {
+    setEditData({ ...editData, ingredients: editData.ingredients.filter((_, idx) => idx !== i) });
+    setIngredientIds((ids) => ids.filter((_, idx) => idx !== i));
+  };
+  const moveIngredient = (from: number, to: number) => {
+    setEditData({ ...editData, ingredients: arrayMove(editData.ingredients, from, to) });
+    setIngredientIds((ids) => arrayMove(ids, from, to));
+  };
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = ingredientIds.indexOf(active.id as string);
+      const newIndex = ingredientIds.indexOf(over.id as string);
+      moveIngredient(oldIndex, newIndex);
+    }
+  };
+  const handleIngredientKeyDown = (e: React.KeyboardEvent, i: number) => {
+    if (e.altKey && e.key === 'ArrowUp' && i > 0) {
+      e.preventDefault();
+      moveIngredient(i, i - 1);
+      setTimeout(() => {
+        const inputs = document.querySelectorAll<HTMLInputElement>('[data-ingredient-name]');
+        inputs[i - 1]?.focus();
+      }, 50);
+      return;
+    }
+    if (e.altKey && e.key === 'ArrowDown' && i < editData.ingredients.length - 1) {
+      e.preventDefault();
+      moveIngredient(i, i + 1);
+      setTimeout(() => {
+        const inputs = document.querySelectorAll<HTMLInputElement>('[data-ingredient-name]');
+        inputs[i + 1]?.focus();
+      }, 50);
+      return;
+    }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (i === editData.ingredients.length - 1) addIngredient();
+      setTimeout(() => {
+        const inputs = document.querySelectorAll<HTMLInputElement>('[data-ingredient-name]');
+        inputs[i + 1]?.focus();
+      }, 50);
+    }
+  };
 
   const updateStep = (i: number, text: string) => {
     const updated = [...editData.steps];
@@ -457,27 +515,37 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           {/* Ingredients */}
           <div className="bg-card rounded-lg p-6 shadow-card">
             <h2 className="font-display text-xl font-semibold mb-4 text-card-foreground">Ingrédients</h2>
-            <ul className="space-y-2">
-              {(editing ? editData.ingredients : current.ingredients).map((ing, i) => (
-                <li key={i} className="flex justify-between items-center py-1.5 border-b border-border last:border-0 font-body text-sm">
-                  {editing ? (
-                    <div className="flex gap-2 items-center w-full">
-                      <Input value={ing.name} onChange={(e) => updateIngredient(i, 'name', e.target.value)} placeholder="Nom de l'ingrédient" className="font-body text-sm flex-1 h-8" />
-                      <Input value={String(ing.quantity)} onChange={(e) => updateIngredient(i, 'quantity', e.target.value)} placeholder="Qté" className="font-body text-sm w-16 h-8" />
-                      <Input value={ing.unit} onChange={(e) => updateIngredient(i, 'unit', e.target.value)} placeholder="Unité" className="font-body text-sm w-20 h-8" />
-                      <button onClick={() => removeIngredient(i)} className="text-destructive hover:text-destructive/80"><Trash2 size={14} /></button>
-                    </div>
-                  ) : (
-                    <>
-                      <span className="text-card-foreground">{ing.name}</span>
-                      <span className="text-muted-foreground whitespace-nowrap ml-3">
-                        {scaleQuantity(ing.quantity)} {ing.unit}
-                      </span>
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
+            {editing ? (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={ingredientIds} strategy={verticalListSortingStrategy}>
+                  <ul className="space-y-2">
+                    {editData.ingredients.map((ing, i) => (
+                      <SortableIngredientItem
+                        key={ingredientIds[i]}
+                        id={ingredientIds[i]}
+                        ingredient={ing}
+                        index={i}
+                        onUpdate={updateIngredient}
+                        onRemove={removeIngredient}
+                        onKeyDown={handleIngredientKeyDown}
+                        canRemove={editData.ingredients.length > 1}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+            ) : (
+              <ul className="space-y-2">
+                {current.ingredients.map((ing, i) => (
+                  <li key={i} className="flex justify-between items-center py-1.5 border-b border-border last:border-0 font-body text-sm">
+                    <span className="text-card-foreground">{ing.name}</span>
+                    <span className="text-muted-foreground whitespace-nowrap ml-3">
+                      {scaleQuantity(ing.quantity)} {ing.unit}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
             {editing && (
               <Button type="button" variant="outline" size="sm" onClick={addIngredient} className="font-body gap-1 mt-3 w-full">
                 <Plus size={14} /> Ajouter

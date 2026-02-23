@@ -9,6 +9,7 @@ class IngredientCreate(BaseModel):
     name: str
     quantity: Optional[float] = None
     unit: Optional[str] = None
+    display_order: Optional[int] = 0
 
 
 class ImageCreate(BaseModel):

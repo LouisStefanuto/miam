@@ -95,6 +95,7 @@ def upgrade() -> None:
         sa.Column("ingredient_id", sa.Uuid(), nullable=False),
         sa.Column("quantity", sa.Float(), nullable=True),
         sa.Column("unit", sa.String(length=50), nullable=True),
+        sa.Column("display_order", sa.Integer(), nullable=False, server_default="0"),
         sa.ForeignKeyConstraint(
             ["ingredient_id"],
             ["ingredients.id"],

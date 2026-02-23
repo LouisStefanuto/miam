@@ -54,6 +54,7 @@ interface BackendIngredient {
   name: string;
   quantity: number | null;
   unit: string | null;
+  display_order: number;
 }
 
 interface BackendImage {
@@ -117,11 +118,13 @@ function backendToFrontend(b: BackendRecipe): Recipe {
     cookTime: b.cook_time_minutes ?? 0,
     restTime: b.rest_time_minutes ?? undefined,
     diets: b.is_veggie ? ['végétarien'] : [],
-    ingredients: b.ingredients.map((i) => ({
-      name: i.name,
-      quantity: i.quantity ?? '',
-      unit: i.unit ?? '',
-    })),
+    ingredients: [...b.ingredients]
+      .sort((a, b) => a.display_order - b.display_order)
+      .map((i) => ({
+        name: i.name,
+        quantity: i.quantity ?? '',
+        unit: i.unit ?? '',
+      })),
     steps: b.preparation.map((text) => ({ text })),
     tested: b.tested,
     createdAt: '',
@@ -147,10 +150,11 @@ function frontendToBackendCreate(r: Recipe) {
     preparation: r.steps.map((s) => s.text).filter((t) => t.trim()),
     ingredients: r.ingredients
       .filter((i) => i.name.trim())
-      .map((i) => ({
+      .map((i, index) => ({
         name: i.name,
         quantity: typeof i.quantity === 'string' ? (parseFloat(i.quantity) || null) : (i.quantity || null),
         unit: i.unit || null,
+        display_order: index,
       })),
   };
 }

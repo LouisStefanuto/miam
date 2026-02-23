@@ -53,8 +53,9 @@ class RecipeRepository(RecipeRepositoryPort):
                     name=ri.ingredient.name,
                     quantity=ri.quantity,
                     unit=ri.unit,
+                    display_order=ri.display_order,
                 )
-                for ri in recipe.ingredients
+                for ri in sorted(recipe.ingredients, key=lambda ri: ri.display_order)
             ],
             images=[
                 ImageEntity(
@@ -102,6 +103,7 @@ class RecipeRepository(RecipeRepositoryPort):
                 ingredient=ingredient_map[ing.name],
                 quantity=ing.quantity,
                 unit=ing.unit,
+                display_order=ing.display_order or 0,
             )
             recipe.ingredients.append(ri)
 
@@ -155,6 +157,7 @@ class RecipeRepository(RecipeRepositoryPort):
                     ingredient=ingredient_map[ing.name],
                     quantity=ing.quantity,
                     unit=ing.unit,
+                    display_order=ing.display_order or 0,
                 )
                 recipe.ingredients.append(ri)
 
@@ -223,6 +226,7 @@ class RecipeRepository(RecipeRepositoryPort):
                 ingredient=ingredient_map[ing.name],
                 quantity=ing.quantity,
                 unit=ing.unit,
+                display_order=ing.display_order or 0,
             )
             recipe.ingredients.append(ri)
 
