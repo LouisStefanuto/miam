@@ -6,7 +6,7 @@
 
 <img src="docs/docs/assets/images/logo.png" alt="Logo" width="25%">
 
-[![Python 3.10-3.11-3.12-3.13](https://img.shields.io/badge/python-3.10--3.11--3.12--3.13-blue.svg)](https://www.python.org/) [![Docs](https://img.shields.io/badge/docs-available-brightgreen.svg)](./docs/)
+[![Docs](https://img.shields.io/badge/docs-available-brightgreen.svg)](./docs/)
 
 [**Install**](#install) • [**Run**](#run) • [**Dev**](#dev) • [**Docs**](https://louisstefanuto.github.io/miam/)
 

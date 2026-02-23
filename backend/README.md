@@ -1,8 +1,14 @@
 <div align="center">
 
-# miam
+# miam - backend
 
-[![Python 3.10-3.11-3.12-3.13](https://img.shields.io/badge/python-3.10--3.11--3.12--3.13-blue.svg)](https://www.python.org/) [![Docs](https://img.shields.io/badge/docs-available-brightgreen.svg)](./docs/)
+[![Python 3.13+](https://img.shields.io/badge/Python-3.13+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-D71F00?logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org/)
+[![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Alembic](https://img.shields.io/badge/Alembic-6BA81E?logo=python&logoColor=white)](https://alembic.sqlalchemy.org/)
+[![Pydantic](https://img.shields.io/badge/Pydantic-E92063?logo=pydantic&logoColor=white)](https://docs.pydantic.dev/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 
 **Python backend of `miam`**
 
