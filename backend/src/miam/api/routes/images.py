@@ -46,6 +46,16 @@ async def upload_image(
     )
 
 
+@router.delete("/{image_id}", status_code=204)
+async def delete_image(
+    image_id: UUID,
+    service: RecipeManagementService = Depends(get_recipe_management_service),
+) -> None:
+    deleted = service.delete_recipe_image(image_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+
 @router.get("/{image_id}")
 async def get_image(
     image_id: UUID,

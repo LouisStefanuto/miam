@@ -26,7 +26,7 @@ const RecipeDetailPage = () => {
   }, [recipes, customTags]);
 
   const handleSave = (updated: Recipe) => {
-    updateMutation.mutate(updated, {
+    updateMutation.mutate({ recipe: updated, originalImage: recipe?.image }, {
       onSuccess: (result) => {
         toast({ title: 'Recette modifiée !', description: result.title });
       },
@@ -38,12 +38,12 @@ const RecipeDetailPage = () => {
 
   const handleRatingChange = (rating: number) => {
     if (!recipe) return;
-    updateMutation.mutate({ ...recipe, rating });
+    updateMutation.mutate({ recipe: { ...recipe, rating } });
   };
 
   const handleTestedToggle = (tested: boolean) => {
     if (!recipe) return;
-    updateMutation.mutate({ ...recipe, tested });
+    updateMutation.mutate({ recipe: { ...recipe, tested } });
   };
 
   const handleDelete = () => {

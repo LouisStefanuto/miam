@@ -57,6 +57,11 @@ class RecipeServicePort(ABC):
         """Retrieve image bytes for a given image ID."""
         pass
 
+    @abstractmethod
+    def delete_recipe_image(self, image_id: UUID) -> bool:
+        """Delete an image from storage and database. Returns True if deleted, False if not found."""
+        pass
+
 
 class RecipeExportServicePort(ABC):
     @abstractmethod

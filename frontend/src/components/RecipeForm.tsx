@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Star, Save, Camera, X, Check, Minus } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Star, Save, Camera, X, Check, Minus, ImagePlus, ImageMinus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 import seasonSpring from '@/assets/icons/season-spring.png';
 import seasonSummer from '@/assets/icons/season-summer.png';
@@ -174,12 +175,26 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
           <div className="w-full h-full bg-muted" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 to-transparent" />
-        <label className="absolute inset-0 z-10 flex items-center justify-center bg-foreground/20 cursor-pointer hover:bg-foreground/30 transition-colors">
-          <input ref={imageRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-          <div className="bg-card/80 backdrop-blur-sm rounded-full p-4">
-            <Camera size={24} className="text-card-foreground" />
-          </div>
-        </label>
+        <input ref={imageRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+        <div className="absolute inset-0 z-10 flex items-center justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors">
+                <Camera size={24} className="text-card-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem className="font-body gap-2" onClick={() => imageRef.current?.click()}>
+                <ImagePlus size={16} /> Modifier l'image
+              </DropdownMenuItem>
+              {data.image && (
+                <DropdownMenuItem className="font-body gap-2 text-destructive focus:text-destructive" onClick={() => set('image', undefined)}>
+                  <ImageMinus size={16} /> Supprimer l'image
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <div className="absolute bottom-6 left-6 right-6 z-20">
           <div className="flex items-center gap-2 mb-2">
@@ -212,6 +227,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             value={data.title}
             onChange={(e) => set('title', e.target.value)}
             placeholder="Titre de la recette"
+            autoFocus={!initialRecipe}
             className="font-display text-3xl md:text-4xl font-bold bg-transparent border-b border-primary-foreground/50 text-primary-foreground h-auto p-0 rounded-none focus-visible:ring-0 placeholder:text-primary-foreground/40"
           />
         </div>

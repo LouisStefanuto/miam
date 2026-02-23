@@ -64,6 +64,11 @@ class RecipeRepositoryPort(ABC):
         """Persist an Image record for a recipe and return the created ImageEntity."""
         pass
 
+    @abstractmethod
+    def delete_image(self, image_id: UUID) -> bool:
+        """Delete an Image record by ID. Returns True if deleted, False if not found."""
+        pass
+
 
 class ImageStoragePort(ABC):
     @abstractmethod

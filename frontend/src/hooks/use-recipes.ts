@@ -36,7 +36,8 @@ export function useCreateRecipe() {
 export function useUpdateRecipe() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updateRecipe,
+    mutationFn: ({ recipe, originalImage }: { recipe: Recipe; originalImage?: string }) =>
+      updateRecipe(recipe, originalImage),
     onSuccess: (updated: Recipe) => {
       queryClient.invalidateQueries({ queryKey: ['recipes'] });
       queryClient.setQueryData(['recipes', updated.id], updated);

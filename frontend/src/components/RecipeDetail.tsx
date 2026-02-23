@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Star, Pencil, Save, X, Plus, Trash2, Minus, Camera, Check } from 'lucide-react';
+import React, { useState, useMemo, useRef } from 'react';
+import { ArrowLeft, Star, Pencil, Save, X, Plus, Trash2, Minus, Camera, Check, ImagePlus, ImageMinus } from 'lucide-react';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import seasonSpring from '@/assets/icons/season-spring.png';
 import seasonSummer from '@/assets/icons/season-summer.png';
 import seasonFall from '@/assets/icons/season-fall.png';
@@ -71,6 +72,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const [displayServings, setDisplayServings] = useState(recipe.servings);
   const [newTag, setNewTag] = useState('');
   const [hoveredStar, setHoveredStar] = useState(0);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const servingsRatio = displayServings / recipe.servings;
 
@@ -212,14 +214,30 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
             </>
           )}
         </div>
-        {/* Image upload overlay when editing */}
+        {/* Image actions when editing */}
         {editing && (
-          <label className="absolute inset-0 flex items-center justify-center bg-foreground/20 cursor-pointer hover:bg-foreground/30 transition-colors">
-            <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-            <div className="bg-card/80 backdrop-blur-sm rounded-full p-4">
-              <Camera size={24} className="text-card-foreground" />
+          <>
+            <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+            <div className="absolute inset-0 flex items-center justify-center z-20">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors">
+                    <Camera size={24} className="text-card-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem className="font-body gap-2" onClick={() => imageInputRef.current?.click()}>
+                    <ImagePlus size={16} /> Modifier l'image
+                  </DropdownMenuItem>
+                  {editData.image && (
+                    <DropdownMenuItem className="font-body gap-2 text-destructive focus:text-destructive" onClick={() => setEditData({ ...editData, image: undefined })}>
+                      <ImageMinus size={16} /> Supprimer l'image
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          </label>
+          </>
         )}
         <div className="absolute bottom-6 left-6 right-6">
           <div className="flex items-center gap-2 mb-2">

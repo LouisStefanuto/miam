@@ -361,6 +361,15 @@ class RecipeRepository(RecipeRepositoryPort):
             display_order=image.display_order,
         )
 
+    def delete_image(self, image_id: UUID) -> bool:
+        """Delete an Image record by ID."""
+        image = self.session.get(Image, image_id)
+        if image is None:
+            return False
+        self.session.delete(image)
+        self.session.commit()
+        return True
+
     def delete_recipe(self, recipe_id: UUID) -> bool:
         """Delete a recipe and all related entities (via cascade)."""
         recipe = self._load_recipe(recipe_id)
