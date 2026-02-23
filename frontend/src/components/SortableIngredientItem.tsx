@@ -56,7 +56,10 @@ export function SortableIngredientItem({
       <Input
         data-ingredient-name
         value={ingredient.name}
-        onChange={(e) => onUpdate(index, 'name', e.target.value)}
+        onChange={(e) => {
+          const v = e.target.value;
+          onUpdate(index, 'name', v.charAt(0).toUpperCase() + v.slice(1));
+        }}
         onKeyDown={(e) => onKeyDown(e, index)}
         placeholder="Nom"
         className="font-body text-sm flex-1 h-8 min-w-0"

@@ -11,6 +11,14 @@ class IngredientCreate(BaseModel):
     unit: Optional[str] = None
     display_order: Optional[int] = 0
 
+    @field_validator("name", mode="before")
+    @classmethod
+    def capitalize_name(cls, v: str) -> str:
+        """Ensure ingredient name starts with a capital letter."""
+        if v:
+            return v[0].upper() + v[1:]
+        return v
+
 
 class ImageCreate(BaseModel):
     caption: Optional[str] = None
