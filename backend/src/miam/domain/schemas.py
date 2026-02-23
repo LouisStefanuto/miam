@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from miam.domain.entities import Category, Season, SourceType
 
@@ -9,7 +9,7 @@ class IngredientCreate(BaseModel):
     name: str
     quantity: Optional[float] = None
     unit: Optional[str] = None
-    display_order: Optional[int] = 0
+    display_order: Optional[int] = None
 
     @field_validator("name", mode="before")
     @classmethod
@@ -22,7 +22,7 @@ class IngredientCreate(BaseModel):
 
 class ImageCreate(BaseModel):
     caption: Optional[str] = None
-    display_order: Optional[int] = 0
+    display_order: Optional[int] = None
 
 
 class SourceCreate(BaseModel):
@@ -48,6 +48,17 @@ class RecipeCreate(BaseModel):
     ingredients: list[IngredientCreate] = []
     images: list[ImageCreate] = []
     sources: list[SourceCreate] = []
+
+    @model_validator(mode="after")
+    def assign_display_orders(self) -> "RecipeCreate":
+        """Auto-assign display_order from list position when not provided."""
+        for idx, ing in enumerate(self.ingredients):
+            if ing.display_order is None:
+                ing.display_order = idx
+        for idx, img in enumerate(self.images):
+            if img.display_order is None:
+                img.display_order = idx
+        return self
 
     @field_validator("season", mode="before")
     @classmethod
@@ -77,6 +88,14 @@ class RecipeUpdate(BaseModel):
     preparation: list[str] = []
     ingredients: list[IngredientCreate] = []
     sources: list[SourceCreate] = []
+
+    @model_validator(mode="after")
+    def assign_display_orders(self) -> "RecipeUpdate":
+        """Auto-assign display_order from list position when not provided."""
+        for idx, ing in enumerate(self.ingredients):
+            if ing.display_order is None:
+                ing.display_order = idx
+        return self
 
 
 class BatchRecipeCreate(BaseModel):

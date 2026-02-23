@@ -103,7 +103,7 @@ class RecipeRepository(RecipeRepositoryPort):
                 ingredient=ingredient_map[ing.name],
                 quantity=ing.quantity,
                 unit=ing.unit,
-                display_order=ing.display_order or 0,
+                display_order=ing.display_order if ing.display_order is not None else 0,
             )
             recipe.ingredients.append(ri)
 
@@ -111,7 +111,7 @@ class RecipeRepository(RecipeRepositoryPort):
         for img in data.images:
             image = Image(
                 caption=img.caption,
-                display_order=img.display_order or 0,
+                display_order=img.display_order if img.display_order is not None else 0,
             )
             recipe.images.append(image)
 
@@ -157,14 +157,14 @@ class RecipeRepository(RecipeRepositoryPort):
                     ingredient=ingredient_map[ing.name],
                     quantity=ing.quantity,
                     unit=ing.unit,
-                    display_order=ing.display_order or 0,
+                    display_order=ing.display_order,
                 )
                 recipe.ingredients.append(ri)
 
             for img in recipe_data.images:
                 image = Image(
                     caption=img.caption,
-                    display_order=img.display_order or 0,
+                    display_order=img.display_order,
                 )
                 recipe.images.append(image)
 
@@ -226,7 +226,7 @@ class RecipeRepository(RecipeRepositoryPort):
                 ingredient=ingredient_map[ing.name],
                 quantity=ing.quantity,
                 unit=ing.unit,
-                display_order=ing.display_order or 0,
+                display_order=ing.display_order if ing.display_order is not None else 0,
             )
             recipe.ingredients.append(ri)
 
@@ -353,7 +353,7 @@ class RecipeRepository(RecipeRepositoryPort):
         image = Image(
             recipe_id=recipe_id,
             caption=caption,
-            display_order=display_order or 0,
+            display_order=display_order if display_order is not None else 0,
         )
 
         self.session.add(image)
