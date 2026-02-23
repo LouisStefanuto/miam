@@ -43,7 +43,7 @@ export function SortableIngredientItem({
     <li
       ref={setNodeRef}
       style={style}
-      className="flex gap-2 items-center py-1.5 border-b border-border last:border-0"
+      className="flex gap-1 items-center py-1.5 border-b border-border last:border-0"
     >
       <button
         type="button"
@@ -58,22 +58,22 @@ export function SortableIngredientItem({
         value={ingredient.name}
         onChange={(e) => onUpdate(index, 'name', e.target.value)}
         onKeyDown={(e) => onKeyDown(e, index)}
-        placeholder="Nom de l'ingrédient"
-        className="font-body text-sm flex-1 h-8"
+        placeholder="Nom"
+        className="font-body text-sm flex-1 h-8 min-w-0"
       />
       <Input
         value={String(ingredient.quantity)}
         onChange={(e) => onUpdate(index, 'quantity', e.target.value)}
         onKeyDown={(e) => onKeyDown(e, index)}
         placeholder="Qté"
-        className="font-body text-sm w-16 h-8"
+        className="font-body text-sm w-12 h-8"
       />
       <Input
         value={ingredient.unit}
         onChange={(e) => onUpdate(index, 'unit', e.target.value)}
         onKeyDown={(e) => onKeyDown(e, index)}
         placeholder="Unité"
-        className="font-body text-sm w-20 h-8"
+        className="font-body text-sm w-12 h-8"
       />
       {canRemove && (
         <button type="button" onClick={() => onRemove(index)} className="text-destructive hover:text-destructive/80">

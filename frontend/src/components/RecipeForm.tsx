@@ -349,9 +349,9 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
           </div>
         </div>
 
-        <div className="grid md:grid-cols-[1fr_2fr] gap-8">
+        <div className="grid md:grid-cols-[2fr_3fr] gap-8">
           {/* Ingredients */}
-          <div className="bg-card rounded-lg p-6 shadow-card">
+          <div className="bg-card rounded-lg p-4 shadow-card">
             <h2 className="font-display text-xl font-semibold mb-4 text-card-foreground">Ingrédients</h2>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={ingredientIds} strategy={verticalListSortingStrategy}>
@@ -386,7 +386,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                     {i + 1}
                   </span>
                   <div className="flex gap-2 items-start flex-1">
-                    <Textarea data-step-textarea value={step.text} onChange={(e) => updateStep(i, e.target.value)} onKeyDown={(e) => handleStepKeyDown(e, i)} placeholder={`Étape ${i + 1}`} className="font-body min-h-[50px] text-sm" />
+                    <Textarea data-step-textarea value={step.text} onChange={(e) => updateStep(i, e.target.value)} onKeyDown={(e) => handleStepKeyDown(e, i)} placeholder={`Étape ${i + 1}`} className="font-body min-h-[50px] text-sm [field-sizing:content]" />
                     {data.steps.length > 1 && (
                       <button onClick={() => removeStep(i)} className="text-destructive hover:text-destructive/80 mt-2"><Trash2 size={14} /></button>
                     )}
