@@ -48,6 +48,11 @@ clean: ## Kill all containers and remove pgdata volume
 	docker compose down -v
 	rm -rf ./backend/images
 
+.PHONY: db-dump
+db-dump: ## Dump the database to a SQL file
+	docker compose exec db pg_dump -U postgres recipes > dump_$(shell date +%Y%m%d_%H%M%S).sql
+	@echo "$(GREEN)Database dumped to dump_$$(date +%Y%m%d_%H%M%S).sql$(RESET)"
+
 .PHONY: docs
 docs: ## Serve documentation locally
 	uv --directory docs run mkdocs serve -a 0.0.0.0:8001

@@ -170,3 +170,4 @@ uv.lock
 
 images/
 claude/
+*.dump
