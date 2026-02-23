@@ -219,23 +219,27 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           <>
             <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
             <div className="absolute inset-0 flex items-center justify-center z-20">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors">
-                    <Camera size={24} className="text-card-foreground" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem className="font-body gap-2" onClick={() => imageInputRef.current?.click()}>
-                    <ImagePlus size={16} /> Modifier l'image
-                  </DropdownMenuItem>
-                  {editData.image && (
+              {editData.image ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors">
+                      <Camera size={24} className="text-card-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem className="font-body gap-2" onClick={() => imageInputRef.current?.click()}>
+                      <ImagePlus size={16} /> Modifier l'image
+                    </DropdownMenuItem>
                     <DropdownMenuItem className="font-body gap-2 text-destructive focus:text-destructive" onClick={() => setEditData({ ...editData, image: undefined })}>
                       <ImageMinus size={16} /> Supprimer l'image
                     </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors" onClick={() => imageInputRef.current?.click()}>
+                  <Camera size={24} className="text-card-foreground" />
+                </button>
+              )}
             </div>
           </>
         )}

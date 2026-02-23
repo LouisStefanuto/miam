@@ -177,23 +177,27 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 to-transparent" />
         <input ref={imageRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
         <div className="absolute inset-0 z-10 flex items-center justify-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors">
-                <Camera size={24} className="text-card-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem className="font-body gap-2" onClick={() => imageRef.current?.click()}>
-                <ImagePlus size={16} /> Modifier l'image
-              </DropdownMenuItem>
-              {data.image && (
+          {data.image ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors">
+                  <Camera size={24} className="text-card-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem className="font-body gap-2" onClick={() => imageRef.current?.click()}>
+                  <ImagePlus size={16} /> Modifier l'image
+                </DropdownMenuItem>
                 <DropdownMenuItem className="font-body gap-2 text-destructive focus:text-destructive" onClick={() => set('image', undefined)}>
                   <ImageMinus size={16} /> Supprimer l'image
                 </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors" onClick={() => imageRef.current?.click()}>
+              <Camera size={24} className="text-card-foreground" />
+            </button>
+          )}
         </div>
 
         <div className="absolute bottom-6 left-6 right-6 z-20">
