@@ -83,6 +83,11 @@ class RecipeManagementService(RecipeServicePort):
         """Retrieve image bytes from storage by image ID."""
         return self.image_storage.get_recipe_image(image_id)
 
+    def delete_recipe_image(self, image_id: UUID) -> bool:
+        """Delete an image from storage and database."""
+        self.image_storage.delete_image(image_id)
+        return self.repository.delete_image(image_id)
+
 
 class RecipeExportService(RecipeExportServicePort):
     """Service for exporting recipes to different formats."""

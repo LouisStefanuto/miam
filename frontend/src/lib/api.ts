@@ -54,6 +54,7 @@ interface BackendIngredient {
   name: string;
   quantity: number | null;
   unit: string | null;
+  display_order: number;
 }
 
 interface BackendImage {
@@ -89,6 +90,19 @@ export function getImageUrl(imageId: string): string {
   return `${API_BASE}/images/${imageId}`;
 }
 
+function getImageIdFromUrl(url: string): string | null {
+  const prefix = `${API_BASE}/images/`;
+  if (url.startsWith(prefix)) {
+    return url.slice(prefix.length);
+  }
+  return null;
+}
+
+export async function deleteImage(imageId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/images/${imageId}`, { method: 'DELETE' });
+  if (!res.ok && res.status !== 404) throw new Error(`Failed to delete image: ${res.status}`);
+}
+
 function backendToFrontend(b: BackendRecipe): Recipe {
   return {
     id: b.id,
@@ -104,11 +118,13 @@ function backendToFrontend(b: BackendRecipe): Recipe {
     cookTime: b.cook_time_minutes ?? 0,
     restTime: b.rest_time_minutes ?? undefined,
     diets: b.is_veggie ? ['végétarien'] : [],
-    ingredients: b.ingredients.map((i) => ({
-      name: i.name,
-      quantity: i.quantity ?? '',
-      unit: i.unit ?? '',
-    })),
+    ingredients: [...b.ingredients]
+      .sort((a, b) => a.display_order - b.display_order)
+      .map((i) => ({
+        name: i.name,
+        quantity: i.quantity ?? '',
+        unit: i.unit ?? '',
+      })),
     steps: b.preparation.map((text) => ({ text })),
     tested: b.tested,
     createdAt: '',
@@ -134,10 +150,11 @@ function frontendToBackendCreate(r: Recipe) {
     preparation: r.steps.map((s) => s.text).filter((t) => t.trim()),
     ingredients: r.ingredients
       .filter((i) => i.name.trim())
-      .map((i) => ({
+      .map((i, index) => ({
         name: i.name,
         quantity: typeof i.quantity === 'string' ? (parseFloat(i.quantity) || null) : (i.quantity || null),
         unit: i.unit || null,
+        display_order: index,
       })),
   };
 }
@@ -167,7 +184,7 @@ export async function fetchRecipe(id: string): Promise<Recipe> {
   return backendToFrontend(data);
 }
 
-export async function updateRecipe(recipe: Recipe): Promise<Recipe> {
+export async function updateRecipe(recipe: Recipe, originalImage?: string): Promise<Recipe> {
   const body = frontendToBackendCreate(recipe);
   const res = await fetch(`${API_BASE}/recipes/${recipe.id}`, {
     method: 'PUT',
@@ -176,10 +193,22 @@ export async function updateRecipe(recipe: Recipe): Promise<Recipe> {
   });
   if (!res.ok) throw new Error(`Failed to update recipe: ${res.status}`);
 
+  const oldImageId = originalImage ? getImageIdFromUrl(originalImage) : null;
+  const imageChanged = originalImage !== recipe.image;
+
+  // Delete old image if image was changed or removed
+  if (imageChanged && oldImageId) {
+    await deleteImage(oldImageId);
+  }
+
   // Upload new image if present (base64 data URL)
   if (recipe.image?.startsWith('data:')) {
     await uploadImage(recipe.id!, recipe.image);
-    // Re-fetch to include the newly uploaded image
+    return fetchRecipe(recipe.id!);
+  }
+
+  // If image was removed (no new image), re-fetch to get clean state
+  if (imageChanged && !recipe.image) {
     return fetchRecipe(recipe.id!);
   }
 

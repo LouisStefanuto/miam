@@ -1,12 +1,16 @@
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Star, Save, Camera, X, Check, Minus } from 'lucide-react';
+import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { ArrowLeft, Plus, Trash2, Star, Save, Camera, X, Check, Minus, ImagePlus, ImageMinus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
+import { SortableIngredientItem } from './SortableIngredientItem';
 import seasonSpring from '@/assets/icons/season-spring.png';
 import seasonSummer from '@/assets/icons/season-summer.png';
 import seasonFall from '@/assets/icons/season-fall.png';
@@ -72,7 +76,15 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     tested: initialRecipe?.tested ?? false,
   });
   const [newTag, setNewTag] = useState('');
+  const [ingredientIds, setIngredientIds] = useState<string[]>(
+    () => data.ingredients.map(() => crypto.randomUUID())
+  );
   const imageRef = useRef<HTMLInputElement>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const set = <K extends keyof typeof data>(key: K, value: (typeof data)[K]) => setData((d) => ({ ...d, [key]: value }));
 
@@ -81,8 +93,26 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     (updated[i] as any)[field] = value;
     set('ingredients', updated);
   };
-  const addIngredient = () => set('ingredients', [...data.ingredients, { name: '', quantity: '', unit: '' }]);
-  const removeIngredient = (i: number) => set('ingredients', data.ingredients.filter((_, idx) => idx !== i));
+  const addIngredient = () => {
+    set('ingredients', [...data.ingredients, { name: '', quantity: '', unit: '' }]);
+    setIngredientIds((ids) => [...ids, crypto.randomUUID()]);
+  };
+  const removeIngredient = (i: number) => {
+    set('ingredients', data.ingredients.filter((_, idx) => idx !== i));
+    setIngredientIds((ids) => ids.filter((_, idx) => idx !== i));
+  };
+  const moveIngredient = (from: number, to: number) => {
+    set('ingredients', arrayMove(data.ingredients, from, to));
+    setIngredientIds((ids) => arrayMove(ids, from, to));
+  };
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = ingredientIds.indexOf(active.id as string);
+      const newIndex = ingredientIds.indexOf(over.id as string);
+      moveIngredient(oldIndex, newIndex);
+    }
+  };
 
   const updateStep = (i: number, text: string) => {
     const updated = [...data.steps];
@@ -113,6 +143,24 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
   };
 
   const handleIngredientKeyDown = (e: React.KeyboardEvent, i: number) => {
+    if (e.altKey && e.key === 'ArrowUp' && i > 0) {
+      e.preventDefault();
+      moveIngredient(i, i - 1);
+      setTimeout(() => {
+        const inputs = document.querySelectorAll<HTMLInputElement>('[data-ingredient-name]');
+        inputs[i - 1]?.focus();
+      }, 50);
+      return;
+    }
+    if (e.altKey && e.key === 'ArrowDown' && i < data.ingredients.length - 1) {
+      e.preventDefault();
+      moveIngredient(i, i + 1);
+      setTimeout(() => {
+        const inputs = document.querySelectorAll<HTMLInputElement>('[data-ingredient-name]');
+        inputs[i + 1]?.focus();
+      }, 50);
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (i === data.ingredients.length - 1) addIngredient();
@@ -174,12 +222,30 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
           <div className="w-full h-full bg-muted" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 to-transparent" />
-        <label className="absolute inset-0 z-10 flex items-center justify-center bg-foreground/20 cursor-pointer hover:bg-foreground/30 transition-colors">
-          <input ref={imageRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-          <div className="bg-card/80 backdrop-blur-sm rounded-full p-4">
-            <Camera size={24} className="text-card-foreground" />
-          </div>
-        </label>
+        <input ref={imageRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+        <div className="absolute inset-0 z-10 flex items-center justify-center">
+          {data.image ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors">
+                  <Camera size={24} className="text-card-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem className="font-body gap-2" onClick={() => imageRef.current?.click()}>
+                  <ImagePlus size={16} /> Modifier l'image
+                </DropdownMenuItem>
+                <DropdownMenuItem className="font-body gap-2 text-destructive focus:text-destructive" onClick={() => set('image', undefined)}>
+                  <ImageMinus size={16} /> Supprimer l'image
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors" onClick={() => imageRef.current?.click()}>
+              <Camera size={24} className="text-card-foreground" />
+            </button>
+          )}
+        </div>
 
         <div className="absolute bottom-6 left-6 right-6 z-20">
           <div className="flex items-center gap-2 mb-2">
@@ -212,6 +278,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             value={data.title}
             onChange={(e) => set('title', e.target.value)}
             placeholder="Titre de la recette"
+            autoFocus={!initialRecipe}
             className="font-display text-3xl md:text-4xl font-bold bg-transparent border-b border-primary-foreground/50 text-primary-foreground h-auto p-0 rounded-none focus-visible:ring-0 placeholder:text-primary-foreground/40"
           />
         </div>
@@ -282,22 +349,28 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
           </div>
         </div>
 
-        <div className="grid md:grid-cols-[1fr_2fr] gap-8">
+        <div className="space-y-8">
           {/* Ingredients */}
-          <div className="bg-card rounded-lg p-6 shadow-card">
+          <div className="bg-card rounded-lg p-4 shadow-card">
             <h2 className="font-display text-xl font-semibold mb-4 text-card-foreground">Ingrédients</h2>
-            <ul className="space-y-2">
-              {data.ingredients.map((ing, i) => (
-                <li key={i} className="flex gap-2 items-center py-1.5 border-b border-border last:border-0">
-                  <Input data-ingredient-name value={ing.name} onChange={(e) => updateIngredient(i, 'name', e.target.value)} onKeyDown={(e) => handleIngredientKeyDown(e, i)} placeholder="Nom de l'ingrédient" className="font-body text-sm flex-1 h-8" />
-                  <Input value={String(ing.quantity)} onChange={(e) => updateIngredient(i, 'quantity', e.target.value)} onKeyDown={(e) => handleIngredientKeyDown(e, i)} placeholder="Qté" className="font-body text-sm w-16 h-8" />
-                  <Input value={ing.unit} onChange={(e) => updateIngredient(i, 'unit', e.target.value)} onKeyDown={(e) => handleIngredientKeyDown(e, i)} placeholder="Unité" className="font-body text-sm w-20 h-8" />
-                  {data.ingredients.length > 1 && (
-                    <button onClick={() => removeIngredient(i)} className="text-destructive hover:text-destructive/80"><Trash2 size={14} /></button>
-                  )}
-                </li>
-              ))}
-            </ul>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={ingredientIds} strategy={verticalListSortingStrategy}>
+                <ul className="space-y-2">
+                  {data.ingredients.map((ing, i) => (
+                    <SortableIngredientItem
+                      key={ingredientIds[i]}
+                      id={ingredientIds[i]}
+                      ingredient={ing}
+                      index={i}
+                      onUpdate={updateIngredient}
+                      onRemove={removeIngredient}
+                      onKeyDown={handleIngredientKeyDown}
+                      canRemove={data.ingredients.length > 1}
+                    />
+                  ))}
+                </ul>
+              </SortableContext>
+            </DndContext>
             <Button type="button" variant="outline" size="sm" onClick={addIngredient} className="font-body gap-1 mt-3 w-full">
               <Plus size={14} /> Ajouter
             </Button>
@@ -313,7 +386,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                     {i + 1}
                   </span>
                   <div className="flex gap-2 items-start flex-1">
-                    <Textarea data-step-textarea value={step.text} onChange={(e) => updateStep(i, e.target.value)} onKeyDown={(e) => handleStepKeyDown(e, i)} placeholder={`Étape ${i + 1}`} className="font-body min-h-[50px] text-sm" />
+                    <Textarea data-step-textarea value={step.text} onChange={(e) => updateStep(i, e.target.value)} onKeyDown={(e) => handleStepKeyDown(e, i)} placeholder={`Étape ${i + 1}`} className="font-body min-h-[50px] text-sm [field-sizing:content]" />
                     {data.steps.length > 1 && (
                       <button onClick={() => removeStep(i)} className="text-destructive hover:text-destructive/80 mt-2"><Trash2 size={14} /></button>
                     )}

@@ -53,8 +53,9 @@ class RecipeRepository(RecipeRepositoryPort):
                     name=ri.ingredient.name,
                     quantity=ri.quantity,
                     unit=ri.unit,
+                    display_order=ri.display_order,
                 )
-                for ri in recipe.ingredients
+                for ri in sorted(recipe.ingredients, key=lambda ri: ri.display_order)
             ],
             images=[
                 ImageEntity(
@@ -102,6 +103,7 @@ class RecipeRepository(RecipeRepositoryPort):
                 ingredient=ingredient_map[ing.name],
                 quantity=ing.quantity,
                 unit=ing.unit,
+                display_order=ing.display_order if ing.display_order is not None else 0,
             )
             recipe.ingredients.append(ri)
 
@@ -109,7 +111,7 @@ class RecipeRepository(RecipeRepositoryPort):
         for img in data.images:
             image = Image(
                 caption=img.caption,
-                display_order=img.display_order or 0,
+                display_order=img.display_order if img.display_order is not None else 0,
             )
             recipe.images.append(image)
 
@@ -155,13 +157,14 @@ class RecipeRepository(RecipeRepositoryPort):
                     ingredient=ingredient_map[ing.name],
                     quantity=ing.quantity,
                     unit=ing.unit,
+                    display_order=ing.display_order,
                 )
                 recipe.ingredients.append(ri)
 
             for img in recipe_data.images:
                 image = Image(
                     caption=img.caption,
-                    display_order=img.display_order or 0,
+                    display_order=img.display_order,
                 )
                 recipe.images.append(image)
 
@@ -223,6 +226,7 @@ class RecipeRepository(RecipeRepositoryPort):
                 ingredient=ingredient_map[ing.name],
                 quantity=ing.quantity,
                 unit=ing.unit,
+                display_order=ing.display_order if ing.display_order is not None else 0,
             )
             recipe.ingredients.append(ri)
 
@@ -349,7 +353,7 @@ class RecipeRepository(RecipeRepositoryPort):
         image = Image(
             recipe_id=recipe_id,
             caption=caption,
-            display_order=display_order or 0,
+            display_order=display_order if display_order is not None else 0,
         )
 
         self.session.add(image)
@@ -360,6 +364,15 @@ class RecipeRepository(RecipeRepositoryPort):
             caption=image.caption,
             display_order=image.display_order,
         )
+
+    def delete_image(self, image_id: UUID) -> bool:
+        """Delete an Image record by ID."""
+        image = self.session.get(Image, image_id)
+        if image is None:
+            return False
+        self.session.delete(image)
+        self.session.commit()
+        return True
 
     def delete_recipe(self, recipe_id: UUID) -> bool:
         """Delete a recipe and all related entities (via cascade)."""

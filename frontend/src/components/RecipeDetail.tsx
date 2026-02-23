@@ -1,6 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Star, Pencil, Save, X, Plus, Trash2, Minus, Camera, Check } from 'lucide-react';
+import React, { useState, useMemo, useRef } from 'react';
+import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { ArrowLeft, Star, Pencil, Save, X, Plus, Trash2, Minus, Camera, Check, ImagePlus, ImageMinus, Copy, ClipboardCheck } from 'lucide-react';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
+import { SortableIngredientItem } from './SortableIngredientItem';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import seasonSpring from '@/assets/icons/season-spring.png';
 import seasonSummer from '@/assets/icons/season-summer.png';
 import seasonFall from '@/assets/icons/season-fall.png';
@@ -16,6 +20,8 @@ import veganIcon from '@/assets/icons/vegetalien.png';
 import cuissonIcon from '@/assets/icons/cuisson.png';
 import melangeIcon from '@/assets/icons/melange.png';
 import servingsIcon from '@/assets/icons/servings.png';
+import { recipeToMarkdown } from '@/lib/recipe-to-markdown';
+import { useToast } from '@/hooks/use-toast';
 
 const DifficultyBars = ({ level }: { level: number }) => (
   <div className="flex gap-0.5 items-end">
@@ -71,6 +77,25 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const [displayServings, setDisplayServings] = useState(recipe.servings);
   const [newTag, setNewTag] = useState('');
   const [hoveredStar, setHoveredStar] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const [ingredientIds, setIngredientIds] = useState<string[]>(
+    () => recipe.ingredients.map(() => crypto.randomUUID())
+  );
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const { toast } = useToast();
+
+  const copyAsMarkdown = async () => {
+    const md = recipeToMarkdown(recipe);
+    await navigator.clipboard.writeText(md);
+    setCopied(true);
+    toast({ title: 'Recette copiée !', description: 'Collez-la avec Ctrl+V.' });
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const servingsRatio = displayServings / recipe.servings;
 
@@ -83,6 +108,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
 
   const startEdit = () => {
     setEditData({ ...recipe });
+    setIngredientIds(recipe.ingredients.map(() => crypto.randomUUID()));
     setEditing(true);
   };
 
@@ -102,8 +128,54 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
     setEditData({ ...editData, ingredients: updated });
   };
 
-  const addIngredient = () => setEditData({ ...editData, ingredients: [...editData.ingredients, { name: '', quantity: '', unit: '' }] });
-  const removeIngredient = (i: number) => setEditData({ ...editData, ingredients: editData.ingredients.filter((_, idx) => idx !== i) });
+  const addIngredient = () => {
+    setEditData({ ...editData, ingredients: [...editData.ingredients, { name: '', quantity: '', unit: '' }] });
+    setIngredientIds((ids) => [...ids, crypto.randomUUID()]);
+  };
+  const removeIngredient = (i: number) => {
+    setEditData({ ...editData, ingredients: editData.ingredients.filter((_, idx) => idx !== i) });
+    setIngredientIds((ids) => ids.filter((_, idx) => idx !== i));
+  };
+  const moveIngredient = (from: number, to: number) => {
+    setEditData({ ...editData, ingredients: arrayMove(editData.ingredients, from, to) });
+    setIngredientIds((ids) => arrayMove(ids, from, to));
+  };
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = ingredientIds.indexOf(active.id as string);
+      const newIndex = ingredientIds.indexOf(over.id as string);
+      moveIngredient(oldIndex, newIndex);
+    }
+  };
+  const handleIngredientKeyDown = (e: React.KeyboardEvent, i: number) => {
+    if (e.altKey && e.key === 'ArrowUp' && i > 0) {
+      e.preventDefault();
+      moveIngredient(i, i - 1);
+      setTimeout(() => {
+        const inputs = document.querySelectorAll<HTMLInputElement>('[data-ingredient-name]');
+        inputs[i - 1]?.focus();
+      }, 50);
+      return;
+    }
+    if (e.altKey && e.key === 'ArrowDown' && i < editData.ingredients.length - 1) {
+      e.preventDefault();
+      moveIngredient(i, i + 1);
+      setTimeout(() => {
+        const inputs = document.querySelectorAll<HTMLInputElement>('[data-ingredient-name]');
+        inputs[i + 1]?.focus();
+      }, 50);
+      return;
+    }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (i === editData.ingredients.length - 1) addIngredient();
+      setTimeout(() => {
+        const inputs = document.querySelectorAll<HTMLInputElement>('[data-ingredient-name]');
+        inputs[i + 1]?.focus();
+      }, 50);
+    }
+  };
 
   const updateStep = (i: number, text: string) => {
     const updated = [...editData.steps];
@@ -187,8 +259,8 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
             <>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <button className="flex items-center gap-1.5 bg-card/80 backdrop-blur-sm rounded-md px-3 py-1.5 text-sm font-body text-destructive hover:bg-red-100 transition-colors">
-                    <Trash2 size={14} /> Supprimer
+                  <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-destructive hover:bg-red-100 transition-colors">
+                    <Trash2 size={16} />
                   </button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
@@ -206,20 +278,43 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-              <button className="flex items-center gap-1.5 bg-card/80 backdrop-blur-sm rounded-md px-3 py-1.5 text-sm font-body text-card-foreground hover:bg-card transition-colors" onClick={startEdit}>
-                <Pencil size={14} /> Modifier
+              <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-card-foreground hover:bg-card transition-colors" onClick={startEdit}>
+                <Pencil size={16} />
+              </button>
+              <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-card-foreground hover:bg-card transition-colors" onClick={copyAsMarkdown}>
+                {copied ? <ClipboardCheck size={16} /> : <Copy size={16} />}
               </button>
             </>
           )}
         </div>
-        {/* Image upload overlay when editing */}
+        {/* Image actions when editing */}
         {editing && (
-          <label className="absolute inset-0 flex items-center justify-center bg-foreground/20 cursor-pointer hover:bg-foreground/30 transition-colors">
-            <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-            <div className="bg-card/80 backdrop-blur-sm rounded-full p-4">
-              <Camera size={24} className="text-card-foreground" />
+          <>
+            <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+            <div className="absolute inset-0 flex items-center justify-center z-20">
+              {editData.image ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors">
+                      <Camera size={24} className="text-card-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem className="font-body gap-2" onClick={() => imageInputRef.current?.click()}>
+                      <ImagePlus size={16} /> Modifier l'image
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="font-body gap-2 text-destructive focus:text-destructive" onClick={() => setEditData({ ...editData, image: undefined })}>
+                      <ImageMinus size={16} /> Supprimer l'image
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors" onClick={() => imageInputRef.current?.click()}>
+                  <Camera size={24} className="text-card-foreground" />
+                </button>
+              )}
             </div>
-          </label>
+          </>
         )}
         <div className="absolute bottom-6 left-6 right-6">
           <div className="flex items-center gap-2 mb-2">
@@ -416,31 +511,41 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           )
         )}
 
-        <div className="grid md:grid-cols-[1fr_2fr] gap-8">
+        <div className={editing ? "space-y-8" : "grid md:grid-cols-[2fr_3fr] gap-8"}>
           {/* Ingredients */}
-          <div className="bg-card rounded-lg p-6 shadow-card">
+          <div className="bg-card rounded-lg p-4 shadow-card">
             <h2 className="font-display text-xl font-semibold mb-4 text-card-foreground">Ingrédients</h2>
-            <ul className="space-y-2">
-              {(editing ? editData.ingredients : current.ingredients).map((ing, i) => (
-                <li key={i} className="flex justify-between items-center py-1.5 border-b border-border last:border-0 font-body text-sm">
-                  {editing ? (
-                    <div className="flex gap-2 items-center w-full">
-                      <Input value={ing.name} onChange={(e) => updateIngredient(i, 'name', e.target.value)} placeholder="Nom de l'ingrédient" className="font-body text-sm flex-1 h-8" />
-                      <Input value={String(ing.quantity)} onChange={(e) => updateIngredient(i, 'quantity', e.target.value)} placeholder="Qté" className="font-body text-sm w-16 h-8" />
-                      <Input value={ing.unit} onChange={(e) => updateIngredient(i, 'unit', e.target.value)} placeholder="Unité" className="font-body text-sm w-20 h-8" />
-                      <button onClick={() => removeIngredient(i)} className="text-destructive hover:text-destructive/80"><Trash2 size={14} /></button>
-                    </div>
-                  ) : (
-                    <>
-                      <span className="text-card-foreground">{ing.name}</span>
-                      <span className="text-muted-foreground whitespace-nowrap ml-3">
-                        {scaleQuantity(ing.quantity)} {ing.unit}
-                      </span>
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
+            {editing ? (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={ingredientIds} strategy={verticalListSortingStrategy}>
+                  <ul className="space-y-2">
+                    {editData.ingredients.map((ing, i) => (
+                      <SortableIngredientItem
+                        key={ingredientIds[i]}
+                        id={ingredientIds[i]}
+                        ingredient={ing}
+                        index={i}
+                        onUpdate={updateIngredient}
+                        onRemove={removeIngredient}
+                        onKeyDown={handleIngredientKeyDown}
+                        canRemove={editData.ingredients.length > 1}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+            ) : (
+              <ul className="space-y-2">
+                {current.ingredients.map((ing, i) => (
+                  <li key={i} className="flex justify-between items-center py-1.5 border-b border-border last:border-0 font-body text-sm">
+                    <span className="text-card-foreground">{ing.name}</span>
+                    <span className="text-muted-foreground whitespace-nowrap ml-3">
+                      {scaleQuantity(ing.quantity)} {ing.unit}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
             {editing && (
               <Button type="button" variant="outline" size="sm" onClick={addIngredient} className="font-body gap-1 mt-3 w-full">
                 <Plus size={14} /> Ajouter
@@ -459,7 +564,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                   </span>
                   {editing ? (
                     <div className="flex gap-2 items-start flex-1">
-                      <Textarea value={step.text} onChange={(e) => updateStep(i, e.target.value)} className="font-body min-h-[50px] text-sm" />
+                      <Textarea value={step.text} onChange={(e) => updateStep(i, e.target.value)} className="font-body min-h-[50px] text-sm [field-sizing:content]" />
                       <button onClick={() => removeStep(i)} className="text-destructive hover:text-destructive/80 mt-2"><Trash2 size={14} /></button>
                     </div>
                   ) : (

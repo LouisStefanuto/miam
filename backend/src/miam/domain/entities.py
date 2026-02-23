@@ -41,6 +41,7 @@ class IngredientEntity:
     name: str
     quantity: float | None = None
     unit: str | None = None
+    display_order: int = 0
 
 
 @dataclass

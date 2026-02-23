@@ -36,10 +36,22 @@ export function useCreateRecipe() {
 export function useUpdateRecipe() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updateRecipe,
+    mutationFn: ({ recipe, originalImage }: { recipe: Recipe; originalImage?: string }) =>
+      updateRecipe(recipe, originalImage),
+    onMutate: async ({ recipe }) => {
+      await queryClient.cancelQueries({ queryKey: ['recipes', recipe.id] });
+      const previous = queryClient.getQueryData<Recipe>(['recipes', recipe.id]);
+      queryClient.setQueryData(['recipes', recipe.id], recipe);
+      return { previous };
+    },
+    onError: (_err, { recipe }, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['recipes', recipe.id], context.previous);
+      }
+    },
     onSuccess: (updated: Recipe) => {
-      queryClient.invalidateQueries({ queryKey: ['recipes'] });
       queryClient.setQueryData(['recipes', updated.id], updated);
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
     },
   });
 }

@@ -57,6 +57,7 @@ class IngredientResponse(BaseModel):
     name: str
     quantity: Optional[float] = None
     unit: Optional[str] = None
+    display_order: int = 0
 
 
 class ImageDetailResponse(BaseModel):
@@ -121,6 +122,7 @@ def map_recipe_to_response(recipe: RecipeEntity) -> RecipeDetailResponse:
                 name=ing.name,
                 quantity=ing.quantity,
                 unit=ing.unit,
+                display_order=ing.display_order,
             )
             for ing in recipe.ingredients
         ],

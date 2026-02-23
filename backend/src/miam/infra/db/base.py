@@ -89,6 +89,7 @@ class RecipeIngredient(Base):
 
     quantity: Mapped[float | None] = mapped_column(Float)
     unit: Mapped[str | None] = mapped_column(String(50))
+    display_order: Mapped[int] = mapped_column(Integer, default=0)
 
     recipe = relationship("Recipe", back_populates="ingredients")
     ingredient = relationship("Ingredient", back_populates="recipes")
