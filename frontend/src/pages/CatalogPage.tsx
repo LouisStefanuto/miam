@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, PenLine, Camera, Instagram, Download, FileJson } from 'lucide-react';
+import AppearanceSheet from '@/components/AppearanceSheet';
 import { useRecipes } from '@/hooks/use-recipes';
 import { useCatalogFilters } from '@/contexts/CatalogFilterContext';
 import HeroSection from '@/components/HeroSection';
@@ -113,6 +114,7 @@ const CatalogPage = () => {
         {/* Search + Add button on same line */}
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
           <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
+          <AppearanceSheet />
           <Button onClick={() => navigate('/export')} variant="outline" className="font-body font-semibold gap-2 ml-auto shrink-0">
             <Download size={18} />
             Exporter

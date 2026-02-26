@@ -4,7 +4,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import { CatalogFilterProvider } from "./contexts/CatalogFilterContext";
+import { AccentColorProvider } from "./contexts/ThemeContext";
 import CatalogPage from "./pages/CatalogPage";
 
 const RecipeDetailPage = lazy(() => import("./pages/RecipeDetailPage"));
@@ -24,6 +26,8 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <ThemeProvider attribute="class" defaultTheme="system" storageKey="miam-mode">
+    <AccentColorProvider>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -43,6 +47,8 @@ const App = () => (
         </CatalogFilterProvider>
       </BrowserRouter>
     </TooltipProvider>
+    </AccentColorProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
