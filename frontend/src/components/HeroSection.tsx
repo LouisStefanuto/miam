@@ -13,8 +13,8 @@ export default function HeroSection() {
         <h1 className="font-display text-4xl md:text-5xl font-bold text-primary-foreground mb-3 drop-shadow-lg">
           Les Tambouilles de Bulle & Luigi
         </h1>
-        <p className="font-body text-primary-foreground/90 text-lg md:text-xl max-w-lg">
-          Miam !
+        <p className="font-display text-primary-foreground/90 text-lg md:text-xl max-w-lg">
+          L'art de mettre les grands plats dans ma bouche
         </p>
       </div>
     </section>
