@@ -36,13 +36,23 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "8080:80"
+      - "3000:80"
     depends_on:
       db:
         condition: service_healthy
       backend:
         condition: service_started
     restart: unless-stopped
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: miam-dozzle
+    ports:
+      - "9999:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    profiles:
+      - debug
 
 volumes:
   pgdata:

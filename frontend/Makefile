@@ -34,4 +34,4 @@ run: ## Run frontend locally
 .PHONY: docker
 docker: ## Build Docker image and run a container
 	docker build -t miam-frontend:latest .
-	docker run --name my-container -p 8080:80 miam-frontend:latest
+	docker run --name my-container -p 3000:3000 miam-frontend:latest

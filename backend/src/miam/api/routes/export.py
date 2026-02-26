@@ -12,7 +12,7 @@ router = APIRouter(prefix="/export", tags=["export"])
 
 
 @router.post("/markdown")
-async def export_to_markdown(
+def export_to_markdown(
     service: RecipeExportService = Depends(get_recipe_export_service),
 ) -> StreamingResponse:
     zip_bytes = service.export_recipes_to_markdown()
@@ -24,7 +24,7 @@ async def export_to_markdown(
 
 
 @router.post("/word")
-async def export_to_docx(
+def export_to_docx(
     service: RecipeExportService = Depends(get_recipe_export_service),
 ) -> StreamingResponse:
     word_bytes = service.export_recipes_to_word()
