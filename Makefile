@@ -41,7 +41,7 @@ stop: ## Stop all containers
 
 .PHONY: pre-commit
 pre-commit: ## Run pre-commit
-	uv --directory backend run pre-commit run --all-files
+	pre-commit run --all-files
 
 .PHONY: clean
 clean: ## Kill all containers and remove pgdata volume
@@ -56,3 +56,11 @@ db-dump: ## Dump the database to a SQL file
 .PHONY: docs
 docs: ## Serve documentation locally
 	uv --directory docs run mkdocs serve -a 0.0.0.0:8001
+
+.PHONY: loadtest
+loadtest: ## Run load tests with Locust web UI (http://localhost:8089)
+	cd locust && uv run locust -f locustfile.py --host http://localhost:8000
+
+.PHONY: loadtest-headless
+loadtest-headless: ## Run headless load test (50 users, 5/s ramp, 2 min)
+	cd locust && uv run locust -f locustfile.py --headless -u 50 -r 5 --run-time 2m --host http://localhost:8000
