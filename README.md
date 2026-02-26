@@ -51,11 +51,13 @@ make docs
 Run pre-commit checks over the entire repo.
 
 ```bash
+uv tool install pre-commit
 make pre-commit
 ```
 
 ## Architecture
 
-- Containerization: Docker Compose
+- Containerization: Docker Compose, Docker, Dozzle for container resource monitoring
 - Backend: PostgreSQL, FastAPI, SqlAlchemy, Alembic, Python
 - Frontend (vibe-coded): React, TypeScript, Vite, Tailwind CSS, shadcn/ui
+- Load testing: Locust

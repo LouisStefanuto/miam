@@ -99,7 +99,7 @@ def build_recipe_payload() -> dict:
 
     return {
         "title": f"{random.choice(RECIPE_TITLES)} #{random.randint(1, 9999)}",
-        "description": f"Une delicieuse recette.",
+        "description": "Une delicieuse recette.",
         "category": random.choice(CATEGORIES),
         "season": season,
         "is_veggie": random.choice([True, False]),

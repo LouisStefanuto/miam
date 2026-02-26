@@ -41,7 +41,7 @@ stop: ## Stop all containers
 
 .PHONY: pre-commit
 pre-commit: ## Run pre-commit
-	uv --directory backend run pre-commit run --all-files
+	pre-commit run --all-files
 
 .PHONY: clean
 clean: ## Kill all containers and remove pgdata volume

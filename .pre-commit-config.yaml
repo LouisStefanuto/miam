@@ -73,5 +73,6 @@ repos:
   rev: 1.8.6
   hooks:
     - id: bandit
+      args: ["--skip", "B311"]
       # Exclude tests bc they contain assert statements, that raise bandit errors
       exclude: tests/
