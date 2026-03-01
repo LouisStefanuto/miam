@@ -1,3 +1,5 @@
+"""Handles storing images (local or remote file storage)."""
+
 import mimetypes
 from pathlib import Path
 from uuid import UUID
