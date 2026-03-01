@@ -1,9 +1,10 @@
 """Shared fixtures for infra layer tests."""
 
 from collections.abc import Generator
+from typing import Any
 
 import pytest
-from sqlalchemy import create_engine, event, text
+from sqlalchemy import Engine, create_engine, event, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from miam.domain.entities import Category, Season
@@ -17,13 +18,13 @@ from miam.infra.repositories import RecipeRepository
 
 
 @pytest.fixture(scope="session")
-def db_engine() -> Generator:
+def db_engine() -> Generator[Engine]:
     """Create an in-memory SQLite engine with all tables."""
     engine = create_engine("sqlite://", echo=False)
 
     # Enable foreign key enforcement on every connection
     @event.listens_for(engine, "connect")
-    def _set_sqlite_pragma(dbapi_conn, _connection_record):
+    def _set_sqlite_pragma(dbapi_conn: Any, _connection_record: Any) -> None:
         cursor = dbapi_conn.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
@@ -34,7 +35,7 @@ def db_engine() -> Generator:
 
 
 @pytest.fixture
-def db_session(db_engine) -> Generator[Session]:
+def db_session(db_engine: Engine) -> Generator[Session]:
     """Provide a clean session per test — truncates all tables on teardown."""
     session_factory = sessionmaker(bind=db_engine)
     session = session_factory()

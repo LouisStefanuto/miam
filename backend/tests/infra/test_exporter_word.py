@@ -4,7 +4,7 @@ import io
 import struct
 import zlib
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from docx import Document
 
@@ -14,37 +14,64 @@ from miam.domain.entities import (
     RecipeEntity,
     SourceEntity,
 )
+from miam.domain.ports_secondary import ImageStoragePort
 from miam.domain.schemas import ImageResponse
 from miam.infra.exporter_word import WordExporter
 
 
-def _make_recipe(**overrides) -> RecipeEntity:
+def _make_recipe(
+    *,
+    recipe_id: UUID | None = None,
+    title: str = "Test Cake",
+    description: str = "A delicious cake",
+    category: str = "dessert",
+    season: str | None = "summer",
+    is_veggie: bool = True,
+    difficulty: int | None = 2,
+    number_of_people: int | None = 4,
+    rate: int | None = 5,
+    tested: bool = True,
+    prep_time_minutes: int | None = 10,
+    cook_time_minutes: int | None = 30,
+    rest_time_minutes: int | None = 5,
+    tags: list[str] | None = None,
+    preparation: list[str] | None = None,
+    ingredients: list[IngredientEntity] | None = None,
+    images: list[ImageEntity] | None = None,
+    sources: list[SourceEntity] | None = None,
+) -> RecipeEntity:
     """Helper to build a RecipeEntity with sensible defaults."""
-    defaults = {
-        "id": uuid4(),
-        "title": "Test Cake",
-        "description": "A delicious cake",
-        "category": "dessert",
-        "season": "summer",
-        "is_veggie": True,
-        "difficulty": 2,
-        "number_of_people": 4,
-        "rate": 5,
-        "tested": True,
-        "prep_time_minutes": 10,
-        "cook_time_minutes": 30,
-        "rest_time_minutes": 5,
-        "tags": ["sweet"],
-        "preparation": ["Mix ingredients", "Bake at 180C"],
-        "ingredients": [
+    return RecipeEntity(
+        id=recipe_id or uuid4(),
+        title=title,
+        description=description,
+        category=category,
+        season=season,
+        is_veggie=is_veggie,
+        difficulty=difficulty,
+        number_of_people=number_of_people,
+        rate=rate,
+        tested=tested,
+        prep_time_minutes=prep_time_minutes,
+        cook_time_minutes=cook_time_minutes,
+        rest_time_minutes=rest_time_minutes,
+        tags=tags if tags is not None else ["sweet"],
+        preparation=preparation
+        if preparation is not None
+        else ["Mix ingredients", "Bake at 180C"],
+        ingredients=ingredients
+        if ingredients is not None
+        else [
             IngredientEntity(name="Flour", quantity=200, unit="g"),
             IngredientEntity(name="Sugar", quantity=100, unit="g"),
         ],
-        "images": [],
-        "sources": [SourceEntity(type="manual", raw_content="Grandma's recipe")],
-    }
-    defaults.update(overrides)
-    return RecipeEntity(**defaults)
+        images=images if images is not None else [],
+        sources=sources
+        if sources is not None
+        else [
+            SourceEntity(type="manual", raw_content="Grandma's recipe"),
+        ],
+    )
 
 
 def _read_docx_text(data: bytes) -> str:
@@ -152,14 +179,22 @@ def _make_valid_png() -> bytes:
     return png
 
 
-class _StubImageStorage:
-    """Minimal stub implementing get_recipe_image for word exporter tests."""
+class _StubImageStorage(ImageStoragePort):
+    """Minimal stub implementing ImageStoragePort for word exporter tests."""
 
-    def __init__(self, images: dict | None = None) -> None:
+    def __init__(self, images: dict[UUID, ImageResponse] | None = None) -> None:
         self.images = images or {}
 
-    def get_recipe_image(self, image_id):
+    def add_recipe_image(
+        self, recipe_id: UUID, image: bytes, filename: str, image_id: UUID
+    ) -> UUID:
+        return image_id
+
+    def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
         return self.images.get(image_id)
+
+    def delete_image(self, image_id: UUID) -> bool:
+        return image_id in self.images
 
 
 class TestWithImages:
@@ -169,9 +204,7 @@ class TestWithImages:
         storage = _StubImageStorage(
             {image_id: ImageResponse(media_type="image/png", content=png_bytes)}
         )
-        recipe = _make_recipe(
-            images=[ImageEntity(id=image_id, caption="Photo")]
-        )
+        recipe = _make_recipe(images=[ImageEntity(id=image_id, caption="Photo")])
         exporter = WordExporter(image_storage=storage)
         data = exporter.to_bytes([recipe])
 
@@ -179,9 +212,7 @@ class TestWithImages:
         assert "Photo" in text
 
     def test_without_image_storage(self) -> None:
-        recipe = _make_recipe(
-            images=[ImageEntity(id=uuid4(), caption="Photo")]
-        )
+        recipe = _make_recipe(images=[ImageEntity(id=uuid4(), caption="Photo")])
         exporter = WordExporter()
         data = exporter.to_bytes([recipe])
         # Should not crash
@@ -189,9 +220,7 @@ class TestWithImages:
 
     def test_missing_image_in_storage(self) -> None:
         storage = _StubImageStorage({})
-        recipe = _make_recipe(
-            images=[ImageEntity(id=uuid4(), caption="Missing")]
-        )
+        recipe = _make_recipe(images=[ImageEntity(id=uuid4(), caption="Missing")])
         exporter = WordExporter(image_storage=storage)
         data = exporter.to_bytes([recipe])
         # Should skip the missing image gracefully

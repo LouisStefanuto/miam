@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from datetime import UTC, datetime
+from typing import Any
 from unittest.mock import MagicMock, create_autospec
 from uuid import UUID, uuid4
 
@@ -22,12 +23,14 @@ from miam.domain.services import RecipeExportService, RecipeManagementService
 
 @pytest.fixture
 def mock_recipe_service() -> MagicMock:
-    return create_autospec(RecipeManagementService, instance=True)
+    mock: MagicMock = create_autospec(RecipeManagementService, instance=True)
+    return mock
 
 
 @pytest.fixture
 def mock_export_service() -> MagicMock:
-    return create_autospec(RecipeExportService, instance=True)
+    mock: MagicMock = create_autospec(RecipeExportService, instance=True)
+    return mock
 
 
 @pytest.fixture
@@ -52,7 +55,7 @@ def make_recipe(
     ingredients: list[IngredientEntity] | None = None,
     images: list[ImageEntity] | None = None,
     sources: list[SourceEntity] | None = None,
-    **kwargs: object,
+    **kwargs: Any,
 ) -> RecipeEntity:
     return RecipeEntity(
         id=recipe_id or uuid4(),

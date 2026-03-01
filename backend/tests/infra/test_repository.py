@@ -101,9 +101,11 @@ class TestAddRecipe:
         repository.add_recipe(data2)
 
         # Only one Ingredient row for "Salt"
-        count = db_session.execute(
-            select(Ingredient).where(Ingredient.name == "Salt")
-        ).scalars().all()
+        count = (
+            db_session.execute(select(Ingredient).where(Ingredient.name == "Salt"))
+            .scalars()
+            .all()
+        )
         assert len(count) == 1
 
     def test_tags_json_round_trip(self, repository: RecipeRepository) -> None:
@@ -156,9 +158,11 @@ class TestAddRecipes:
         ]
         repository.add_recipes(recipes)
 
-        count = db_session.execute(
-            select(Ingredient).where(Ingredient.name == "Butter")
-        ).scalars().all()
+        count = (
+            db_session.execute(select(Ingredient).where(Ingredient.name == "Butter"))
+            .scalars()
+            .all()
+        )
         assert len(count) == 1
 
     def test_empty_list(self, repository: RecipeRepository) -> None:
@@ -178,7 +182,9 @@ class TestGetRecipeById:
         data = make_recipe_create(
             title="Full",
             ingredients=[IngredientCreate(name="Egg", quantity=3)],
-            sources=[SourceCreate(type=SourceType.url, raw_content="https://example.com")],
+            sources=[
+                SourceCreate(type=SourceType.url, raw_content="https://example.com")
+            ],
         )
         created = repository.add_recipe(data)
 
@@ -203,17 +209,26 @@ class TestSearchRecipes:
     def _seed(self, repo: RecipeRepository) -> None:
         repo.add_recipe(
             make_recipe_create(
-                title="Apple Pie", category=Category.dessert, is_veggie=True, season=Season.autumn
+                title="Apple Pie",
+                category=Category.dessert,
+                is_veggie=True,
+                season=Season.autumn,
             )
         )
         repo.add_recipe(
             make_recipe_create(
-                title="Beef Stew", category=Category.plat, is_veggie=False, season=Season.winter
+                title="Beef Stew",
+                category=Category.plat,
+                is_veggie=False,
+                season=Season.winter,
             )
         )
         repo.add_recipe(
             make_recipe_create(
-                title="Apple Tart", category=Category.dessert, is_veggie=True, season=Season.summer
+                title="Apple Tart",
+                category=Category.dessert,
+                is_veggie=True,
+                season=Season.summer,
             )
         )
 
@@ -346,9 +361,7 @@ class TestUpdateRecipe:
         assert updated.sources[0].type == "url"
 
     def test_not_found(self, repository: RecipeRepository) -> None:
-        update = RecipeUpdate(
-            title="X", description="Y", category=Category.plat
-        )
+        update = RecipeUpdate(title="X", description="Y", category=Category.plat)
         assert repository.update_recipe(uuid4(), update) is None
 
     def test_clears_ingredients(self, repository: RecipeRepository) -> None:
