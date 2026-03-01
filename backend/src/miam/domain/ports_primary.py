@@ -11,17 +11,14 @@ class RecipeServicePort(ABC):
     @abstractmethod
     def create_recipe(self, data: RecipeCreate) -> RecipeEntity:
         """Persist a new recipe with all related entities and return the created Recipe."""
-        pass
 
     @abstractmethod
     def create_recipes(self, data: list[RecipeCreate]) -> list[RecipeEntity]:
         """Persist multiple recipes atomically and return all created Recipe entities."""
-        pass
 
     @abstractmethod
     def get_recipe_by_id(self, recipe_id: UUID) -> RecipeEntity | None:
         """Retrieve a recipe by its ID, including all related entities."""
-        pass
 
     @abstractmethod
     def search_recipes(
@@ -35,41 +32,33 @@ class RecipeServicePort(ABC):
         offset: int = 0,
     ) -> PaginatedResult:
         """Search for recipes using dynamic filters with pagination."""
-        pass
 
     @abstractmethod
     def update_recipe(self, recipe_id: UUID, data: RecipeUpdate) -> RecipeEntity | None:
         """Full replacement of a recipe (PUT semantics). Returns None if not found."""
-        pass
 
     @abstractmethod
     def delete_recipe(self, recipe_id: UUID) -> bool:
         """Delete a recipe by ID. Returns True if deleted, False if not found."""
-        pass
 
     @abstractmethod
     def add_recipe_image(self, recipe_id: UUID, content: bytes, filename: str) -> UUID:
         """Add an image to a recipe and return its image ID."""
-        pass
 
     @abstractmethod
     def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
         """Retrieve image bytes for a given image ID."""
-        pass
 
     @abstractmethod
     def delete_recipe_image(self, image_id: UUID) -> bool:
         """Delete an image from storage and database. Returns True if deleted, False if not found."""
-        pass
 
 
 class RecipeExportServicePort(ABC):
     @abstractmethod
     def export_recipes_to_markdown(self) -> bytes:
         """Export all recipes as a ZIP archive containing Markdown and images."""
-        pass
 
     @abstractmethod
     def export_recipes_to_word(self) -> bytes:
         """Export all recipes as Word document."""
-        pass

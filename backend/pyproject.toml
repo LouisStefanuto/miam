@@ -55,14 +55,15 @@ select = [
     # "DOC", # pydoclint (sill in preview)
     # "ANN", # enforce type annotations
     "UP",  # pyupgrade
-    'YTT', # flake8-2020
+    "YTT", # flake8-2020
     "FAST",
-    'B',   # flake8-bugbear
-#     "A",   # flake8-builtins
-#     'C4',  # flake8-comprehensions
-#     "DTZ", # flake8-datetimez
-#     "Q",   # flake8-quotes
-#     'PIE', # flake8-pie
+    "B",   # flake8-bugbear
+    "A",   # flake8-builtins
+    "C4",  # flake8-comprehensions
+    "DTZ", # flake8-datetimez
+    "Q",   # flake8-quotes
+    "PIE", # flake8-pie
+    "LOG", # flake8-logging
 ]
 ignore = [
     "D1",  # don't require docstrings, only lint existing ones
