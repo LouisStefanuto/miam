@@ -8,7 +8,7 @@
 
 [![Docs](https://img.shields.io/badge/docs-available-brightgreen.svg)](./docs/)
 
-[**Install**](#install) • [**Run**](#run) • [**Dev**](#dev) • [**Docs**](https://louisstefanuto.github.io/miam/)
+[**Install**](#install) • [**Run**](#run) • [**Docs**](https://louisstefanuto.github.io/miam/) • [**Dev**](#dev)
 
 </div>
 
@@ -48,13 +48,20 @@ make docs
 
 ## Dev
 
-Run pre-commit checks over the entire repo.
+Before pushing to this repo, please setup pre-commit.
 
 ```bash
 uv tool install pre-commit
 pre-commit install --hook-type commit-msg --hook-type pre-push
-make pre-commit
 ```
+
+When running the project containers, monitor container resource usage with [Dozzle](https://dozzle.dev/guide/what-is-dozzle).
+
+```bash
+make dozzle
+```
+
+For performance results under load testing, see the [Locust section](./locust/README.md).
 
 ## Architecture
 
