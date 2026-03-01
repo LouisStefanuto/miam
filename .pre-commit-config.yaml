@@ -76,3 +76,10 @@ repos:
       args: ["--skip", "B311"]
       # Exclude tests bc they contain assert statements, that raise bandit errors
       exclude: tests/
+- repo: https://github.com/commitizen-tools/commitizen
+  rev: v4.13.9
+  hooks:
+    - id: commitizen
+      stages: [commit-msg]
+    - id: commitizen-branch
+      stages: [pre-push]
