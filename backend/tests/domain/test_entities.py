@@ -1,6 +1,6 @@
 """Tests for domain entities and enums."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from miam.domain.entities import (
@@ -92,7 +92,9 @@ class TestSourceEntity:
 class TestRecipeEntity:
     def test_minimal(self) -> None:
         uid = uuid4()
-        recipe = RecipeEntity(id=uid, title="Pasta", description="Simple pasta", category="plat")
+        recipe = RecipeEntity(
+            id=uid, title="Pasta", description="Simple pasta", category="plat"
+        )
         assert recipe.id == uid
         assert recipe.title == "Pasta"
         assert recipe.description == "Simple pasta"
@@ -116,7 +118,7 @@ class TestRecipeEntity:
     def test_full(self) -> None:
         uid = uuid4()
         img_id = uuid4()
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         recipe = RecipeEntity(
             id=uid,
             title="Ratatouille",

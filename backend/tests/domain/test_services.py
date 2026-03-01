@@ -16,7 +16,6 @@ from miam.domain.ports_secondary import (
 from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
 from miam.domain.services import RecipeExportService, RecipeManagementService
 
-
 # ---------------------------------------------------------------------------
 # Stub implementations of secondary ports
 # ---------------------------------------------------------------------------
@@ -234,8 +233,12 @@ class TestRecipeManagementServiceSearch:
     def test_search_by_title(self) -> None:
         from miam.domain.entities import Category
 
-        self.service.create_recipe(RecipeCreate(title="Apple Pie", category=Category.dessert))
-        self.service.create_recipe(RecipeCreate(title="Beef Stew", category=Category.plat))
+        self.service.create_recipe(
+            RecipeCreate(title="Apple Pie", category=Category.dessert)
+        )
+        self.service.create_recipe(
+            RecipeCreate(title="Beef Stew", category=Category.plat)
+        )
         result = self.service.search_recipes(title="Apple")
         assert result.total == 1
         assert result.items[0].title == "Apple Pie"
@@ -244,7 +247,9 @@ class TestRecipeManagementServiceSearch:
         from miam.domain.entities import Category
 
         for i in range(5):
-            self.service.create_recipe(RecipeCreate(title=f"R{i}", category=Category.plat))
+            self.service.create_recipe(
+                RecipeCreate(title=f"R{i}", category=Category.plat)
+            )
         result = self.service.search_recipes(limit=2, offset=1)
         assert result.total == 5
         assert len(result.items) == 2
@@ -273,9 +278,7 @@ class TestRecipeManagementServiceUpdate:
     def test_update_not_found(self) -> None:
         from miam.domain.entities import Category
 
-        update_data = RecipeUpdate(
-            title="X", description="Y", category=Category.plat
-        )
+        update_data = RecipeUpdate(title="X", description="Y", category=Category.plat)
         result = self.service.update_recipe(uuid4(), update_data)
         assert result is None
 
@@ -371,7 +374,9 @@ class TestRecipeExportService:
 
         mgmt = RecipeManagementService(self.repo, StubImageStorage())
         for i in range(count):
-            mgmt.create_recipe(RecipeCreate(title=f"Recipe {i}", category=Category.plat))
+            mgmt.create_recipe(
+                RecipeCreate(title=f"Recipe {i}", category=Category.plat)
+            )
 
     def test_export_markdown(self) -> None:
         self._seed_recipes(3)
