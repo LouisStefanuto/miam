@@ -52,6 +52,7 @@ Run pre-commit checks over the entire repo.
 
 ```bash
 uv tool install pre-commit
+pre-commit install --hook-type commit-msg --hook-type pre-push
 make pre-commit
 ```
 

@@ -1,3 +1,5 @@
+"""I/O models to interact with entities."""
+
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator

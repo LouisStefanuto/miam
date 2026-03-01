@@ -55,7 +55,7 @@ db-dump: ## Dump the database to a SQL file
 
 .PHONY: docs
 docs: ## Serve documentation locally
-	uv --directory docs run mkdocs serve -a 0.0.0.0:8001
+	uv --directory docs run mkdocs serve -a 0.0.0.0:8001 -w ../backend/src/
 
 .PHONY: loadtest
 loadtest: ## Run load tests with Locust web UI (http://localhost:8089)

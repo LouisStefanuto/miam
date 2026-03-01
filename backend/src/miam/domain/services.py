@@ -1,4 +1,4 @@
-"""Domain services that orchestrate recipe operations."""
+"""Orchestrate recipe operations."""
 
 from uuid import UUID
 
