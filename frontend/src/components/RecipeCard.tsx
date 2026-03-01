@@ -103,12 +103,12 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
           <StarRating rating={recipe.rating} />
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-muted-foreground font-body mt-2">
+        <div className="flex items-end gap-3 text-xs text-muted-foreground font-body mt-2">
           <span className="flex items-center gap-1">
             <Clock size={13} />
             {totalTime} min
           </span>
-          <span className="flex items-center gap-1">
+          <span className="flex items-end gap-1">
             <DifficultyBars level={diff.bars} />
             {diff.label}
           </span>
