@@ -1,4 +1,5 @@
 import io
+import pathlib
 import uuid
 import zipfile
 from unittest.mock import MagicMock
@@ -19,7 +20,7 @@ from miam.infra.exporter_markdown import MarkdownExporter
 # Fixtures for test data
 # -----------------------------
 @pytest.fixture
-def sample_recipes():
+def sample_recipes() -> list[RecipeEntity]:
     recipe = RecipeEntity(
         id=uuid.uuid4(),
         title="Test Cake",
@@ -54,7 +55,7 @@ def sample_recipes():
 # -----------------------------
 # Tests
 # -----------------------------
-def test_exporter_to_string(sample_recipes):
+def test_exporter_to_string(sample_recipes: list[RecipeEntity]) -> None:
     exporter = MarkdownExporter()
     output = exporter.to_string(sample_recipes)
 
@@ -80,7 +81,9 @@ def test_exporter_to_string(sample_recipes):
     assert "Bake at 180C for 30 min" in output
 
 
-def test_exporter_to_markdown(tmp_path, sample_recipes):
+def test_exporter_to_markdown(
+    tmp_path: pathlib.Path, sample_recipes: list[RecipeEntity]
+) -> None:
     exporter = MarkdownExporter()
     output_file = tmp_path / "recipes.md"
 
@@ -99,7 +102,7 @@ def test_exporter_to_markdown(tmp_path, sample_recipes):
     assert content.startswith("# Test Cake")
 
 
-def test_exporter_to_zip_bytes(sample_recipes):
+def test_exporter_to_zip_bytes(sample_recipes: list[RecipeEntity]) -> None:
     image_id = sample_recipes[0].images[0].id
     fake_png = b"\x89PNG\r\n\x1a\nfake-image-data"
 
@@ -131,7 +134,9 @@ def test_exporter_to_zip_bytes(sample_recipes):
         assert "Test Cake" in md_content
 
 
-def test_exporter_to_zip_bytes_without_storage(sample_recipes):
+def test_exporter_to_zip_bytes_without_storage(
+    sample_recipes: list[RecipeEntity],
+) -> None:
     exporter = MarkdownExporter()
     zip_bytes = exporter.to_zip_bytes(sample_recipes)
 

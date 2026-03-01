@@ -39,7 +39,7 @@ skip_empty = true
 python_version = "3.13"
 mypy_path = ["$MYPY_CONFIG_FILE_DIR"]
 strict = true
-exclude = ["tests/.*", "docs/"]
+exclude = ["docs/"]
 plugins = ["pydantic.mypy"]
 
 [tool.ruff]
@@ -64,6 +64,7 @@ select = [
     "Q",   # flake8-quotes
     "PIE", # flake8-pie
     "LOG", # flake8-logging
+    "PT", # flake8-pytest-style
 ]
 ignore = [
     "D1",  # don't require docstrings, only lint existing ones
@@ -71,10 +72,6 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = [
-    "D205",  # ignore: 1 blank line required between summary line and description
-    "S101"   # ignore: Use of assert detected for tests
-]
 "alembic/**" = [
     "D",     # ignore: docstring rules for auto-generated migrations
     "UP",
