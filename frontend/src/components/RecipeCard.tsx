@@ -1,18 +1,15 @@
-import { Clock, Star, Users, Check } from 'lucide-react';
+import { Clock, Star, Users, Sun, Snowflake, Flower, LeafyGreen, Vegan } from 'lucide-react';
 import beaverIcon from '/icon.png';
 import { Recipe } from '@/data/recipes';
 import { Badge } from '@/components/ui/badge';
-import seasonSpring from '@/assets/icons/season-spring.png';
-import seasonSummer from '@/assets/icons/season-summer.png';
-import seasonFall from '@/assets/icons/season-fall.png';
-import seasonWinter from '@/assets/icons/season-winter.png';
-import veganIcon from '@/assets/icons/vegetalien.png';
 
-const seasonIcons: Record<string, string> = {
-  printemps: seasonSpring,
-  été: seasonSummer,
-  automne: seasonFall,
-  hiver: seasonWinter,
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const seasonIcons: Record<string, any> = {
+  printemps: Flower,
+  été: Sun,
+  automne: LeafyGreen,
+  hiver: Snowflake,
 };
 
 const difficultyLabels: Record<string, { label: string; bars: number }> = {
@@ -77,11 +74,11 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
         {/* Season + végé badges top right */}
         <div className="absolute top-2 right-2 flex gap-1.5">
           {isVegetarian && (
-            <div className="w-8 h-8 rounded-full border-2 border-white/50 bg-white/90 flex items-center justify-center shadow-sm">
-              <img src={veganIcon} alt="Végétarien" className="w-5 h-5 object-contain" />
+            <div className="w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm">
+              <Vegan size={16} className="text-green-600" />
             </div>
           )}
-          <img src={seasonIcons[recipe.season]} alt={recipe.season} className="w-8 h-8 rounded-full border-2 border-white/50 bg-white/90 object-cover shadow-sm grayscale" />
+          {(() => { const SeasonIcon = seasonIcons[recipe.season]; return SeasonIcon ? <div className="w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm"><SeasonIcon size={16} className="text-gray-600 dark:text-gray-300" /></div> : null; })()}
         </div>
         {/* Type badge */}
         <div className="absolute top-2 left-2 flex gap-1.5">

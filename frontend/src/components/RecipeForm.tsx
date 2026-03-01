@@ -11,10 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 import { SortableIngredientItem } from './SortableIngredientItem';
-import seasonSpring from '@/assets/icons/season-spring.png';
-import seasonSummer from '@/assets/icons/season-summer.png';
-import seasonFall from '@/assets/icons/season-fall.png';
-import seasonWinter from '@/assets/icons/season-winter.png';
 import veganIcon from '@/assets/icons/vegetalien.png';
 import cuissonIcon from '@/assets/icons/cuisson.png';
 import melangeIcon from '@/assets/icons/melange.png';
@@ -32,13 +28,6 @@ const difficultyLevels: Record<string, { label: string; bars: number }> = {
   facile: { label: 'Facile', bars: 1 },
   moyen: { label: 'Moyen', bars: 2 },
   difficile: { label: 'Difficile', bars: 3 },
-};
-
-const seasonIcons: Record<string, string> = {
-  printemps: seasonSpring,
-  été: seasonSummer,
-  automne: seasonFall,
-  hiver: seasonWinter,
 };
 
 interface RecipeFormProps {

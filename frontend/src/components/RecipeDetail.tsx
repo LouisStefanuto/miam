@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ArrowLeft, Star, Pencil, Save, X, Plus, Trash2, Minus, Camera, Check, ImagePlus, ImageMinus, Copy, ClipboardCheck } from 'lucide-react';
+import { ArrowLeft, Star, Pencil, Save, X, Plus, Trash2, Minus, Camera, Check, ImagePlus, ImageMinus, Copy, ClipboardCheck, Sun, Snowflake, Flower, LeafyGreen, Vegan } from 'lucide-react';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 import { SortableIngredientItem } from './SortableIngredientItem';
 import { Badge } from '@/components/ui/badge';
@@ -12,11 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import seasonSpring from '@/assets/icons/season-spring.png';
-import seasonSummer from '@/assets/icons/season-summer.png';
-import seasonFall from '@/assets/icons/season-fall.png';
-import seasonWinter from '@/assets/icons/season-winter.png';
-import veganIcon from '@/assets/icons/vegetalien.png';
+
 import cuissonIcon from '@/assets/icons/cuisson.png';
 import melangeIcon from '@/assets/icons/melange.png';
 import servingsIcon from '@/assets/icons/servings.png';
@@ -41,11 +37,12 @@ const difficultyLevels: Record<string, { label: string; bars: number }> = {
   difficile: { label: 'Difficile', bars: 3 },
 };
 
-const seasonIcons: Record<string, string> = {
-  printemps: seasonSpring,
-  été: seasonSummer,
-  automne: seasonFall,
-  hiver: seasonWinter,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const seasonIcons: Record<string, any> = {
+  printemps: Flower,
+  été: Sun,
+  automne: LeafyGreen,
+  hiver: Snowflake,
 };
 
 const difficultyLabels: Record<string, string> = {
@@ -340,11 +337,11 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 </SelectContent>
               </Select>
             ) : (
-              <img src={seasonIcons[current.season]} alt={current.season} className="w-7 h-7 rounded-full border-2 border-white/50 bg-white/20 backdrop-blur-sm object-cover grayscale" />
+              (() => { const SeasonIcon = seasonIcons[current.season]; return SeasonIcon ? <div className="w-7 h-7 rounded-full border-2 border-card/95 bg-card/95 backdrop-blur-sm flex items-center justify-center"><SeasonIcon size={14} className="text-gray-600 dark:text-gray-300" /></div> : null; })()
             )}
             {current.diets.includes('végétarien') && (
-              <div className="w-7 h-7 rounded-full border-2 border-white/50 bg-white/80 backdrop-blur-sm flex items-center justify-center">
-                <img src={veganIcon} alt="Végétarien" className="w-5 h-5 object-contain" />
+              <div className="w-7 h-7 rounded-full border-2 border-card/95 bg-card/95 backdrop-blur-sm flex items-center justify-center">
+                <Vegan size={14} className="text-green-600" />
               </div>
             )}
             {/* Testé toggle - always interactive */}
