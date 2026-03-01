@@ -53,15 +53,6 @@ repos:
     - id: ruff-format
 - repo: local
   hooks:
-    - id: ty-python-backend
-      name: ty (alternative to mypy, currently testing it out)
-      entry: uv --directory backend run ty check . --output-format=concise
-      args: []
-      language: system
-      types: [python]
-      pass_filenames: false
-- repo: local
-  hooks:
     - id: mypy-python-backend
       name: mypy
       entry: uv --directory backend run mypy --config-file=pyproject.toml .
