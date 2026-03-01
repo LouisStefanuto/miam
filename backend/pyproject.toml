@@ -56,7 +56,8 @@ select = [
     # "ANN", # enforce type annotations
     "UP",  # pyupgrade
     'YTT', # flake8-2020
-#     'B',   # flake8-bugbear
+    "FAST",
+    # 'B',   # flake8-bugbear
 #     "A",   # flake8-builtins
 #     'C4',  # flake8-comprehensions
 #     "DTZ", # flake8-datetimez
