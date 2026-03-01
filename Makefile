@@ -64,3 +64,7 @@ loadtest: ## Run load tests with Locust web UI (http://localhost:8089)
 .PHONY: loadtest-headless
 loadtest-headless: ## Run headless load test (50 users, 5/s ramp, 2 min)
 	cd locust && uv run locust -f locustfile.py --headless -u 50 -r 5 --run-time 2m --host http://localhost:8000
+
+.PHONY: dozzle
+dozzle: ## Monitor container resource usage with Dozzle
+	docker compose up dozzle
