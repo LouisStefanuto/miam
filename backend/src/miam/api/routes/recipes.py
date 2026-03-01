@@ -1,7 +1,7 @@
 """API routes for managing recipes (CRUD operations)."""
 
 from datetime import datetime
-from typing import Optional
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
@@ -23,46 +23,46 @@ class BatchRecipeResponse(BaseModel):
     ids: list[UUID]
 
 
-@router.post(
-    "/batch", response_model=BatchRecipeResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/batch", status_code=status.HTTP_201_CREATED)
 def create_recipes(
     batch_in: BatchRecipeCreate,
-    service: RecipeManagementService = Depends(get_recipe_management_service),
+    service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
 ) -> BatchRecipeResponse:
     """Create multiple recipes in a single atomic operation."""
     try:
         recipes = service.create_recipes(batch_in.recipes)
         return BatchRecipeResponse(ids=[r.id for r in recipes])
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
+        ) from exc
 
 
-@router.post("", response_model=RecipeResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def create_recipe(
     recipe_in: RecipeCreate,
-    service: RecipeManagementService = Depends(get_recipe_management_service),
+    service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
 ) -> RecipeResponse:
-    """
-    Create a new recipe.
-    """
+    """Create a new recipe."""
     try:
         recipe = service.create_recipe(recipe_in)
         return RecipeResponse(id=recipe.id)
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
+        ) from exc
 
 
 class IngredientResponse(BaseModel):
     name: str
-    quantity: Optional[float] = None
-    unit: Optional[str] = None
+    quantity: float | None = None
+    unit: str | None = None
     display_order: int = 0
 
 
 class ImageDetailResponse(BaseModel):
     id: UUID
-    caption: Optional[str] = None
+    caption: str | None = None
     display_order: int = 0
 
 
@@ -75,28 +75,28 @@ class RecipeDetailResponse(BaseModel):
     id: UUID
     title: str
     description: str
-    prep_time_minutes: Optional[int] = None
-    cook_time_minutes: Optional[int] = None
-    rest_time_minutes: Optional[int] = None
-    season: Optional[str] = None
+    prep_time_minutes: int | None = None
+    cook_time_minutes: int | None = None
+    rest_time_minutes: int | None = None
+    season: str | None = None
     category: str
     is_veggie: bool
-    difficulty: Optional[int] = None
-    number_of_people: Optional[int] = None
-    rate: Optional[int] = None
+    difficulty: int | None = None
+    number_of_people: int | None = None
+    rate: int | None = None
     tested: bool
     tags: list[str]
     preparation: list[str]
     ingredients: list[IngredientResponse]
     images: list[ImageDetailResponse]
     sources: list[SourceResponse]
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
 
 
 class PaginatedRecipeResponse(BaseModel):
     items: list[RecipeDetailResponse]
     total: int
-    limit: Optional[int] = None
+    limit: int | None = None
     offset: int = 0
 
 
@@ -145,20 +145,18 @@ def map_recipe_to_response(recipe: RecipeEntity) -> RecipeDetailResponse:
     )
 
 
-@router.get("/search", response_model=PaginatedRecipeResponse)
+@router.get("/search")
 def search_recipes(
-    recipe_id: Optional[UUID] = Query(None),
-    title: Optional[str] = Query(None),
-    category: Optional[str] = Query(None),
-    is_veggie: Optional[bool] = Query(None),
-    season: Optional[str] = Query(None),
-    limit: Optional[int] = Query(None, ge=1, le=100),
-    offset: int = Query(0, ge=0),
-    service: RecipeManagementService = Depends(get_recipe_management_service),
+    service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
+    recipe_id: Annotated[UUID | None, Query()] = None,
+    title: Annotated[str | None, Query()] = None,
+    category: Annotated[str | None, Query()] = None,
+    is_veggie: Annotated[bool | None, Query()] = None,
+    season: Annotated[str | None, Query()] = None,
+    limit: Annotated[int | None, Query(ge=1, le=100)] = None,
+    offset: Annotated[int, Query(ge=0)] = 0,
 ) -> PaginatedRecipeResponse:
-    """
-    Search recipes with optional filters and pagination.
-    """
+    """Search recipes with optional filters and pagination."""
     result = service.search_recipes(
         recipe_id=recipe_id,
         title=title,
@@ -176,10 +174,10 @@ def search_recipes(
     )
 
 
-@router.get("/{recipe_id}", response_model=RecipeDetailResponse)
+@router.get("/{recipe_id}")
 def get_recipe(
-    recipe_id: UUID = Path(..., description="The ID of the recipe to retrieve"),
-    service: RecipeManagementService = Depends(get_recipe_management_service),
+    recipe_id: Annotated[UUID, Path(description="The ID of the recipe to retrieve")],
+    service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
 ) -> RecipeDetailResponse:
     recipe = service.get_recipe_by_id(recipe_id)
     if not recipe:
@@ -193,8 +191,8 @@ def get_recipe(
 
 @router.delete("/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_recipe(
-    recipe_id: UUID = Path(..., description="The ID of the recipe to delete"),
-    service: RecipeManagementService = Depends(get_recipe_management_service),
+    recipe_id: Annotated[UUID, Path(description="The ID of the recipe to delete")],
+    service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
 ) -> None:
     """Delete a recipe by ID."""
     deleted = service.delete_recipe(recipe_id)
@@ -205,16 +203,18 @@ def delete_recipe(
         )
 
 
-@router.put("/{recipe_id}", response_model=RecipeDetailResponse)
+@router.put("/{recipe_id}")
 def update_recipe(
     recipe_in: RecipeUpdate,
-    recipe_id: UUID = Path(..., description="The ID of the recipe to replace"),
-    service: RecipeManagementService = Depends(get_recipe_management_service),
+    recipe_id: Annotated[UUID, Path(description="The ID of the recipe to replace")],
+    service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
 ) -> RecipeDetailResponse:
     try:
         recipe = service.update_recipe(recipe_id, recipe_in)
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
+        ) from exc
     if recipe is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -223,15 +223,13 @@ def update_recipe(
     return map_recipe_to_response(recipe)
 
 
-@router.get("", response_model=PaginatedRecipeResponse)
+@router.get("")
 def get_recipes(
-    limit: Optional[int] = Query(None, ge=1, le=100),
-    offset: int = Query(0, ge=0),
-    service: RecipeManagementService = Depends(get_recipe_management_service),
+    service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
+    limit: Annotated[int | None, Query(ge=1, le=100)] = None,
+    offset: Annotated[int, Query(ge=0)] = 0,
 ) -> PaginatedRecipeResponse:
-    """
-    Retrieve recipes with optional pagination.
-    """
+    """Retrieve recipes with optional pagination."""
     result = service.search_recipes(limit=limit, offset=offset)
     return PaginatedRecipeResponse(
         items=[map_recipe_to_response(r) for r in result.items],

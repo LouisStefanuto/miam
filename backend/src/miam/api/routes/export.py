@@ -1,6 +1,7 @@
 """API routes for exporting recipes in various formats."""
 
 import io
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/export", tags=["export"])
 
 @router.post("/markdown")
 def export_to_markdown(
-    service: RecipeExportService = Depends(get_recipe_export_service),
+    service: Annotated[RecipeExportService, Depends(get_recipe_export_service)],
 ) -> StreamingResponse:
     zip_bytes = service.export_recipes_to_markdown()
     return StreamingResponse(
@@ -25,7 +26,7 @@ def export_to_markdown(
 
 @router.post("/word")
 def export_to_docx(
-    service: RecipeExportService = Depends(get_recipe_export_service),
+    service: Annotated[RecipeExportService, Depends(get_recipe_export_service)],
 ) -> StreamingResponse:
     word_bytes = service.export_recipes_to_word()
     return StreamingResponse(

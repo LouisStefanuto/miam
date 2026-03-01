@@ -1,5 +1,6 @@
 """API routes for managing images."""
 
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
@@ -17,11 +18,11 @@ class ImageUploadResponse(BaseModel):
     image_id: UUID
 
 
-@router.post("", response_model=ImageUploadResponse, status_code=201)
+@router.post("", status_code=201)
 async def upload_image(
-    recipe_id: UUID = Form(...),
-    image: UploadFile = File(...),
-    service: RecipeManagementService = Depends(get_recipe_management_service),
+    recipe_id: Annotated[UUID, Form()],
+    image: Annotated[UploadFile, File()],
+    service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
 ) -> ImageUploadResponse:
     if not image.filename:
         raise HTTPException(
@@ -49,7 +50,7 @@ async def upload_image(
 @router.delete("/{image_id}", status_code=204)
 async def delete_image(
     image_id: UUID,
-    service: RecipeManagementService = Depends(get_recipe_management_service),
+    service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
 ) -> None:
     deleted = service.delete_recipe_image(image_id)
     if not deleted:
@@ -59,7 +60,7 @@ async def delete_image(
 @router.get("/{image_id}")
 async def get_image(
     image_id: UUID,
-    service: RecipeManagementService = Depends(get_recipe_management_service),
+    service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
 ) -> Response:
     image_response = service.get_recipe_image(image_id)
     if not image_response:

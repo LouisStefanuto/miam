@@ -4,7 +4,7 @@ Defines all tables, relationships, and enums for the recipe management system.
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     Boolean,
@@ -122,7 +122,7 @@ class Recipe(Base):
     preparation: Mapped[list[str] | None] = mapped_column(JSON, default=list)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
     )
 

@@ -32,11 +32,6 @@ create-environment: ## Set up Python environment using uv
 
 .PHONY: lint
 lint: ## Lint using ruff (use `make format` to do formatting)
-	ruff format --check
-	ruff check
-
-.PHONY: format
-format: ## Format source code with ruff
 	ruff check --fix
 	ruff format
 

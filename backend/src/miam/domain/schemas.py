@@ -1,6 +1,6 @@
 """I/O models to interact with entities."""
 
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -9,9 +9,9 @@ from miam.domain.entities import Category, Season, SourceType
 
 class IngredientCreate(BaseModel):
     name: str
-    quantity: Optional[float] = None
-    unit: Optional[str] = None
-    display_order: Optional[int] = None
+    quantity: float | None = None
+    unit: str | None = None
+    display_order: int | None = None
 
     @field_validator("name", mode="before")
     @classmethod
@@ -23,8 +23,8 @@ class IngredientCreate(BaseModel):
 
 
 class ImageCreate(BaseModel):
-    caption: Optional[str] = None
-    display_order: Optional[int] = None
+    caption: str | None = None
+    display_order: int | None = None
 
 
 class SourceCreate(BaseModel):
@@ -35,15 +35,15 @@ class SourceCreate(BaseModel):
 class RecipeCreate(BaseModel):
     title: str
     description: str = ""
-    prep_time_minutes: Optional[int] = None
-    cook_time_minutes: Optional[int] = None
-    rest_time_minutes: Optional[int] = None
-    season: Optional[Season] = None
+    prep_time_minutes: int | None = None
+    cook_time_minutes: int | None = None
+    rest_time_minutes: int | None = None
+    season: Season | None = None
     category: Category
-    is_veggie: Optional[bool] = False
-    difficulty: Optional[int] = Field(None, ge=1, le=3)
-    number_of_people: Optional[int] = Field(None, ge=1)
-    rate: Optional[int] = Field(None, ge=1, le=5)
+    is_veggie: bool | None = False
+    difficulty: int | None = Field(None, ge=1, le=3)
+    number_of_people: int | None = Field(None, ge=1)
+    rate: int | None = Field(None, ge=1, le=5)
     tested: bool = False
     tags: list[str] = []
     preparation: list[str] = []
@@ -76,15 +76,15 @@ class RecipeUpdate(BaseModel):
 
     title: str
     description: str
-    prep_time_minutes: Optional[int] = None
-    cook_time_minutes: Optional[int] = None
-    rest_time_minutes: Optional[int] = None
-    season: Optional[Season] = None
+    prep_time_minutes: int | None = None
+    cook_time_minutes: int | None = None
+    rest_time_minutes: int | None = None
+    season: Season | None = None
     category: Category
-    is_veggie: Optional[bool] = False
-    difficulty: Optional[int] = Field(None, ge=1, le=3)
-    number_of_people: Optional[int] = Field(None, ge=1)
-    rate: Optional[int] = Field(None, ge=1, le=5)
+    is_veggie: bool | None = False
+    difficulty: int | None = Field(None, ge=1, le=3)
+    number_of_people: int | None = Field(None, ge=1)
+    rate: int | None = Field(None, ge=1, le=5)
     tested: bool = False
     tags: list[str] = []
     preparation: list[str] = []

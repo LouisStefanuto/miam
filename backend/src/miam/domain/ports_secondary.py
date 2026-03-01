@@ -1,7 +1,6 @@
 """Define how the domain interacts with infrastructure."""
 
 from abc import ABC, abstractmethod
-from typing import Optional
 from uuid import UUID
 
 from miam.domain.entities import ImageEntity, PaginatedResult, RecipeEntity
@@ -18,56 +17,48 @@ class RecipeRepositoryPort(ABC):
     @abstractmethod
     def add_recipe(self, data: RecipeCreate) -> RecipeEntity:
         """Persist a new recipe and return it as a domain entity."""
-        pass
 
     @abstractmethod
     def add_recipes(self, data: list[RecipeCreate]) -> list[RecipeEntity]:
         """Persist multiple recipes atomically and return them as domain entities."""
-        pass
 
     @abstractmethod
     def get_recipe_by_id(self, recipe_id: UUID) -> RecipeEntity | None:
         """Retrieve a recipe by ID with all relationships loaded."""
-        pass
 
     @abstractmethod
     def search_recipes(
         self,
-        recipe_id: Optional[UUID] = None,
-        title: Optional[str] = None,
-        category: Optional[str] = None,
-        is_veggie: Optional[bool] = None,
-        season: Optional[str] = None,
-        limit: Optional[int] = None,
+        recipe_id: UUID | None = None,
+        title: str | None = None,
+        category: str | None = None,
+        is_veggie: bool | None = None,
+        season: str | None = None,
+        limit: int | None = None,
         offset: int = 0,
     ) -> PaginatedResult:
         """Query recipes with dynamic filtering and pagination."""
-        pass
 
     @abstractmethod
     def update_recipe(self, recipe_id: UUID, data: RecipeUpdate) -> RecipeEntity | None:
         """Full replacement of a recipe. Returns None if not found."""
-        pass
 
     @abstractmethod
     def delete_recipe(self, recipe_id: UUID) -> bool:
         """Delete a recipe by ID. Returns True if deleted, False if not found."""
-        pass
 
     @abstractmethod
     def add_image(
         self,
         recipe_id: UUID,
-        caption: Optional[str] = None,
+        caption: str | None = None,
         display_order: int | None = 0,
     ) -> ImageEntity:
         """Persist an Image record for a recipe and return the created ImageEntity."""
-        pass
 
     @abstractmethod
     def delete_image(self, image_id: UUID) -> bool:
         """Delete an Image record by ID. Returns True if deleted, False if not found."""
-        pass
 
 
 class ImageStoragePort(ABC):
@@ -80,17 +71,14 @@ class ImageStoragePort(ABC):
         image_id: UUID,
     ) -> UUID:
         """Add an image to storage and return its image ID."""
-        pass
 
     @abstractmethod
     def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
         """Retrieve image bytes from storage by image ID."""
-        pass
 
     @abstractmethod
     def delete_image(self, image_id: UUID) -> bool:
         """Delete an image file from storage. Returns True if deleted, False if not found."""
-        pass
 
 
 class WordExporterPort(ABC):
@@ -99,12 +87,10 @@ class WordExporterPort(ABC):
     @abstractmethod
     def save(self, recipes: list[RecipeEntity], output_path: str) -> None:
         """Save recipes to a Word file."""
-        pass
 
     @abstractmethod
     def to_bytes(self, recipes: list[RecipeEntity]) -> bytes:
         """Serialize recipes to Word binary format."""
-        pass
 
 
 class MarkdownExporterPort(ABC):
@@ -113,14 +99,11 @@ class MarkdownExporterPort(ABC):
     @abstractmethod
     def save(self, recipes: list[RecipeEntity], output_file: str) -> None:
         """Save recipes to a Markdown file (includes I/O side effect)."""
-        pass
 
     @abstractmethod
     def to_string(self, recipes: list[RecipeEntity]) -> str:
         """Serialize recipes to Markdown string format."""
-        pass
 
     @abstractmethod
     def to_zip_bytes(self, recipes: list[RecipeEntity]) -> bytes:
         """Serialize recipes to a ZIP archive containing the Markdown file and images."""
-        pass

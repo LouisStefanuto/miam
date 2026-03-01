@@ -13,7 +13,7 @@ from miam.infra.image_storage import LocalImageStorage
 from miam.infra.repositories import RecipeRepository
 
 
-def get_db() -> Generator[Session, None, None]:
+def get_db() -> Generator[Session]:
     db = SessionLocal()
     try:
         yield db
@@ -22,7 +22,7 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def get_recipe_management_service(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db),  # noqa: B008
 ) -> RecipeManagementService:
     repo = RecipeRepository(db)
     image_storage = LocalImageStorage("images")
@@ -30,7 +30,7 @@ def get_recipe_management_service(
 
 
 def get_recipe_export_service(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db),  # noqa: B008
 ) -> RecipeExportService:
     repo = RecipeRepository(db)
     image_storage = LocalImageStorage("images")
