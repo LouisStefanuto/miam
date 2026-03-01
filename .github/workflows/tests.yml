@@ -27,13 +27,12 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: 🚀 Run unit tests
-        run: uv run pytest
+        run: uv run pytest --cov-report=xml
 
-      # (OPTIONAL)
-      # - name: 📤 Upload coverage to Codecov
-      #   uses: codecov/codecov-action@v5
-      #   with:
-      #     token: ${{ secrets.CODECOV_TOKEN }}
-      #     files: ./coverage.xml
-      #     flags: unittests
-      #     name: codecov-umbrella
+      - name: 📤 Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella

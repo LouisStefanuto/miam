@@ -24,12 +24,12 @@ jobs:
           uv --version
 
       - name: 🚧 Install the project
-        run: uv sync --all-extras --dev
+        run: uv sync --all-extras
 
       - name: 🔎 Run ruff
         run: |
-          uv run ruff format --exit-non-zero-on-format --check
           uv run ruff check --exit-non-zero-on-fix --fix
+          uv run ruff format --exit-non-zero-on-format --check
 
       - name: 🔎 Run mypy
         run: |

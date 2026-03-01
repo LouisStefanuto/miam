@@ -38,8 +38,8 @@ def client(
     mock_recipe_service: MagicMock,
     mock_export_service: MagicMock,
 ) -> Generator[TestClient]:
-    app.dependency_overrides[get_recipe_management_service] = (
-        lambda: mock_recipe_service
+    app.dependency_overrides[get_recipe_management_service] = lambda: (
+        mock_recipe_service
     )
     app.dependency_overrides[get_recipe_export_service] = lambda: mock_export_service
     yield TestClient(app)
