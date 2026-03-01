@@ -71,5 +71,5 @@ class RecipeExportServicePort(ABC):
 
     @abstractmethod
     def export_recipes_to_word(self) -> bytes:
-        """Export all recipes as Word document"""
+        """Export all recipes as Word document."""
         pass

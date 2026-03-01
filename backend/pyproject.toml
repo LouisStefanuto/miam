@@ -47,13 +47,12 @@ extend-include = ["*.ipynb"]  # lint and format jupyer notebooks
 target-version = "py313"
 
 [tool.ruff.lint]
-extend-select = ["I"]  # sort imports like isort https://github.com/astral-sh/ruff/issues/8926
-# select = [
-#     "E",   # pycodestyle (Error)
+select = [
+    "E",   # pycodestyle (Error)
+    "F",   # Pyflakes
+    "I",   # isort – sort imports like isort (https://github.com/astral-sh/ruff/issues/8926)
+    "D",   # pydocstyle – lint existing docstrings (google convention, no types in docstrings)
 #     'YTT', # flake8-2020
-#     "F",   # Pyflakes
-#     "I",   # isort
-#     "D",   # lint docstring style (google, no types) and
 #     "DOC", # pydoclint
 #     "ANN", # enforce type annotations
 #     "UP",  # pyupgrade
@@ -63,16 +62,19 @@ extend-select = ["I"]  # sort imports like isort https://github.com/astral-sh/ru
 #     "DTZ", # flake8-datetimez
 #     "Q",   # flake8-quotes
 #     'PIE', # flake8-pie
-# ]
-# ignore = [
-#     "D1",  # don't require docstrings, only lint existing ones
-#     "E501" # checks for lines that exceed the specified maximum character length
-# ]
+]
+ignore = [
+    "D1",  # don't require docstrings, only lint existing ones
+    "E501" # checks for lines that exceed the specified maximum character length
+]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
     "D205",  # ignore: 1 blank line required between summary line and description
     "S101"   # ignore: Use of assert detected for tests
+]
+"alembic/**" = [
+    "D",     # ignore: docstring rules for auto-generated migrations
 ]
 
 [tool.ruff.lint.pydocstyle]

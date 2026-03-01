@@ -25,6 +25,7 @@ class MarkdownExporter(MarkdownExporterPort):
         """Build markdown for a single recipe.
 
         Args:
+            recipe: the recipe entity to render.
             image_filenames: mapping of image ID -> filename in the ZIP
                              (e.g. "uuid.png"). When provided, image references
                              use ``images/{filename}``; otherwise bare UUIDs.

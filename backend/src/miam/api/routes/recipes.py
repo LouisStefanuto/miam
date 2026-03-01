@@ -43,9 +43,7 @@ def create_recipe(
     recipe_in: RecipeCreate,
     service: RecipeManagementService = Depends(get_recipe_management_service),
 ) -> RecipeResponse:
-    """
-    Create a new recipe.
-    """
+    """Create a new recipe."""
     try:
         recipe = service.create_recipe(recipe_in)
         return RecipeResponse(id=recipe.id)
@@ -156,9 +154,7 @@ def search_recipes(
     offset: int = Query(0, ge=0),
     service: RecipeManagementService = Depends(get_recipe_management_service),
 ) -> PaginatedRecipeResponse:
-    """
-    Search recipes with optional filters and pagination.
-    """
+    """Search recipes with optional filters and pagination."""
     result = service.search_recipes(
         recipe_id=recipe_id,
         title=title,
@@ -229,9 +225,7 @@ def get_recipes(
     offset: int = Query(0, ge=0),
     service: RecipeManagementService = Depends(get_recipe_management_service),
 ) -> PaginatedRecipeResponse:
-    """
-    Retrieve recipes with optional pagination.
-    """
+    """Retrieve recipes with optional pagination."""
     result = service.search_recipes(limit=limit, offset=offset)
     return PaginatedRecipeResponse(
         items=[map_recipe_to_response(r) for r in result.items],
