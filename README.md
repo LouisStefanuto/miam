@@ -7,6 +7,7 @@
 <img src="docs/docs/assets/images/logo.png" alt="Logo" width="25%">
 
 [![Docs](https://img.shields.io/badge/docs-available-brightgreen.svg)](./docs/)
+[![Coverage](https://codecov.io/gh/LouisStefanuto/miam/branch/main/graph/badge.svg)](https://codecov.io/gh/LouisStefanuto/miam)
 
 [**Install**](#install) • [**Run**](#run) • [**Docs**](https://louisstefanuto.github.io/miam/) • [**Dev**](#dev)
 
