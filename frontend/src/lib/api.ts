@@ -86,7 +86,7 @@ interface BackendRecipe {
 
 // --- Conversion functions ---
 
-export function getImageUrl(imageId: string): string {
+function getImageUrl(imageId: string): string {
   return `${API_BASE}/images/${imageId}`;
 }
 
@@ -98,7 +98,7 @@ function getImageIdFromUrl(url: string): string | null {
   return null;
 }
 
-export async function deleteImage(imageId: string): Promise<void> {
+async function deleteImage(imageId: string): Promise<void> {
   const res = await fetch(`${API_BASE}/images/${imageId}`, { method: 'DELETE' });
   if (!res.ok && res.status !== 404) throw new Error(`Failed to delete image: ${res.status}`);
 }

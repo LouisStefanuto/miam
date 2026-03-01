@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, PenLine, Camera, Instagram, Download, FileJson } from 'lucide-react';
 import AppearanceSheet from '@/components/AppearanceSheet';
@@ -26,17 +26,6 @@ const CatalogPage = () => {
   const navigate = useNavigate();
   const { data: recipes = [], isLoading } = useRecipes();
   const { searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage } = useCatalogFilters();
-  const [customTags] = useState<string[]>([]);
-
-  const allTags = useMemo(() => {
-    const tagSet = new Set<string>();
-    recipes.forEach((r) => r.tags.forEach((t) => tagSet.add(t)));
-    customTags.forEach((t) => tagSet.add(t));
-    return Array.from(tagSet).sort();
-  }, [recipes, customTags]);
-
-  // Keep allTags available but unused for now — catalog doesn't render tags directly
-  void allTags;
 
   const filtered = useMemo(() => {
     let result = recipes.filter((r) => {
