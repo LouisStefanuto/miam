@@ -1,7 +1,6 @@
 """API routes for managing recipes (CRUD operations)."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
@@ -53,14 +52,14 @@ def create_recipe(
 
 class IngredientResponse(BaseModel):
     name: str
-    quantity: Optional[float] = None
-    unit: Optional[str] = None
+    quantity: float | None = None
+    unit: str | None = None
     display_order: int = 0
 
 
 class ImageDetailResponse(BaseModel):
     id: UUID
-    caption: Optional[str] = None
+    caption: str | None = None
     display_order: int = 0
 
 
@@ -73,28 +72,28 @@ class RecipeDetailResponse(BaseModel):
     id: UUID
     title: str
     description: str
-    prep_time_minutes: Optional[int] = None
-    cook_time_minutes: Optional[int] = None
-    rest_time_minutes: Optional[int] = None
-    season: Optional[str] = None
+    prep_time_minutes: int | None = None
+    cook_time_minutes: int | None = None
+    rest_time_minutes: int | None = None
+    season: str | None = None
     category: str
     is_veggie: bool
-    difficulty: Optional[int] = None
-    number_of_people: Optional[int] = None
-    rate: Optional[int] = None
+    difficulty: int | None = None
+    number_of_people: int | None = None
+    rate: int | None = None
     tested: bool
     tags: list[str]
     preparation: list[str]
     ingredients: list[IngredientResponse]
     images: list[ImageDetailResponse]
     sources: list[SourceResponse]
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
 
 
 class PaginatedRecipeResponse(BaseModel):
     items: list[RecipeDetailResponse]
     total: int
-    limit: Optional[int] = None
+    limit: int | None = None
     offset: int = 0
 
 
@@ -145,12 +144,12 @@ def map_recipe_to_response(recipe: RecipeEntity) -> RecipeDetailResponse:
 
 @router.get("/search", response_model=PaginatedRecipeResponse)
 def search_recipes(
-    recipe_id: Optional[UUID] = Query(None),
-    title: Optional[str] = Query(None),
-    category: Optional[str] = Query(None),
-    is_veggie: Optional[bool] = Query(None),
-    season: Optional[str] = Query(None),
-    limit: Optional[int] = Query(None, ge=1, le=100),
+    recipe_id: UUID | None = Query(None),
+    title: str | None = Query(None),
+    category: str | None = Query(None),
+    is_veggie: bool | None = Query(None),
+    season: str | None = Query(None),
+    limit: int | None = Query(None, ge=1, le=100),
     offset: int = Query(0, ge=0),
     service: RecipeManagementService = Depends(get_recipe_management_service),
 ) -> PaginatedRecipeResponse:
@@ -221,7 +220,7 @@ def update_recipe(
 
 @router.get("", response_model=PaginatedRecipeResponse)
 def get_recipes(
-    limit: Optional[int] = Query(None, ge=1, le=100),
+    limit: int | None = Query(None, ge=1, le=100),
     offset: int = Query(0, ge=0),
     service: RecipeManagementService = Depends(get_recipe_management_service),
 ) -> PaginatedRecipeResponse:

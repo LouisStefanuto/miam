@@ -1,7 +1,6 @@
 """Define how the domain interacts with infrastructure."""
 
 from abc import ABC, abstractmethod
-from typing import Optional
 from uuid import UUID
 
 from miam.domain.entities import ImageEntity, PaginatedResult, RecipeEntity
@@ -33,12 +32,12 @@ class RecipeRepositoryPort(ABC):
     @abstractmethod
     def search_recipes(
         self,
-        recipe_id: Optional[UUID] = None,
-        title: Optional[str] = None,
-        category: Optional[str] = None,
-        is_veggie: Optional[bool] = None,
-        season: Optional[str] = None,
-        limit: Optional[int] = None,
+        recipe_id: UUID | None = None,
+        title: str | None = None,
+        category: str | None = None,
+        is_veggie: bool | None = None,
+        season: str | None = None,
+        limit: int | None = None,
         offset: int = 0,
     ) -> PaginatedResult:
         """Query recipes with dynamic filtering and pagination."""
@@ -58,7 +57,7 @@ class RecipeRepositoryPort(ABC):
     def add_image(
         self,
         recipe_id: UUID,
-        caption: Optional[str] = None,
+        caption: str | None = None,
         display_order: int | None = 0,
     ) -> ImageEntity:
         """Persist an Image record for a recipe and return the created ImageEntity."""

@@ -52,10 +52,10 @@ select = [
     "F",   # Pyflakes
     "I",   # isort – sort imports like isort (https://github.com/astral-sh/ruff/issues/8926)
     "D",   # pydocstyle – lint existing docstrings (google convention, no types in docstrings)
-#     'YTT', # flake8-2020
-#     "DOC", # pydoclint
-#     "ANN", # enforce type annotations
-#     "UP",  # pyupgrade
+    # "DOC", # pydoclint (sill in preview)
+    # "ANN", # enforce type annotations
+    "UP",  # pyupgrade
+    'YTT', # flake8-2020
 #     'B',   # flake8-bugbear
 #     "A",   # flake8-builtins
 #     'C4',  # flake8-comprehensions
@@ -75,6 +75,7 @@ ignore = [
 ]
 "alembic/**" = [
     "D",     # ignore: docstring rules for auto-generated migrations
+    "UP",
 ]
 
 [tool.ruff.lint.pydocstyle]

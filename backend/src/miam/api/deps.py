@@ -13,7 +13,7 @@ from miam.infra.image_storage import LocalImageStorage
 from miam.infra.repositories import RecipeRepository
 
 
-def get_db() -> Generator[Session, None, None]:
+def get_db() -> Generator[Session]:
     db = SessionLocal()
     try:
         yield db
