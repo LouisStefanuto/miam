@@ -2,20 +2,30 @@
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from miam import __version__
 from miam.api.routes import export, images, recipes, root
 
+
+class CorsSettings(BaseSettings):
+    """CORS configuration loaded from environment variables."""
+
+    cors_origins: list[str] = ["http://localhost", "http://localhost:3000"]
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore",
+    )
+
+
 app = FastAPI(title="Livre Recettes", version=__version__)
 
-origins = [
-    "http://localhost",
-    "http://localhost:3000",
-]
+cors_settings = CorsSettings()
 
 app.add_middleware(
     CORSMiddleware,  # ty: ignore[invalid-argument-type]
-    allow_origins=origins,
+    allow_origins=cors_settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
