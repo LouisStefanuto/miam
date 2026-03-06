@@ -29,7 +29,7 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - ./backend/images:/app/images
+      - images:/app/images
 
   frontend:
     build:
@@ -56,3 +56,4 @@ services:
 
 volumes:
   pgdata:
+  images:
