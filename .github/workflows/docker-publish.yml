@@ -3,6 +3,8 @@ name: Build and Push Docker Images
 on:
   push:
     branches: [main]
+    tags:
+      - "v*"
   workflow_dispatch:
 
 env:
@@ -31,8 +33,13 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Extract short SHA
-        id: meta
-        run: echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+        id: sha
+        run: echo "short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Extract version from tag
+        id: version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: echo "value=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
 
       - name: Build and push backend
         uses: docker/build-push-action@v7
@@ -41,7 +48,7 @@ jobs:
           push: true
           tags: |
             ${{ env.IMAGE_PREFIX }}-backend:latest
-            ${{ env.IMAGE_PREFIX }}-backend:${{ steps.meta.outputs.sha_short }}
+            ${{ env.IMAGE_PREFIX }}-backend:${{ steps.sha.outputs.short }}
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
 
@@ -52,6 +59,20 @@ jobs:
           push: true
           tags: |
             ${{ env.IMAGE_PREFIX }}-frontend:latest
-            ${{ env.IMAGE_PREFIX }}-frontend:${{ steps.meta.outputs.sha_short }}
+            ${{ env.IMAGE_PREFIX }}-frontend:${{ steps.sha.outputs.short }}
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
+
+      - name: Tag backend with version
+        if: steps.version.outputs.value
+        run: |
+          docker buildx imagetools create \
+            --tag ${{ env.IMAGE_PREFIX }}-backend:${{ steps.version.outputs.value }} \
+            ${{ env.IMAGE_PREFIX }}-backend:${{ steps.sha.outputs.short }}
+
+      - name: Tag frontend with version
+        if: steps.version.outputs.value
+        run: |
+          docker buildx imagetools create \
+            --tag ${{ env.IMAGE_PREFIX }}-frontend:${{ steps.version.outputs.value }} \
+            ${{ env.IMAGE_PREFIX }}-frontend:${{ steps.sha.outputs.short }}
