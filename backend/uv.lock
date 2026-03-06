@@ -717,7 +717,6 @@ wheels = [
 
 [[package]]
 name = "miam"
-version = "0.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "alembic" },
