@@ -68,3 +68,13 @@ loadtest-headless: ## Run headless load test (50 users, 5/s ramp, 2 min)
 .PHONY: dozzle
 dozzle: ## Monitor container resource usage with Dozzle
 	docker compose up dozzle
+
+.PHONY: amd
+amd: ## Build Docker images for linux/amd64
+	docker buildx build --platform linux/amd64 -t miam-backend:latest ./backend
+	docker buildx build --platform linux/amd64 -t miam-frontend:latest ./frontend
+
+.PHONY: arm
+arm64: ## Build Docker images for linux/arm64
+	docker buildx build --platform linux/arm64 -t miam-backend:latest ./backend
+	docker buildx build --platform linux/arm64 -t miam-frontend:latest ./frontend
