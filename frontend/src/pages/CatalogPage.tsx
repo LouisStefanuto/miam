@@ -133,9 +133,20 @@ const CatalogPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <HeroSection />
+      <div className="relative">
+        <HeroSection />
+        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+          <AppearanceSheet />
+          <Button onClick={() => navigate('/export')} variant="outline" className="font-body font-semibold gap-2 shrink-0 bg-card/80 backdrop-blur-sm">
+            <Download size={18} />
+            Exporter
+          </Button>
+          <CartSheet />
+        </div>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-6">
+
         {/* Search + Add button on same line */}
         <div className="flex flex-col md:flex-row gap-4 items-start">
           <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
@@ -145,15 +156,9 @@ const CatalogPage = () => {
               Réinitialiser
             </button>
           )}
-          <AppearanceSheet />
-          <Button onClick={() => navigate('/export')} variant="outline" className="font-body font-semibold gap-2 ml-auto shrink-0">
-            <Download size={18} />
-            Exporter
-          </Button>
-          <CartSheet />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 shrink-0">
+              <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 shrink-0 ml-auto">
                 <Plus size={18} />
                 Ajouter une recette
               </Button>
