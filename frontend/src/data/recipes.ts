@@ -30,6 +30,7 @@ export interface Recipe {
   ingredients: Ingredient[];
   steps: Step[];
   variants?: string;
+  owner?: string;
   tested: boolean;
   createdAt: string;
   updatedAt: string;

@@ -111,7 +111,7 @@ function backendToFrontend(b: BackendRecipe): Recipe {
     type: categoryToFrontend[b.category] ?? 'plat',
     season: b.season ? (seasonToFrontend[b.season] ?? 'été') : 'été',
     tags: b.tags,
-    rating: b.rate ?? 3,
+    rating: b.rate ?? 0,
     difficulty: b.difficulty ? (difficultyToFrontend[b.difficulty] ?? 'moyen') : 'moyen',
     servings: b.number_of_people ?? 4,
     prepTime: b.prep_time_minutes ?? 0,
@@ -126,6 +126,7 @@ function backendToFrontend(b: BackendRecipe): Recipe {
         unit: i.unit ?? '',
       })),
     steps: b.preparation.map((text) => ({ text })),
+    owner: b.description || undefined,
     tested: b.tested,
     createdAt: '',
     updatedAt: '',
@@ -135,7 +136,7 @@ function backendToFrontend(b: BackendRecipe): Recipe {
 function frontendToBackendCreate(r: Recipe) {
   return {
     title: r.title,
-    description: '',
+    description: r.owner || '',
     prep_time_minutes: r.prepTime || null,
     cook_time_minutes: r.cookTime || null,
     rest_time_minutes: r.restTime || null,

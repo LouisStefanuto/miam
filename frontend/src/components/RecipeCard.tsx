@@ -57,11 +57,11 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
           <img
             src={recipe.image}
             alt={recipe.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${!recipe.tested ? 'opacity-60 saturate-[0.3]' : ''}`}
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full bg-muted flex items-center justify-center">
+          <div className={`w-full h-full bg-muted flex items-center justify-center ${!recipe.tested ? 'opacity-60' : ''}`}>
             <img src={beaverIcon} alt="Pas d'image" className="w-10 h-10 opacity-50 grayscale" />
           </div>
         )}
@@ -88,17 +88,12 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
               Végé
             </Badge>
           )}
-          {!recipe.tested && (
-            <Badge variant="outline" className="bg-card/95 text-muted-foreground font-body text-xs border-muted-foreground/30">
-              À tester
-            </Badge>
-          )}
         </div>
       </div>
 
       {/* Content */}
       <div className="p-4 flex flex-col flex-1">
-        <h3 className="font-display text-lg font-semibold text-card-foreground leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+        <h3 className="font-display text-lg font-semibold text-card-foreground leading-tight line-clamp-2 min-h-[2lh] group-hover:text-primary transition-colors">
           {recipe.title}
         </h3>
 
@@ -109,7 +104,7 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
         <div className="flex items-end gap-3 text-xs text-muted-foreground font-body mt-2">
           <span className="flex items-center gap-1">
             <Clock size={13} />
-            {totalTime} min
+            {totalTime ? `${totalTime} min` : '-'}
           </span>
           <span className="flex items-end gap-1">
             <DifficultyBars level={diff.bars} />
@@ -121,13 +116,6 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
           </span>
         </div>
 
-        <div className="flex flex-wrap gap-1 pt-1 mt-auto min-h-[24px]">
-          {recipe.tags.slice(0, 3).map((tag) => (
-            <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-body">
-              {tag}
-            </span>
-          ))}
-        </div>
       </div>
     </button>
   );

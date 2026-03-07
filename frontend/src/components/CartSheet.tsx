@@ -158,7 +158,7 @@ export default function CartSheet() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" className="font-body font-semibold gap-2 shrink-0 relative">
+        <Button variant="outline" className="font-body font-semibold gap-2 shrink-0 relative focus-visible:ring-0 focus-visible:ring-offset-0">
           <ShoppingCart size={18} />
           Panier
           {count > 0 && (
@@ -185,7 +185,7 @@ export default function CartSheet() {
                 Recettes sélectionnées
               </h3>
               {cartRecipes.map((recipe) => (
-                <div key={recipe.id} className="flex items-center gap-3 p-2 rounded-lg bg-secondary/50">
+                <div key={recipe.id} className="flex items-center gap-3 p-2 rounded-lg bg-secondary/50 group">
                   {recipe.image ? (
                     <img src={recipe.image} alt={recipe.title} className="w-12 h-12 rounded object-cover shrink-0" />
                   ) : (
@@ -197,7 +197,7 @@ export default function CartSheet() {
                   </div>
                   <button
                     onClick={() => remove(recipe.id)}
-                    className="shrink-0 p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    className="shrink-0 p-1.5 rounded-full text-muted-foreground md:text-muted-foreground/0 md:group-hover:text-muted-foreground hover:!text-destructive hover:bg-destructive/10 transition-colors"
                     title="Retirer du panier"
                   >
                     <X size={16} />

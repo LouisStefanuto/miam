@@ -1,13 +1,13 @@
 import { useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, PenLine, Camera, Instagram, Download, FileJson } from 'lucide-react';
+import { Plus, PenLine, Camera, Instagram, Download, FileJson, X } from 'lucide-react';
 import AppearanceSheet from '@/components/AppearanceSheet';
 import CartSheet from '@/components/CartSheet';
 import { useRecipes } from '@/hooks/use-recipes';
 import { useCatalogFilters } from '@/contexts/CatalogFilterContext';
 import HeroSection from '@/components/HeroSection';
 import SearchBar from '@/components/SearchBar';
-import FilterBar from '@/components/FilterBar';
+import FilterBar, { defaultFilters } from '@/components/FilterBar';
 import RecipeCard from '@/components/RecipeCard';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
@@ -68,6 +68,43 @@ const CatalogPage = () => {
     return result;
   }, [recipes, searchQuery, searchTags, filters]);
 
+  const topTags = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const r of recipes) {
+      for (const t of r.tags) {
+        counts[t] = (counts[t] || 0) + 1;
+      }
+    }
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([tag]) => tag);
+  }, [recipes]);
+
+  const hasActiveFilters =
+    searchQuery.trim() !== '' ||
+    searchTags.length > 0 ||
+    filters.type !== defaultFilters.type ||
+    filters.season !== defaultFilters.season ||
+    filters.difficulty !== defaultFilters.difficulty ||
+    filters.tested !== defaultFilters.tested ||
+    filters.vegetarian !== defaultFilters.vegetarian ||
+    filters.rapido !== defaultFilters.rapido;
+
+  const resetAll = () => {
+    setSearchQuery('');
+    setSearchTags([]);
+    setFilters({ ...defaultFilters, sort: filters.sort });
+  };
+
+  const handleTagClick = (tag: string) => {
+    if (searchTags.includes(tag)) {
+      setSearchTags(searchTags.filter((t) => t !== tag));
+    } else {
+      setSearchTags([...searchTags, tag]);
+    }
+  };
+
   // Reset to page 1 when filters or search change
   useEffect(() => {
     setCurrentPage(1);
@@ -98,48 +135,80 @@ const CatalogPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <HeroSection />
-
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-6">
-        {/* Search + Add button on same line */}
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-          <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
+      <div className="relative">
+        <HeroSection />
+        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
           <AppearanceSheet />
-          <Button onClick={() => navigate('/export')} variant="outline" className="font-body font-semibold gap-2 ml-auto shrink-0">
+          <Button onClick={() => navigate('/export')} variant="outline" className="font-body font-semibold gap-2 shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0">
             <Download size={18} />
             Exporter
           </Button>
           <CartSheet />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 shrink-0">
-                <Plus size={18} />
-                Ajouter une recette
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="font-body">
-              <DropdownMenuItem onClick={() => navigate('/recipes/new')} className="gap-2 cursor-pointer">
-                <PenLine size={16} />
-                Créer manuellement
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/import/ocr')} className="gap-2 cursor-pointer">
-                <Camera size={16} />
-                Importer depuis des photos
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/import/json')} className="gap-2 cursor-pointer">
-                <FileJson size={16} />
-                Importer depuis un JSON
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled className="gap-2 cursor-pointer opacity-50">
-                <Instagram size={16} />
-                Importer depuis Instagram
-                <span className="text-xs text-muted-foreground ml-auto">Bientôt</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
+      </div>
 
-        <FilterBar filters={filters} onChange={setFilters} />
+      <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-6">
+
+        <div className="space-y-2">
+          {/* Search + Add button on same line */}
+          <div className="flex flex-col md:flex-row gap-4 items-start">
+            <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
+            {hasActiveFilters && (
+              <button onClick={resetAll} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0 h-11">
+                <X size={14} />
+                Réinitialiser
+              </button>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 shrink-0 ml-auto">
+                  <Plus size={18} />
+                  Ajouter une recette
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="font-body">
+                <DropdownMenuItem onClick={() => navigate('/recipes/new')} className="gap-2 cursor-pointer">
+                  <PenLine size={16} />
+                  Créer manuellement
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/import/ocr')} className="gap-2 cursor-pointer">
+                  <Camera size={16} />
+                  Importer depuis des photos
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/import/json')} className="gap-2 cursor-pointer">
+                  <FileJson size={16} />
+                  Importer depuis un JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled className="gap-2 cursor-pointer opacity-50">
+                  <Instagram size={16} />
+                  Importer depuis Instagram
+                  <span className="text-xs text-muted-foreground ml-auto">Bientôt</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Quick tag filters */}
+          {topTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {topTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => handleTagClick(tag)}
+                  className={`text-xs px-2.5 py-1 rounded-full border font-body capitalize transition-colors ${
+                    searchTags.includes(tag)
+                      ? 'bg-primary/20 border-primary/40 text-primary'
+                      : 'bg-secondary border-transparent text-secondary-foreground hover:bg-primary/10'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <FilterBar filters={filters} onChange={setFilters} />
+        </div>
 
         {/* Results count */}
         <p className="text-sm text-muted-foreground font-body">

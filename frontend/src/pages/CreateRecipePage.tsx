@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useRecipes, useCreateRecipe } from '@/hooks/use-recipes';
+import { useRecipes, useCreateRecipe, useUpdateRecipe } from '@/hooks/use-recipes';
 import RecipeForm from '@/components/RecipeForm';
 import { toast } from '@/hooks/use-toast';
 import { Recipe } from '@/data/recipes';
@@ -9,6 +9,7 @@ const CreateRecipePage = () => {
   const navigate = useNavigate();
   const { data: recipes = [] } = useRecipes();
   const createMutation = useCreateRecipe();
+  const updateMutation = useUpdateRecipe();
   const [customTags, setCustomTags] = useState<string[]>([]);
 
   useEffect(() => {
@@ -42,6 +43,11 @@ const CreateRecipePage = () => {
 
   const handleDeleteTag = (tag: string) => {
     setCustomTags((prev) => prev.filter((t) => t !== tag));
+    recipes.forEach((r) => {
+      if (r.tags.includes(tag)) {
+        updateMutation.mutate({ recipe: { ...r, tags: r.tags.filter((t) => t !== tag) } });
+      }
+    });
     toast({ title: `Tag "${tag}" supprimé`, description: 'Retiré de toutes les recettes.' });
   };
 

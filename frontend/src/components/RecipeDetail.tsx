@@ -402,6 +402,9 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
               </span>
             )}
           </h1>
+          {!editing && current.owner && (
+            <p className="font-display text-lg text-primary-foreground/80 drop-shadow-lg mt-1">Recette de {current.owner}</p>
+          )}
         </div>
       </div>
 
@@ -426,10 +429,10 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
             </>
           ) : (
             <>
-              <InfoCard icon={melangeIcon} label="Préparation" value={`${current.prepTime} min`} />
-              <InfoCard icon={cuissonIcon} label="Cuisson" value={`${current.cookTime} min`} />
+              <InfoCard icon={melangeIcon} label="Préparation" value={current.prepTime ? `${current.prepTime} min` : '-'} />
+              <InfoCard icon={cuissonIcon} label="Cuisson" value={current.cookTime ? `${current.cookTime} min` : '-'} />
               <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
-                <img src={servingsIcon} alt="Portions" className="w-8 h-8" />
+                <IconDisk><img src={servingsIcon} alt="Portions" className="w-5 h-5" /></IconDisk>
                 <div className="flex items-center gap-2">
                   <button onClick={() => setDisplayServings(Math.max(1, displayServings - 1))} className="w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors">
                     <Minus size={12} />
@@ -458,31 +461,43 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           </div>
         )}
 
+        {/* Owner */}
+        {editing && (
+          <div className="flex items-center gap-2">
+            <span className="font-body text-sm font-semibold text-foreground">Recette de :</span>
+            <Input value={editData.owner || ''} onChange={(e) => setEditData({ ...editData, owner: e.target.value })} placeholder="Nom de l'auteur…" className="h-8 w-48 text-sm font-body" />
+          </div>
+        )}
+
         {/* Tags */}
         {editing ? (
           <div className="space-y-2">
             <span className="font-body text-sm font-semibold text-foreground">Tags</span>
             <div className="flex flex-wrap gap-2">
               {[...new Set([...allTags, ...editData.tags])].map((tag) => (
-                <div key={tag} className="flex items-center gap-0.5">
-                  <button
-                    onClick={() => toggleTag(tag)}
-                    className={`text-xs px-3 py-1 rounded-full font-body capitalize transition-colors ${
-                      editData.tags.includes(tag)
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-secondary text-secondary-foreground hover:bg-primary/20'
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                  <button
-                    onClick={() => onDeleteTag?.(tag)}
-                    className="text-destructive/60 hover:text-destructive transition-colors p-0.5"
+                <button
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
+                  className={`flex items-center gap-1 text-xs pl-3 pr-1.5 py-1 rounded-full font-body capitalize transition-colors ${
+                    editData.tags.includes(tag)
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-secondary-foreground hover:bg-primary/20'
+                  }`}
+                >
+                  {tag}
+                  <span
+                    role="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditData((d) => ({ ...d, tags: d.tags.filter((t) => t !== tag) }));
+                      onDeleteTag?.(tag);
+                    }}
+                    className="hover:text-destructive transition-colors ml-0.5"
                     title={`Supprimer le tag "${tag}" partout`}
                   >
-                    <X size={10} />
-                  </button>
-                </div>
+                    <X size={12} />
+                  </span>
+                </button>
               ))}
               <div className="flex items-center gap-1">
                 <Input
@@ -591,10 +606,18 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   );
 }
 
+function IconDisk({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center [&>img]:[filter:brightness(0)_invert(1)] dark:[&>img]:[filter:brightness(0)]">
+      {children}
+    </div>
+  );
+}
+
 function InfoCard({ icon, label, value }: { icon: string | React.ReactNode; label: string; value: string }) {
   return (
     <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
-      {typeof icon === 'string' ? <img src={icon} alt={label} className="w-8 h-8" /> : <div className="w-8 h-8 flex items-center justify-center">{icon}</div>}
+      {typeof icon === 'string' ? <IconDisk><img src={icon} alt={label} className="w-5 h-5" /></IconDisk> : <div className="w-10 h-10 flex items-center justify-center">{icon}</div>}
       <span className="text-sm font-body font-semibold text-card-foreground">{value}</span>
       <span className="text-xs text-muted-foreground font-body">{label}</span>
     </div>
@@ -604,7 +627,7 @@ function InfoCard({ icon, label, value }: { icon: string | React.ReactNode; labe
 function EditInfoCard({ icon, label, value, onChange }: { icon: string; label: string; value: number; onChange: (v: string) => void }) {
   return (
     <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
-      <img src={icon} alt={label} className="w-8 h-8" />
+      <IconDisk><img src={icon} alt={label} className="w-5 h-5" /></IconDisk>
       <Input type="number" min={0} value={value} onChange={(e) => onChange(e.target.value)} className="h-7 w-16 text-center text-sm font-body font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
       <span className="text-xs text-muted-foreground font-body">{label}</span>
     </div>

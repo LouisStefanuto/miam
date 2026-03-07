@@ -57,11 +57,12 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     servings: initialRecipe?.servings ?? 4,
     prepTime: initialRecipe?.prepTime ?? 30,
     cookTime: initialRecipe?.cookTime ?? 30,
-    rating: initialRecipe?.rating ?? 3,
+    rating: initialRecipe?.rating ?? 0,
     diets: initialRecipe?.diets ?? [],
     tags: initialRecipe?.tags ?? [],
     ingredients: initialRecipe?.ingredients?.length ? initialRecipe.ingredients : defaultIngredients(),
     steps: initialRecipe?.steps?.length ? initialRecipe.steps : [{ text: '' }],
+    owner: initialRecipe?.owner ?? '',
     tested: initialRecipe?.tested ?? false,
   });
   const [newTag, setNewTag] = useState('');
@@ -171,8 +172,18 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     }
   };
 
+  const [errors, setErrors] = useState<string[]>([]);
+
   const handleSubmit = () => {
-    if (!data.title.trim()) return;
+    const missing: string[] = [];
+    if (!data.title.trim()) missing.push('Titre');
+    if (!data.ingredients.some((i) => i.name.trim())) missing.push('Au moins un ingrédient');
+    if (!data.steps.some((s) => s.text.trim())) missing.push('Au moins une étape');
+    if (missing.length > 0) {
+      setErrors(missing);
+      return;
+    }
+    setErrors([]);
     const now = new Date().toISOString().split('T')[0];
     onSave({
       ...data,
@@ -203,8 +214,17 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
         </div>
       </div>
 
+      {/* Validation errors */}
+      {errors.length > 0 && (
+        <div className="fixed top-14 left-0 right-0 z-[59] bg-destructive/10 border-b border-destructive/30 px-4 py-2 text-center">
+          <p className="text-sm font-body text-destructive font-medium">
+            Champs requis : {errors.join(', ')}
+          </p>
+        </div>
+      )}
+
       {/* Hero image area */}
-      <div className="relative h-[300px] md:h-[400px] overflow-hidden mt-14">
+      <div className={`relative h-[300px] md:h-[400px] overflow-hidden ${errors.length > 0 ? 'mt-24' : 'mt-14'}`}>
         {data.image ? (
           <img src={data.image} alt={data.title} className="w-full h-full object-cover" />
         ) : (
@@ -269,6 +289,12 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             placeholder="Titre de la recette"
             autoFocus={!initialRecipe}
             className="font-display text-3xl md:text-4xl font-bold bg-transparent border-b border-primary-foreground/50 text-primary-foreground h-auto p-0 rounded-none focus-visible:ring-0 placeholder:text-primary-foreground/40"
+          />
+          <Input
+            value={data.owner}
+            onChange={(e) => set('owner', e.target.value)}
+            placeholder="Recette de…"
+            className="font-display text-lg bg-transparent border-0 text-primary-foreground/80 h-auto p-0 rounded-none focus-visible:ring-0 placeholder:text-primary-foreground/40 mt-1 w-auto"
           />
         </div>
       </div>
@@ -393,10 +419,18 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
   );
 }
 
+function IconDisk({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center [&>img]:[filter:brightness(0)_invert(1)] dark:[&>img]:[filter:brightness(0)]">
+      {children}
+    </div>
+  );
+}
+
 function EditInfoCard({ icon, label, value, onChange }: { icon: string; label: string; value: number; onChange: (v: string) => void }) {
   return (
     <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
-      <img src={icon} alt={label} className="w-8 h-8" />
+      <IconDisk><img src={icon} alt={label} className="w-5 h-5" /></IconDisk>
       <Input type="number" min={0} value={value} onChange={(e) => onChange(e.target.value)} className="h-7 w-16 text-center text-sm font-body font-semibold" />
       <span className="text-xs text-muted-foreground font-body">{label}</span>
     </div>
