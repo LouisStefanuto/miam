@@ -475,28 +475,29 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
             <span className="font-body text-sm font-semibold text-foreground">Tags</span>
             <div className="flex flex-wrap gap-2">
               {[...new Set([...allTags, ...editData.tags])].map((tag) => (
-                <div key={tag} className="flex items-center gap-0.5">
-                  <button
-                    onClick={() => toggleTag(tag)}
-                    className={`text-xs px-3 py-1 rounded-full font-body capitalize transition-colors ${
-                      editData.tags.includes(tag)
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-secondary text-secondary-foreground hover:bg-primary/20'
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                  <button
-                    onClick={() => {
+                <button
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
+                  className={`flex items-center gap-1 text-xs pl-3 pr-1.5 py-1 rounded-full font-body capitalize transition-colors ${
+                    editData.tags.includes(tag)
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-secondary-foreground hover:bg-primary/20'
+                  }`}
+                >
+                  {tag}
+                  <span
+                    role="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setEditData((d) => ({ ...d, tags: d.tags.filter((t) => t !== tag) }));
                       onDeleteTag?.(tag);
                     }}
-                    className="text-destructive/60 hover:text-destructive transition-colors p-0.5"
+                    className="hover:text-destructive transition-colors ml-0.5"
                     title={`Supprimer le tag "${tag}" partout`}
                   >
-                    <X size={10} />
-                  </button>
-                </div>
+                    <X size={12} />
+                  </span>
+                </button>
               ))}
               <div className="flex items-center gap-1">
                 <Input
