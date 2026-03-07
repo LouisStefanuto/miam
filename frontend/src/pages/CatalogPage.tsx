@@ -137,10 +137,10 @@ const CatalogPage = () => {
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-6">
         {/* Search + Add button on same line */}
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+        <div className="flex flex-col md:flex-row gap-4 items-start">
           <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
           {hasActiveFilters && (
-            <button onClick={resetAll} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0">
+            <button onClick={resetAll} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0 h-11">
               <X size={14} />
               Réinitialiser
             </button>
