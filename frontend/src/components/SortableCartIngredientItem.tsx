@@ -35,7 +35,7 @@ export function SortableCartIngredientItem({ id, name, details, checked, onToggl
     >
       <button
         type="button"
-        className="cursor-grab active:cursor-grabbing text-muted-foreground/0 group-hover:text-muted-foreground hover:!text-foreground touch-none shrink-0 transition-colors"
+        className="cursor-grab active:cursor-grabbing text-muted-foreground md:text-muted-foreground/0 md:group-hover:text-muted-foreground hover:!text-foreground touch-none shrink-0 transition-colors"
         {...attributes}
         {...listeners}
       >
@@ -62,7 +62,7 @@ export function SortableCartIngredientItem({ id, name, details, checked, onToggl
       </span>
       <button
         onClick={() => onRemove(id)}
-        className="shrink-0 p-1 rounded-full text-muted-foreground/0 group-hover:text-muted-foreground hover:!text-destructive transition-colors"
+        className="shrink-0 p-1 rounded-full text-muted-foreground md:text-muted-foreground/0 md:group-hover:text-muted-foreground hover:!text-destructive transition-colors"
         title="Retirer de la liste"
       >
         <X size={14} />
