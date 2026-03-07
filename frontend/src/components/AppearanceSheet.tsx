@@ -17,7 +17,7 @@ export default function AppearanceSheet() {
       <Tooltip>
         <TooltipTrigger asChild>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="shrink-0">
+            <Button variant="outline" size="icon" className="shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0">
               <Palette size={18} />
               <span className="sr-only">Apparence</span>
             </Button>

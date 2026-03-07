@@ -139,7 +139,7 @@ const CatalogPage = () => {
         <HeroSection />
         <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
           <AppearanceSheet />
-          <Button onClick={() => navigate('/export')} variant="outline" className="font-body font-semibold gap-2 shrink-0">
+          <Button onClick={() => navigate('/export')} variant="outline" className="font-body font-semibold gap-2 shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0">
             <Download size={18} />
             Exporter
           </Button>

@@ -158,7 +158,7 @@ export default function CartSheet() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" className="font-body font-semibold gap-2 shrink-0 relative">
+        <Button variant="outline" className="font-body font-semibold gap-2 shrink-0 relative focus-visible:ring-0 focus-visible:ring-offset-0">
           <ShoppingCart size={18} />
           Panier
           {count > 0 && (
