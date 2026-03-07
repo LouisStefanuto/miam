@@ -1,4 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { ShoppingCart, Trash2, ClipboardCopy, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -6,8 +8,15 @@ import { useCart } from '@/contexts/CartContext';
 import { useRecipes } from '@/hooks/use-recipes';
 import { toast } from 'sonner';
 import type { Recipe } from '@/data/recipes';
+import { SortableCartIngredientItem } from './SortableCartIngredientItem';
 
-function aggregateIngredients(recipes: Recipe[]): { name: string; details: string }[] {
+interface AggregatedIngredient {
+  id: string;
+  name: string;
+  details: string;
+}
+
+function aggregateIngredients(recipes: Recipe[]): AggregatedIngredient[] {
   const map = new Map<string, { quantities: { qty: number | string; unit: string }[] }>();
 
   for (const recipe of recipes) {
@@ -18,7 +27,7 @@ function aggregateIngredients(recipes: Recipe[]): { name: string; details: strin
     }
   }
 
-  const result: { name: string; details: string }[] = [];
+  const result: AggregatedIngredient[] = [];
 
   for (const [name, { quantities }] of map) {
     // Group by unit and sum numeric quantities
@@ -40,13 +49,13 @@ function aggregateIngredients(recipes: Recipe[]): { name: string; details: strin
     }
 
     const displayName = name.charAt(0).toUpperCase() + name.slice(1);
-    result.push({ name: displayName, details: parts.join(' + ') });
+    result.push({ id: name, name: displayName, details: parts.join(' + ') });
   }
 
   return result.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-function generateShoppingListText(recipes: Recipe[]): string {
+function generateShoppingListText(recipes: Recipe[], ingredients: AggregatedIngredient[]): string {
   const lines: string[] = ['Liste de courses', ''];
   lines.push(`Recettes (${recipes.length}) :`);
   for (const r of recipes) {
@@ -54,7 +63,6 @@ function generateShoppingListText(recipes: Recipe[]): string {
   }
   lines.push('');
   lines.push('Ingrédients :');
-  const ingredients = aggregateIngredients(recipes);
   for (const ing of ingredients) {
     lines.push(`  [ ] ${ing.details ? `${ing.details} ` : ''}${ing.name}`);
   }
@@ -71,10 +79,54 @@ export default function CartSheet() {
     [allRecipes, items],
   );
 
-  const ingredients = useMemo(() => aggregateIngredients(cartRecipes), [cartRecipes]);
+  const rawIngredients = useMemo(() => aggregateIngredients(cartRecipes), [cartRecipes]);
+
+  // Local state for user-reordered / removed ingredients
+  const [ingredients, setIngredients] = useState<AggregatedIngredient[]>(rawIngredients);
+
+  // Sync when recipes change (new recipe added/removed from cart)
+  useEffect(() => {
+    setIngredients((prev) => {
+      const prevIds = new Set(prev.map((i) => i.id));
+      const rawIds = new Set(rawIngredients.map((i) => i.id));
+
+      // Keep existing order for ingredients that are still present, update their details
+      const kept = prev
+        .filter((i) => rawIds.has(i.id))
+        .map((i) => {
+          const updated = rawIngredients.find((r) => r.id === i.id)!;
+          return { ...i, details: updated.details, name: updated.name };
+        });
+
+      // Append new ingredients at the end
+      const added = rawIngredients.filter((i) => !prevIds.has(i.id));
+
+      return [...kept, ...added];
+    });
+  }, [rawIngredients]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setIngredients((prev) => {
+        const oldIndex = prev.findIndex((i) => i.id === active.id);
+        const newIndex = prev.findIndex((i) => i.id === over.id);
+        return arrayMove(prev, oldIndex, newIndex);
+      });
+    }
+  };
+
+  const removeIngredient = (id: string) => {
+    setIngredients((prev) => prev.filter((i) => i.id !== id));
+  };
 
   const copyShoppingList = () => {
-    const text = generateShoppingListText(cartRecipes);
+    const text = generateShoppingListText(cartRecipes, ingredients);
     navigator.clipboard.writeText(text).then(
       () => toast.success('Liste de courses copiée !'),
       () => toast.error('Impossible de copier dans le presse-papier'),
@@ -133,22 +185,28 @@ export default function CartSheet() {
             </div>
 
             {/* Shopping list preview */}
-            <div className="space-y-2">
-              <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                Liste de courses
-              </h3>
-              <ul className="space-y-1">
-                {ingredients.map((ing) => (
-                  <li key={ing.name} className="flex items-baseline gap-2 font-body text-sm">
-                    <span className="w-4 h-4 shrink-0 rounded border border-muted-foreground/30 mt-0.5" />
-                    <span>
-                      {ing.details && <span className="font-medium">{ing.details} </span>}
-                      {ing.name}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {ingredients.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Liste de courses
+                </h3>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={ingredients.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+                    <ul className="space-y-1">
+                      {ingredients.map((ing) => (
+                        <SortableCartIngredientItem
+                          key={ing.id}
+                          id={ing.id}
+                          name={ing.name}
+                          details={ing.details}
+                          onRemove={removeIngredient}
+                        />
+                      ))}
+                    </ul>
+                  </SortableContext>
+                </DndContext>
+              </div>
+            )}
           </div>
         )}
 
