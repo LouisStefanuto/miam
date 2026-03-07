@@ -57,11 +57,11 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
           <img
             src={recipe.image}
             alt={recipe.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${!recipe.tested ? 'opacity-60 saturate-[0.3]' : ''}`}
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full bg-muted flex items-center justify-center">
+          <div className={`w-full h-full bg-muted flex items-center justify-center ${!recipe.tested ? 'opacity-60' : ''}`}>
             <img src={beaverIcon} alt="Pas d'image" className="w-10 h-10 opacity-50 grayscale" />
           </div>
         )}
@@ -86,11 +86,6 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
           {recipe.diets.includes('végétarien') && (
             <Badge variant="secondary" className="bg-card/95 text-green-600 font-body text-xs">
               Végé
-            </Badge>
-          )}
-          {!recipe.tested && (
-            <Badge variant="outline" className="bg-card/95 text-muted-foreground font-body text-xs border-muted-foreground/30">
-              À tester
             </Badge>
           )}
         </div>
