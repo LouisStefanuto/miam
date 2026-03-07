@@ -121,13 +121,6 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
           </span>
         </div>
 
-        <div className="flex flex-wrap gap-1 pt-1 mt-auto min-h-[24px]">
-          {recipe.tags.slice(0, 3).map((tag) => (
-            <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-body">
-              {tag}
-            </span>
-          ))}
-        </div>
       </div>
     </button>
   );
