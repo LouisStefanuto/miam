@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 import { SortableIngredientItem } from './SortableIngredientItem';
@@ -66,6 +67,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     tested: initialRecipe?.tested ?? false,
   });
   const [newTag, setNewTag] = useState('');
+  const [tagToDelete, setTagToDelete] = useState<string | null>(null);
   const [ingredientIds, setIngredientIds] = useState<string[]>(
     () => data.ingredients.map(() => crypto.randomUUID())
   );
@@ -341,7 +343,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                 >
                   {tag}
                 </button>
-                <button onClick={() => onDeleteTag?.(tag)} className="text-destructive/60 hover:text-destructive transition-colors p-0.5" title={`Supprimer le tag "${tag}" partout`}>
+                <button onClick={() => setTagToDelete(tag)} className="text-destructive/60 hover:text-destructive transition-colors p-0.5" title={`Supprimer le tag "${tag}" partout`}>
                   <X size={10} />
                 </button>
               </div>
@@ -351,6 +353,25 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
               <Button type="button" size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={addNewTag}><Plus size={12} /></Button>
             </div>
           </div>
+          <AlertDialog open={!!tagToDelete} onOpenChange={(open) => !open && setTagToDelete(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="font-display">Supprimer le tag « {tagToDelete} » ?</AlertDialogTitle>
+                <AlertDialogDescription className="font-body">
+                  Ce tag sera supprimé de toutes les recettes. Cette action est irréversible.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body"
+                  onClick={() => { onDeleteTag?.(tagToDelete!); setTagToDelete(null); }}
+                >
+                  Supprimer
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <div className="space-y-2 mt-3">
             <span className="font-body text-sm font-semibold text-foreground">Régime</span>
             <div className="flex flex-wrap gap-3">

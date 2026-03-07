@@ -73,6 +73,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const [editData, setEditData] = useState<Recipe>(recipe);
   const [displayServings, setDisplayServings] = useState(recipe.servings);
   const [newTag, setNewTag] = useState('');
+  const [tagToDelete, setTagToDelete] = useState<string | null>(null);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [copied, setCopied] = useState(false);
   const [ingredientIds, setIngredientIds] = useState<string[]>(
@@ -489,8 +490,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                     role="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setEditData((d) => ({ ...d, tags: d.tags.filter((t) => t !== tag) }));
-                      onDeleteTag?.(tag);
+                      setTagToDelete(tag);
                     }}
                     className="hover:text-destructive transition-colors ml-0.5"
                     title={`Supprimer le tag "${tag}" partout`}
@@ -510,6 +510,29 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={addNewTag}><Plus size={12} /></Button>
               </div>
             </div>
+            <AlertDialog open={!!tagToDelete} onOpenChange={(open) => !open && setTagToDelete(null)}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-display">Supprimer le tag « {tagToDelete} » ?</AlertDialogTitle>
+                  <AlertDialogDescription className="font-body">
+                    Ce tag sera supprimé de toutes les recettes. Cette action est irréversible.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body"
+                    onClick={() => {
+                      setEditData((d) => ({ ...d, tags: d.tags.filter((t) => t !== tagToDelete) }));
+                      onDeleteTag?.(tagToDelete!);
+                      setTagToDelete(null);
+                    }}
+                  >
+                    Supprimer
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <div className="space-y-2 mt-3">
               <span className="font-body text-sm font-semibold text-foreground">Régime</span>
               <div className="flex flex-wrap gap-3">
