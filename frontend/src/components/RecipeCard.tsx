@@ -49,7 +49,7 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
 
   return (
     <button
-      onClick={onClick}
+      onClick={(e) => { if (e.metaKey || e.ctrlKey) { e.preventDefault(); cart.toggle(recipe.id); } else { onClick(); } }}
       className="group text-left w-full h-full flex flex-col bg-card rounded-lg overflow-hidden shadow-card hover:shadow-card-hover transition-[box-shadow,transform] duration-300 hover:-translate-y-1"
     >
       {/* Image */}
