@@ -110,7 +110,7 @@ export default function FilterBar({ filters, onChange, topTags = [], selectedTag
         {/* Sort */}
         <div className="ml-auto">
           <Select value={filters.sort} onValueChange={(v) => set('sort', v)}>
-            <SelectTrigger className="w-auto min-w-[140px] h-9 text-xs font-body bg-secondary border-0 gap-1.5">
+            <SelectTrigger className="w-auto min-w-[140px] h-9 text-xs font-body bg-secondary border-0 gap-1.5 focus:ring-0 focus:ring-offset-0">
               <ArrowUpDown size={13} className="text-muted-foreground" />
               <SelectValue />
             </SelectTrigger>
@@ -199,7 +199,7 @@ function FilterSelect({
 
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className={`w-auto min-w-[120px] h-9 text-xs font-body capitalize ${isActive ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-card'}`}>
+      <SelectTrigger className="w-auto min-w-[120px] h-9 text-xs font-body capitalize bg-card focus:ring-0 focus:ring-offset-0">
         <SelectValue placeholder={placeholder}>
           {isActive ? options.find((o) => o === value) : placeholder}
         </SelectValue>
