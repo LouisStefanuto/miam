@@ -67,6 +67,12 @@ const RecipeDetailPage = () => {
 
   const handleDeleteTag = (tag: string) => {
     setCustomTags((prev) => prev.filter((t) => t !== tag));
+    // Remove the tag from all recipes that have it
+    recipes.forEach((r) => {
+      if (r.tags.includes(tag)) {
+        updateMutation.mutate({ recipe: { ...r, tags: r.tags.filter((t) => t !== tag) } });
+      }
+    });
     toast({ title: `Tag "${tag}" supprimé`, description: 'Retiré de toutes les recettes.' });
   };
 

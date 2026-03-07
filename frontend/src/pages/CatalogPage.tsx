@@ -1,13 +1,13 @@
 import { useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, PenLine, Camera, Instagram, Download, FileJson } from 'lucide-react';
+import { Plus, PenLine, Camera, Instagram, Download, FileJson, X } from 'lucide-react';
 import AppearanceSheet from '@/components/AppearanceSheet';
 import CartSheet from '@/components/CartSheet';
 import { useRecipes } from '@/hooks/use-recipes';
 import { useCatalogFilters } from '@/contexts/CatalogFilterContext';
 import HeroSection from '@/components/HeroSection';
 import SearchBar from '@/components/SearchBar';
-import FilterBar from '@/components/FilterBar';
+import FilterBar, { defaultFilters } from '@/components/FilterBar';
 import RecipeCard from '@/components/RecipeCard';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
@@ -68,6 +68,41 @@ const CatalogPage = () => {
     return result;
   }, [recipes, searchQuery, searchTags, filters]);
 
+  const topTags = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const r of recipes) {
+      for (const t of r.tags) {
+        counts[t] = (counts[t] || 0) + 1;
+      }
+    }
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([tag]) => tag);
+  }, [recipes]);
+
+  const hasActiveFilters =
+    searchQuery.trim() !== '' ||
+    searchTags.length > 0 ||
+    filters.type !== defaultFilters.type ||
+    filters.season !== defaultFilters.season ||
+    filters.difficulty !== defaultFilters.difficulty ||
+    filters.tested !== defaultFilters.tested ||
+    filters.vegetarian !== defaultFilters.vegetarian ||
+    filters.rapido !== defaultFilters.rapido;
+
+  const resetAll = () => {
+    setSearchQuery('');
+    setSearchTags([]);
+    setFilters({ ...defaultFilters, sort: filters.sort });
+  };
+
+  const handleTagClick = (tag: string) => {
+    if (!searchTags.includes(tag)) {
+      setSearchTags([...searchTags, tag]);
+    }
+  };
+
   // Reset to page 1 when filters or search change
   useEffect(() => {
     setCurrentPage(1);
@@ -104,6 +139,12 @@ const CatalogPage = () => {
         {/* Search + Add button on same line */}
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
           <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
+          {hasActiveFilters && (
+            <button onClick={resetAll} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0">
+              <X size={14} />
+              Réinitialiser
+            </button>
+          )}
           <AppearanceSheet />
           <Button onClick={() => navigate('/export')} variant="outline" className="font-body font-semibold gap-2 ml-auto shrink-0">
             <Download size={18} />
@@ -139,7 +180,7 @@ const CatalogPage = () => {
           </DropdownMenu>
         </div>
 
-        <FilterBar filters={filters} onChange={setFilters} />
+        <FilterBar filters={filters} onChange={setFilters} topTags={topTags} onTagClick={handleTagClick} />
 
         {/* Results count */}
         <p className="text-sm text-muted-foreground font-body">

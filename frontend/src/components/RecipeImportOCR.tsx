@@ -94,7 +94,7 @@ export default function RecipeImportOCR({ onBack, onImportRecipes }: RecipeImpor
         ingredients: p.ingredients || [],
         steps: p.steps || [],
         variants: p.variants,
-        rating: 3,
+        rating: 0,
         tested: false,
         createdAt: now,
         updatedAt: now,

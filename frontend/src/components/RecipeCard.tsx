@@ -109,7 +109,7 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
         <div className="flex items-end gap-3 text-xs text-muted-foreground font-body mt-2">
           <span className="flex items-center gap-1">
             <Clock size={13} />
-            {totalTime} min
+            {totalTime ? `${totalTime} min` : '-'}
           </span>
           <span className="flex items-end gap-1">
             <DifficultyBars level={diff.bars} />
