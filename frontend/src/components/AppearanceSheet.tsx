@@ -39,7 +39,7 @@ export default function AppearanceSheet({ trigger }: { trigger?: React.ReactNode
         </Tooltip>
       )}
 
-      <SheetContent side="right">
+      <SheetContent side="right" className="w-full sm:max-w-lg">
         <SheetHeader>
           <SheetTitle className="font-display">Apparence</SheetTitle>
           <SheetDescription>
