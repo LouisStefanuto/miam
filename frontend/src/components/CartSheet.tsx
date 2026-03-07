@@ -55,7 +55,7 @@ function aggregateIngredients(recipes: Recipe[]): AggregatedIngredient[] {
   return result.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-function generateShoppingListText(recipes: Recipe[], ingredients: AggregatedIngredient[]): string {
+function generateShoppingListText(recipes: Recipe[], ingredients: AggregatedIngredient[], checkedIds: Set<string>): string {
   const lines: string[] = ['Liste de courses', ''];
   lines.push(`Recettes (${recipes.length}) :`);
   for (const r of recipes) {
@@ -64,7 +64,8 @@ function generateShoppingListText(recipes: Recipe[], ingredients: AggregatedIngr
   lines.push('');
   lines.push('Ingrédients :');
   for (const ing of ingredients) {
-    lines.push(`  [ ] ${ing.details ? `${ing.details} ` : ''}${ing.name}`);
+    const check = checkedIds.has(ing.id) ? 'x' : ' ';
+    lines.push(`  [${check}] ${ing.details ? `${ing.details} ` : ''}${ing.name}`);
   }
   return lines.join('\n');
 }
@@ -83,6 +84,7 @@ export default function CartSheet() {
 
   // Local state for user-reordered / removed ingredients
   const [ingredients, setIngredients] = useState<AggregatedIngredient[]>(rawIngredients);
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
 
   // Sync when recipes change (new recipe added/removed from cart)
   useEffect(() => {
@@ -121,12 +123,32 @@ export default function CartSheet() {
     }
   };
 
-  const removeIngredient = (id: string) => {
-    setIngredients((prev) => prev.filter((i) => i.id !== id));
+  const toggleIngredient = (id: string) => {
+    setCheckedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
+  const removeIngredient = (id: string) => {
+    setIngredients((prev) => prev.filter((i) => i.id !== id));
+    setCheckedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
+
+  const sortedIngredients = useMemo(() => {
+    const unchecked = ingredients.filter((i) => !checkedIds.has(i.id));
+    const checked = ingredients.filter((i) => checkedIds.has(i.id));
+    return [...unchecked, ...checked];
+  }, [ingredients, checkedIds]);
+
   const copyShoppingList = () => {
-    const text = generateShoppingListText(cartRecipes, ingredients);
+    const text = generateShoppingListText(cartRecipes, sortedIngredients, checkedIds);
     navigator.clipboard.writeText(text).then(
       () => toast.success('Liste de courses copiée !'),
       () => toast.error('Impossible de copier dans le presse-papier'),
@@ -191,14 +213,16 @@ export default function CartSheet() {
                   Liste de courses
                 </h3>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={ingredients.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+                  <SortableContext items={sortedIngredients.map((i) => i.id)} strategy={verticalListSortingStrategy}>
                     <ul className="space-y-1">
-                      {ingredients.map((ing) => (
+                      {sortedIngredients.map((ing) => (
                         <SortableCartIngredientItem
                           key={ing.id}
                           id={ing.id}
                           name={ing.name}
                           details={ing.details}
+                          checked={checkedIds.has(ing.id)}
+                          onToggle={toggleIngredient}
                           onRemove={removeIngredient}
                         />
                       ))}
