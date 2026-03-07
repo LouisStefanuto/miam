@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 const colorKeys = Object.keys(ACCENT_COLORS) as AccentColor[];
 
-export default function AppearanceSheet() {
+export default function AppearanceSheet({ trigger }: { trigger?: React.ReactNode } = {}) {
   const { theme, setTheme } = useTheme();
   const { accentColor, setAccentColor } = useAccentColor();
   const [tooltipOpen, setTooltipOpen] = useState(false);
@@ -17,25 +17,29 @@ export default function AppearanceSheet() {
 
   return (
     <Sheet>
-      <Tooltip open={tooltipOpen}>
-        <TooltipTrigger asChild>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-              onPointerEnter={() => { timerRef.current = setTimeout(() => setTooltipOpen(true), 800); }}
-              onPointerLeave={() => { clearTimeout(timerRef.current); setTooltipOpen(false); }}
-            >
-              <Palette size={18} />
-              <span className="sr-only">Apparence</span>
-            </Button>
-          </SheetTrigger>
-        </TooltipTrigger>
-        <TooltipContent>Apparence</TooltipContent>
-      </Tooltip>
+      {trigger ? (
+        <SheetTrigger asChild>{trigger}</SheetTrigger>
+      ) : (
+        <Tooltip open={tooltipOpen}>
+          <TooltipTrigger asChild>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                onPointerEnter={() => { timerRef.current = setTimeout(() => setTooltipOpen(true), 800); }}
+                onPointerLeave={() => { clearTimeout(timerRef.current); setTooltipOpen(false); }}
+              >
+                <Palette size={18} />
+                <span className="sr-only">Apparence</span>
+              </Button>
+            </SheetTrigger>
+          </TooltipTrigger>
+          <TooltipContent>Apparence</TooltipContent>
+        </Tooltip>
+      )}
 
-      <SheetContent side="right">
+      <SheetContent side="right" className="w-full sm:max-w-lg">
         <SheetHeader>
           <SheetTitle className="font-display">Apparence</SheetTitle>
           <SheetDescription>

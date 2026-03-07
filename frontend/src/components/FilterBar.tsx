@@ -1,6 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArrowUpDown, Leaf, Check, Zap } from 'lucide-react';
+import { ArrowUpDown, Leaf, Check, Zap, UtensilsCrossed, Sun, Gauge } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export interface Filters {
   type: string;
@@ -38,6 +39,7 @@ const sorts = [
 ];
 
 export default function FilterBar({ filters, onChange }: FilterBarProps) {
+  const isMobile = useIsMobile();
   const set = (key: keyof Filters, value: string) => onChange({ ...filters, [key]: value });
 
   const toggleFilter = (key: keyof Filters) => {
@@ -47,9 +49,9 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
   return (
     <div>
       <div className="flex flex-wrap gap-2 items-center">
-        <FilterSelect placeholder="Type" value={filters.type} defaultValue="tous" options={types} onValueChange={(v) => set('type', v)} />
-        <FilterSelect placeholder="Saison" value={filters.season} defaultValue="toutes" options={seasons} onValueChange={(v) => set('season', v)} />
-        <FilterSelect placeholder="Difficulté" value={filters.difficulty} defaultValue="toutes" options={difficulties} onValueChange={(v) => set('difficulty', v)} />
+        <FilterSelect placeholder="Type" value={filters.type} defaultValue="tous" options={types} onValueChange={(v) => set('type', v)} icon={<UtensilsCrossed size={13} />} />
+        <FilterSelect placeholder="Saison" value={filters.season} defaultValue="toutes" options={seasons} onValueChange={(v) => set('season', v)} icon={<Sun size={13} />} />
+        <FilterSelect placeholder="Difficulté" value={filters.difficulty} defaultValue="toutes" options={difficulties} onValueChange={(v) => set('difficulty', v)} icon={<Gauge size={13} />} />
 
         {/* Toggle: Testé */}
         <ToggleChip
@@ -80,11 +82,11 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
         />
 
         {/* Sort */}
-        <div className="ml-auto">
+        <div className="md:ml-auto">
           <Select value={filters.sort} onValueChange={(v) => set('sort', v)}>
-            <SelectTrigger className="w-auto min-w-[140px] h-9 text-xs font-body bg-secondary border-0 gap-1.5 focus:ring-0 focus:ring-offset-0">
+            <SelectTrigger className="w-auto md:min-w-[140px] h-9 text-xs font-body bg-secondary border-0 gap-1.5 focus:ring-0 focus:ring-offset-0">
               <ArrowUpDown size={13} className="text-muted-foreground" />
-              <SelectValue />
+              {!isMobile && <SelectValue />}
             </SelectTrigger>
             <SelectContent className="bg-popover z-50">
               {sorts.map((s) => (
@@ -109,12 +111,12 @@ function ToggleChip({ active, onClick, icon, label, activeClass, tooltip }: {
   const chip = (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1.5 h-9 px-3 rounded-md border text-xs font-body font-medium transition-colors ${
+      className={`flex items-center gap-1.5 h-9 px-2.5 md:px-3 rounded-md border text-xs font-body font-medium transition-colors ${
         active ? activeClass : 'bg-card border-input text-muted-foreground hover:bg-secondary'
       }`}
     >
       {icon}
-      {label}
+      <span className="hidden md:inline">{label}</span>
     </button>
   );
 
@@ -138,21 +140,28 @@ function FilterSelect({
   defaultValue,
   options,
   onValueChange,
+  icon,
 }: {
   placeholder: string;
   value: string;
   defaultValue: string;
   options: string[];
   onValueChange: (value: string) => void;
+  icon?: React.ReactNode;
 }) {
   const isActive = value !== defaultValue;
+  const isMobile = useIsMobile();
 
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className="w-auto min-w-[120px] h-9 text-xs font-body capitalize bg-card focus:ring-0 focus:ring-offset-0">
-        <SelectValue placeholder={placeholder}>
-          {isActive ? options.find((o) => o === value) : placeholder}
-        </SelectValue>
+      <SelectTrigger className="w-auto md:min-w-[120px] h-9 text-xs font-body capitalize bg-card focus:ring-0 focus:ring-offset-0">
+        {icon && isMobile ? (
+          <span className="text-muted-foreground shrink-0">{icon}</span>
+        ) : (
+          <SelectValue placeholder={placeholder}>
+            {isActive ? options.find((o) => o === value) : placeholder}
+          </SelectValue>
+        )}
       </SelectTrigger>
       <SelectContent className="bg-popover z-50">
         {options.map((opt) => (

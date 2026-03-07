@@ -31,10 +31,6 @@ export function recipeToMarkdown(recipe: Recipe): string {
   }
   lines.push(infoParts.join(' · '));
 
-  if (recipe.owner) {
-    lines.push(`Recette de ${recipe.owner}`);
-  }
-
   // Times
   const timeParts: string[] = [];
   if (recipe.prepTime) timeParts.push(`Prépa: ${recipe.prepTime} min`);

@@ -1,8 +1,10 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, PenLine, Camera, Instagram, Download, FileJson, X } from 'lucide-react';
 import AppearanceSheet from '@/components/AppearanceSheet';
 import CartSheet from '@/components/CartSheet';
+import MobileHeader from '@/components/MobileHeader';
+import MobileAddButton from '@/components/MobileAddButton';
 import { useRecipes } from '@/hooks/use-recipes';
 import { useCatalogFilters } from '@/contexts/CatalogFilterContext';
 import HeroSection from '@/components/HeroSection';
@@ -27,6 +29,7 @@ const CatalogPage = () => {
   const navigate = useNavigate();
   const { data: recipes = [], isLoading } = useRecipes();
   const { searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage } = useCatalogFilters();
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const filtered = useMemo(() => {
     let result = recipes.filter((r) => {
@@ -135,7 +138,14 @@ const CatalogPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="relative">
+      {/* Mobile header */}
+      <MobileHeader
+        onSearchToggle={() => setMobileSearchOpen((v) => !v)}
+        searchOpen={mobileSearchOpen}
+      />
+
+      {/* Desktop hero + action buttons (hidden on mobile) */}
+      <div className="relative hidden md:block">
         <HeroSection />
         <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
           <AppearanceSheet />
@@ -147,21 +157,28 @@ const CatalogPage = () => {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-6">
+      {/* Mobile FAB */}
+      <MobileAddButton />
+
+      <main className="max-w-7xl mx-auto px-4 md:px-8 py-2 md:py-8 space-y-3 md:space-y-6">
 
         <div className="space-y-2">
           {/* Search + Add button on same line */}
           <div className="flex flex-col md:flex-row gap-4 items-start">
-            <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
+            {/* Desktop: always visible. Mobile: toggled via header search button */}
+            <div className={`w-full md:contents ${mobileSearchOpen ? '' : 'hidden md:contents'}`}>
+              <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
+            </div>
             {hasActiveFilters && (
-              <button onClick={resetAll} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0 h-11">
+              <button onClick={resetAll} className="hidden md:flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0 h-11">
                 <X size={14} />
                 Réinitialiser
               </button>
             )}
+            {/* Desktop add recipe dropdown (hidden on mobile, FAB replaces it) */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 shrink-0 ml-auto">
+                <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 shrink-0 ml-auto hidden md:inline-flex">
                   <Plus size={18} />
                   Ajouter une recette
                 </Button>
@@ -188,9 +205,9 @@ const CatalogPage = () => {
             </DropdownMenu>
           </div>
 
-          {/* Quick tag filters */}
+          {/* Quick tag filters (desktop only) */}
           {topTags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="hidden md:flex flex-wrap gap-1.5">
               {topTags.map((tag) => (
                 <button
                   key={tag}
@@ -211,9 +228,17 @@ const CatalogPage = () => {
         </div>
 
         {/* Results count */}
-        <p className="text-sm text-muted-foreground font-body">
-          {filtered.length} recette{filtered.length !== 1 ? 's' : ''} trouvée{filtered.length !== 1 ? 's' : ''}
-        </p>
+        <div className="flex items-center justify-between md:justify-start gap-2">
+          <p className="text-sm text-muted-foreground font-body">
+            {filtered.length} recette{filtered.length !== 1 ? 's' : ''} trouvée{filtered.length !== 1 ? 's' : ''}
+          </p>
+          {hasActiveFilters && (
+            <button onClick={resetAll} className="md:hidden flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0">
+              <X size={14} />
+              Réinitialiser
+            </button>
+          )}
+        </div>
 
         {/* Grid */}
         {isLoading ? (

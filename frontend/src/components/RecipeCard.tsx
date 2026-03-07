@@ -3,6 +3,7 @@ import beaverIcon from '/icon.png';
 import { Recipe } from '@/data/recipes';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 const difficultyLabels: Record<string, { label: string; bars: number }> = {
@@ -28,12 +29,12 @@ const DifficultyBars = ({ level }: { level: number }) => (
   </div>
 );
 
-const StarRating = ({ rating }: { rating: number }) => (
+const StarRating = ({ rating, size = 14 }: { rating: number; size?: number }) => (
   <div className="flex gap-0.5">
     {[1, 2, 3, 4, 5].map((i) => (
       <Star
         key={i}
-        size={14}
+        size={size}
         className={i <= rating ? 'fill-primary text-primary' : 'text-muted'}
       />
     ))}
@@ -41,10 +42,79 @@ const StarRating = ({ rating }: { rating: number }) => (
 );
 
 export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
+  const isMobile = useIsMobile();
   const totalTime = recipe.prepTime + recipe.cookTime;
   const diff = difficultyLabels[recipe.difficulty];
   const cart = useCart();
   const inCart = cart.has(recipe.id);
+
+  if (isMobile) {
+    return (
+      <button
+        onClick={(e) => { if (e.metaKey || e.ctrlKey) { e.preventDefault(); cart.toggle(recipe.id); } else { onClick(); } }}
+        className="group text-left w-full relative rounded-lg overflow-hidden shadow-card"
+      >
+        {/* Full image background */}
+        <div className="relative aspect-[16/9] overflow-hidden">
+          {recipe.image ? (
+            <img
+              src={recipe.image}
+              alt={recipe.title}
+              className={`w-full h-full object-cover ${!recipe.tested ? 'opacity-60 saturate-[0.3]' : ''}`}
+              loading="lazy"
+            />
+          ) : (
+            <div className={`w-full h-full bg-muted flex items-center justify-center ${!recipe.tested ? 'opacity-60' : ''}`}>
+              <img src={beaverIcon} alt="Pas d'image" className="w-10 h-10 opacity-50 grayscale" />
+            </div>
+          )}
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 to-transparent" />
+
+          {/* Cart button top right */}
+          <div className="absolute top-2 right-2">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); cart.toggle(recipe.id); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); cart.toggle(recipe.id); } }}
+              className={`w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm transition-colors ${inCart ? 'text-primary fill-primary' : 'text-gray-600 dark:text-gray-300'}`}
+              title={inCart ? 'Retirer du panier' : 'Ajouter au panier'}
+            >
+              <ShoppingCart size={16} className={inCart ? 'fill-primary' : ''} />
+            </div>
+          </div>
+
+          {/* Overlaid content at bottom */}
+          <div className="absolute bottom-3 left-3 right-3">
+            {/* Badges */}
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <Badge className="bg-primary text-primary-foreground capitalize font-body text-xs">
+                {recipe.type}
+              </Badge>
+              {recipe.diets.includes('végétarien') && (
+                <Badge variant="secondary" className="bg-card/95 text-green-600 font-body text-xs">
+                  Végé
+                </Badge>
+              )}
+            </div>
+            {/* Title */}
+            <h3 className="font-display text-lg font-bold text-primary-foreground drop-shadow-lg leading-tight line-clamp-2">
+              {recipe.title}
+            </h3>
+            {/* Rating + meta */}
+            <div className="flex items-center gap-3 mt-1">
+              <StarRating rating={recipe.rating} size={13} />
+              <span className="flex items-center gap-1 text-xs text-primary-foreground/80 font-body">
+                <Clock size={12} />
+                {totalTime ? `${totalTime} min` : '-'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </button>
+    );
+  }
 
   return (
     <button
