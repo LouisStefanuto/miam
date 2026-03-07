@@ -53,4 +53,6 @@ WORKDIR /app
 # Uses `fastapi dev` to enable hot-reloading when the `watch` sync occurs
 # Uses `--host 0.0.0.0` to allow access from outside the container
 # CMD ["fastapi", "dev", "--host", "0.0.0.0", "src/miam/api/main.py"]
-CMD ["sh", "-c", "alembic upgrade head && fastapi dev --host 0.0.0.0 src/miam/api/main.py"]
+COPY entrypoint.sh ./
+RUN chmod +x entrypoint.sh
+CMD ["./entrypoint.sh"]
