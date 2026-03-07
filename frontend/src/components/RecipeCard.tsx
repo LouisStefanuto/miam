@@ -1,16 +1,9 @@
-import { Clock, Star, Users, Sun, Snowflake, Flower, LeafyGreen, Vegan } from 'lucide-react';
+import { Clock, Star, Users, ShoppingCart } from 'lucide-react';
 import beaverIcon from '/icon.png';
 import { Recipe } from '@/data/recipes';
 import { Badge } from '@/components/ui/badge';
+import { useCart } from '@/contexts/CartContext';
 
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const seasonIcons: Record<string, any> = {
-  printemps: Flower,
-  été: Sun,
-  automne: LeafyGreen,
-  hiver: Snowflake,
-};
 
 const difficultyLabels: Record<string, { label: string; bars: number }> = {
   facile: { label: 'Facile', bars: 1 },
@@ -50,11 +43,12 @@ const StarRating = ({ rating }: { rating: number }) => (
 export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
   const totalTime = recipe.prepTime + recipe.cookTime;
   const diff = difficultyLabels[recipe.difficulty];
-  const isVegetarian = recipe.diets.includes('végétarien');
+  const cart = useCart();
+  const inCart = cart.has(recipe.id);
 
   return (
     <button
-      onClick={onClick}
+      onClick={(e) => { if (e.metaKey || e.ctrlKey) { e.preventDefault(); cart.toggle(recipe.id); } else { onClick(); } }}
       className="group text-left w-full h-full flex flex-col bg-card rounded-lg overflow-hidden shadow-card hover:shadow-card-hover transition-[box-shadow,transform] duration-300 hover:-translate-y-1"
     >
       {/* Image */}
@@ -71,20 +65,29 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
             <img src={beaverIcon} alt="Pas d'image" className="w-10 h-10 opacity-50 grayscale" />
           </div>
         )}
-        {/* Season + végé badges top right */}
+        {/* Cart button top right */}
         <div className="absolute top-2 right-2 flex gap-1.5">
-          {isVegetarian && (
-            <div className="w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm">
-              <Vegan size={16} className="text-green-600" />
-            </div>
-          )}
-          {(() => { const SeasonIcon = seasonIcons[recipe.season]; return SeasonIcon ? <div className="w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm"><SeasonIcon size={16} className="text-gray-600 dark:text-gray-300" /></div> : null; })()}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={(e) => { e.stopPropagation(); cart.toggle(recipe.id); }}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); cart.toggle(recipe.id); } }}
+            className={`w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm transition-colors ${inCart ? 'text-primary fill-primary' : 'text-gray-600 dark:text-gray-300 hover:text-primary'}`}
+            title={inCart ? 'Retirer du panier' : 'Ajouter au panier'}
+          >
+            <ShoppingCart size={16} className={inCart ? 'fill-primary' : ''} />
+          </div>
         </div>
         {/* Type badge */}
         <div className="absolute top-2 left-2 flex gap-1.5">
           <Badge variant="secondary" className="bg-card/95 text-card-foreground font-body text-xs capitalize">
             {recipe.type}
           </Badge>
+          {recipe.diets.includes('végétarien') && (
+            <Badge variant="secondary" className="bg-card/95 text-green-600 font-body text-xs">
+              Végé
+            </Badge>
+          )}
           {!recipe.tested && (
             <Badge variant="outline" className="bg-card/95 text-muted-foreground font-body text-xs border-muted-foreground/30">
               À tester

@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { CatalogFilterProvider } from "./contexts/CatalogFilterContext";
 import { AccentColorProvider } from "./contexts/ThemeContext";
+import { CartProvider } from "./contexts/CartContext";
 import CatalogPage from "./pages/CatalogPage";
 
 const RecipeDetailPage = lazy(() => import("./pages/RecipeDetailPage"));
@@ -32,6 +33,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <CartProvider>
         <CatalogFilterProvider>
           <Suspense>
           <Routes>
@@ -45,6 +47,7 @@ const App = () => (
           </Routes>
           </Suspense>
         </CatalogFilterProvider>
+        </CartProvider>
       </BrowserRouter>
     </TooltipProvider>
     </AccentColorProvider>
