@@ -2,6 +2,7 @@ import { useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, PenLine, Camera, Instagram, Download, FileJson } from 'lucide-react';
 import AppearanceSheet from '@/components/AppearanceSheet';
+import CartSheet from '@/components/CartSheet';
 import { useRecipes } from '@/hooks/use-recipes';
 import { useCatalogFilters } from '@/contexts/CatalogFilterContext';
 import HeroSection from '@/components/HeroSection';
@@ -108,6 +109,7 @@ const CatalogPage = () => {
             <Download size={18} />
             Exporter
           </Button>
+          <CartSheet />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 shrink-0">
