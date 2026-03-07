@@ -126,7 +126,6 @@ function backendToFrontend(b: BackendRecipe): Recipe {
         unit: i.unit ?? '',
       })),
     steps: b.preparation.map((text) => ({ text })),
-    owner: b.description || undefined,
     tested: b.tested,
     createdAt: '',
     updatedAt: '',
@@ -136,7 +135,7 @@ function backendToFrontend(b: BackendRecipe): Recipe {
 function frontendToBackendCreate(r: Recipe) {
   return {
     title: r.title,
-    description: r.owner || '',
+    description: '',
     prep_time_minutes: r.prepTime || null,
     cook_time_minutes: r.cookTime || null,
     rest_time_minutes: r.restTime || null,

@@ -63,7 +63,6 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     tags: initialRecipe?.tags ?? [],
     ingredients: initialRecipe?.ingredients?.length ? initialRecipe.ingredients : defaultIngredients(),
     steps: initialRecipe?.steps?.length ? initialRecipe.steps : [{ text: '' }],
-    owner: initialRecipe?.owner ?? '',
     tested: initialRecipe?.tested ?? false,
   });
   const [newTag, setNewTag] = useState('');
@@ -291,12 +290,6 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             placeholder="Titre de la recette"
             autoFocus={!initialRecipe}
             className="font-display text-3xl md:text-4xl font-bold bg-transparent border-b border-primary-foreground/50 text-primary-foreground h-auto p-0 rounded-none focus-visible:ring-0 placeholder:text-primary-foreground/40"
-          />
-          <Input
-            value={data.owner}
-            onChange={(e) => set('owner', e.target.value)}
-            placeholder="Recette de…"
-            className="font-display text-lg bg-transparent border-0 text-primary-foreground/80 h-auto p-0 rounded-none focus-visible:ring-0 placeholder:text-primary-foreground/40 mt-1 w-auto"
           />
         </div>
       </div>

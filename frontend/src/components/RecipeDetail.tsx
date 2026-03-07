@@ -403,9 +403,6 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
               </span>
             )}
           </h1>
-          {!editing && current.owner && (
-            <p className="font-display text-lg text-primary-foreground/80 drop-shadow-lg mt-1">Recette de {current.owner}</p>
-          )}
         </div>
       </div>
 
@@ -462,13 +459,6 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           </div>
         )}
 
-        {/* Owner */}
-        {editing && (
-          <div className="flex items-center gap-2">
-            <span className="font-body text-sm font-semibold text-foreground">Recette de :</span>
-            <Input value={editData.owner || ''} onChange={(e) => setEditData({ ...editData, owner: e.target.value })} placeholder="Nom de l'auteur…" className="h-8 w-48 text-sm font-body" />
-          </div>
-        )}
 
         {/* Tags */}
         {editing ? (
