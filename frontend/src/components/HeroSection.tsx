@@ -2,7 +2,7 @@ import heroBg from '@/assets/hero-bg.jpg';
 
 export default function HeroSection() {
   return (
-    <section className="relative h-[340px] md:h-[400px] overflow-hidden">
+    <section className="relative h-[220px] md:h-[280px] overflow-hidden">
       <img
         src={heroBg}
         alt="Cuisine"
