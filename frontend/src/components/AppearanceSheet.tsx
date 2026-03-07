@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor, Check, Palette } from "lucide-react";
 import { useAccentColor, ACCENT_COLORS, type AccentColor } from "@/contexts/ThemeContext";
@@ -11,13 +12,21 @@ const colorKeys = Object.keys(ACCENT_COLORS) as AccentColor[];
 export default function AppearanceSheet() {
   const { theme, setTheme } = useTheme();
   const { accentColor, setAccentColor } = useAccentColor();
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
   return (
     <Sheet>
-      <Tooltip>
+      <Tooltip open={tooltipOpen}>
         <TooltipTrigger asChild>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <Button
+              variant="outline"
+              size="icon"
+              className="shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+              onPointerEnter={() => { timerRef.current = setTimeout(() => setTooltipOpen(true), 800); }}
+              onPointerLeave={() => { clearTimeout(timerRef.current); setTooltipOpen(false); }}
+            >
               <Palette size={18} />
               <span className="sr-only">Apparence</span>
             </Button>
