@@ -149,45 +149,66 @@ const CatalogPage = () => {
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-6">
 
-        {/* Search + Add button on same line */}
-        <div className="flex flex-col md:flex-row gap-4 items-start">
-          <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
-          {hasActiveFilters && (
-            <button onClick={resetAll} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0 h-11">
-              <X size={14} />
-              Réinitialiser
-            </button>
-          )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 shrink-0 ml-auto">
-                <Plus size={18} />
-                Ajouter une recette
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="font-body">
-              <DropdownMenuItem onClick={() => navigate('/recipes/new')} className="gap-2 cursor-pointer">
-                <PenLine size={16} />
-                Créer manuellement
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/import/ocr')} className="gap-2 cursor-pointer">
-                <Camera size={16} />
-                Importer depuis des photos
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/import/json')} className="gap-2 cursor-pointer">
-                <FileJson size={16} />
-                Importer depuis un JSON
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled className="gap-2 cursor-pointer opacity-50">
-                <Instagram size={16} />
-                Importer depuis Instagram
-                <span className="text-xs text-muted-foreground ml-auto">Bientôt</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <div className="space-y-2">
+          {/* Search + Add button on same line */}
+          <div className="flex flex-col md:flex-row gap-4 items-start">
+            <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
+            {hasActiveFilters && (
+              <button onClick={resetAll} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0 h-11">
+                <X size={14} />
+                Réinitialiser
+              </button>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 shrink-0 ml-auto">
+                  <Plus size={18} />
+                  Ajouter une recette
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="font-body">
+                <DropdownMenuItem onClick={() => navigate('/recipes/new')} className="gap-2 cursor-pointer">
+                  <PenLine size={16} />
+                  Créer manuellement
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/import/ocr')} className="gap-2 cursor-pointer">
+                  <Camera size={16} />
+                  Importer depuis des photos
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/import/json')} className="gap-2 cursor-pointer">
+                  <FileJson size={16} />
+                  Importer depuis un JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled className="gap-2 cursor-pointer opacity-50">
+                  <Instagram size={16} />
+                  Importer depuis Instagram
+                  <span className="text-xs text-muted-foreground ml-auto">Bientôt</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
-        <FilterBar filters={filters} onChange={setFilters} topTags={topTags} selectedTags={searchTags} onTagClick={handleTagClick} />
+          {/* Quick tag filters */}
+          {topTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {topTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => handleTagClick(tag)}
+                  className={`text-xs px-2.5 py-1 rounded-full border font-body capitalize transition-colors ${
+                    searchTags.includes(tag)
+                      ? 'bg-primary/20 border-primary/40 text-primary'
+                      : 'bg-secondary border-transparent text-secondary-foreground hover:bg-primary/10'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <FilterBar filters={filters} onChange={setFilters} />
+        </div>
 
         {/* Results count */}
         <p className="text-sm text-muted-foreground font-body">

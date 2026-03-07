@@ -1,4 +1,3 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ArrowUpDown, Leaf, Check, Zap } from 'lucide-react';
@@ -26,9 +25,6 @@ export const defaultFilters: Filters = {
 interface FilterBarProps {
   filters: Filters;
   onChange: (filters: Filters) => void;
-  topTags?: string[];
-  selectedTags?: string[];
-  onTagClick?: (tag: string) => void;
 }
 
 const types = ['tous', 'apéro', 'entrée', 'plat', 'pâtes', 'dessert', 'boisson'];
@@ -41,40 +37,16 @@ const sorts = [
   { value: 'time', label: 'Plus rapide' },
 ];
 
-export default function FilterBar({ filters, onChange, topTags = [], selectedTags = [], onTagClick }: FilterBarProps) {
+export default function FilterBar({ filters, onChange }: FilterBarProps) {
   const set = (key: keyof Filters, value: string) => onChange({ ...filters, [key]: value });
 
   const toggleFilter = (key: keyof Filters) => {
     set(key, filters[key] === 'on' ? 'off' : 'on');
   };
 
-  const filtersRef = useRef<HTMLDivElement>(null);
-  const [maxTagWidth, setMaxTagWidth] = useState<number>(0);
-
-  const measure = useCallback(() => {
-    if (!filtersRef.current) return;
-    // Measure the right edge of the last chip (Rapido) to get the left-content width
-    const container = filtersRef.current;
-    const children = Array.from(container.children) as HTMLElement[];
-    // Last child is the ml-auto sort div — we want the one before it
-    const lastChip = children[children.length - 2];
-    if (lastChip) {
-      const containerRect = container.getBoundingClientRect();
-      const chipRect = lastChip.getBoundingClientRect();
-      setMaxTagWidth(chipRect.right - containerRect.left);
-    }
-  }, []);
-
-  useEffect(() => {
-    measure();
-    const observer = new ResizeObserver(measure);
-    if (filtersRef.current) observer.observe(filtersRef.current);
-    return () => observer.disconnect();
-  }, [measure]);
-
   return (
-    <div className="space-y-2">
-      <div ref={filtersRef} className="flex flex-wrap gap-2 items-center">
+    <div>
+      <div className="flex flex-wrap gap-2 items-center">
         <FilterSelect placeholder="Type" value={filters.type} defaultValue="tous" options={types} onValueChange={(v) => set('type', v)} />
         <FilterSelect placeholder="Saison" value={filters.season} defaultValue="toutes" options={seasons} onValueChange={(v) => set('season', v)} />
         <FilterSelect placeholder="Difficulté" value={filters.difficulty} defaultValue="toutes" options={difficulties} onValueChange={(v) => set('difficulty', v)} />
@@ -122,28 +94,6 @@ export default function FilterBar({ filters, onChange, topTags = [], selectedTag
           </Select>
         </div>
       </div>
-
-      {/* Quick tag filters */}
-      {topTags.length > 0 && (
-        <div
-          className="flex flex-wrap gap-1.5 overflow-hidden"
-          style={maxTagWidth > 0 ? { maxWidth: maxTagWidth, maxHeight: '2rem' } : undefined}
-        >
-          {topTags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => onTagClick?.(tag)}
-              className={`text-xs px-2.5 py-1 rounded-full border font-body capitalize transition-colors ${
-                selectedTags.includes(tag)
-                  ? 'bg-primary/20 border-primary/40 text-primary'
-                  : 'bg-secondary border-transparent text-secondary-foreground hover:bg-primary/10'
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
