@@ -98,7 +98,7 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
 
       {/* Content */}
       <div className="p-4 flex flex-col flex-1">
-        <h3 className="font-display text-lg font-semibold text-card-foreground leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+        <h3 className="font-display text-lg font-semibold text-card-foreground leading-tight line-clamp-2 min-h-[2lh] group-hover:text-primary transition-colors">
           {recipe.title}
         </h3>
 
