@@ -70,7 +70,7 @@ function generateShoppingListText(recipes: Recipe[], ingredients: AggregatedIngr
   return lines.join('\n');
 }
 
-export default function CartSheet() {
+export default function CartSheet({ trigger }: { trigger?: React.ReactNode } = {}) {
   const { items, remove, clear, count } = useCart();
   const { data: allRecipes = [] } = useRecipes();
   const [open, setOpen] = useState(false);
@@ -157,17 +157,21 @@ export default function CartSheet() {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="outline" className="font-body font-semibold gap-2 shrink-0 relative focus-visible:ring-0 focus-visible:ring-offset-0">
-          <ShoppingCart size={18} />
-          Panier
-          {count > 0 && (
-            <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
-              {count}
-            </span>
-          )}
-        </Button>
-      </SheetTrigger>
+      {trigger ? (
+        <SheetTrigger asChild>{trigger}</SheetTrigger>
+      ) : (
+        <SheetTrigger asChild>
+          <Button variant="outline" className="font-body font-semibold gap-2 shrink-0 relative focus-visible:ring-0 focus-visible:ring-offset-0">
+            <ShoppingCart size={18} />
+            Panier
+            {count > 0 && (
+              <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
+                {count}
+              </span>
+            )}
+          </Button>
+        </SheetTrigger>
+      )}
       <SheetContent className="w-full sm:max-w-lg flex flex-col">
         <SheetHeader>
           <SheetTitle className="font-display">Panier ({count})</SheetTitle>
