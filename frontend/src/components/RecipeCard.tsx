@@ -1,17 +1,9 @@
-import { Clock, Star, Users, Sun, Snowflake, Flower, LeafyGreen, Vegan, ShoppingCart } from 'lucide-react';
+import { Clock, Star, Users, Vegan, ShoppingCart } from 'lucide-react';
 import beaverIcon from '/icon.png';
 import { Recipe } from '@/data/recipes';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
 
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const seasonIcons: Record<string, any> = {
-  printemps: Flower,
-  été: Sun,
-  automne: LeafyGreen,
-  hiver: Snowflake,
-};
 
 const difficultyLabels: Record<string, { label: string; bars: number }> = {
   facile: { label: 'Facile', bars: 1 },
@@ -81,7 +73,16 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
               <Vegan size={16} className="text-green-600" />
             </div>
           )}
-          {(() => { const SeasonIcon = seasonIcons[recipe.season]; return SeasonIcon ? <div className="w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm"><SeasonIcon size={16} className="text-gray-600 dark:text-gray-300" /></div> : null; })()}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={(e) => { e.stopPropagation(); cart.toggle(recipe.id); }}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); cart.toggle(recipe.id); } }}
+            className={`w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm transition-colors ${inCart ? 'text-primary' : 'text-gray-600 dark:text-gray-300 hover:text-primary'}`}
+            title={inCart ? 'Retirer du panier' : 'Ajouter au panier'}
+          >
+            <ShoppingCart size={16} />
+          </div>
         </div>
         {/* Type badge */}
         <div className="absolute top-2 left-2 flex gap-1.5">
@@ -119,16 +120,6 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
             <Users size={13} />
             {recipe.servings}
           </span>
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={(e) => { e.stopPropagation(); cart.toggle(recipe.id); }}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); cart.toggle(recipe.id); } }}
-            className={`shrink-0 ml-auto p-1.5 rounded-full transition-colors ${inCart ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100'}`}
-            title={inCart ? 'Retirer du panier' : 'Ajouter au panier'}
-          >
-            <ShoppingCart size={16} />
-          </div>
         </div>
 
         <div className="flex flex-wrap gap-1 pt-1 mt-auto min-h-[24px]">
