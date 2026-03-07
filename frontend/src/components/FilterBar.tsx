@@ -27,6 +27,7 @@ interface FilterBarProps {
   filters: Filters;
   onChange: (filters: Filters) => void;
   topTags?: string[];
+  selectedTags?: string[];
   onTagClick?: (tag: string) => void;
 }
 
@@ -40,7 +41,7 @@ const sorts = [
   { value: 'time', label: 'Plus rapide' },
 ];
 
-export default function FilterBar({ filters, onChange, topTags = [], onTagClick }: FilterBarProps) {
+export default function FilterBar({ filters, onChange, topTags = [], selectedTags = [], onTagClick }: FilterBarProps) {
   const set = (key: keyof Filters, value: string) => onChange({ ...filters, [key]: value });
 
   const toggleFilter = (key: keyof Filters) => {
@@ -132,7 +133,11 @@ export default function FilterBar({ filters, onChange, topTags = [], onTagClick 
             <button
               key={tag}
               onClick={() => onTagClick?.(tag)}
-              className="text-xs px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground hover:bg-primary/20 font-body capitalize transition-colors"
+              className={`text-xs px-2.5 py-1 rounded-full border font-body capitalize transition-colors ${
+                selectedTags.includes(tag)
+                  ? 'bg-primary/20 border-primary/40 text-primary'
+                  : 'bg-secondary border-transparent text-secondary-foreground hover:bg-primary/10'
+              }`}
             >
               {tag}
             </button>

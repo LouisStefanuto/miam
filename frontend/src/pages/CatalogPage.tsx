@@ -98,7 +98,9 @@ const CatalogPage = () => {
   };
 
   const handleTagClick = (tag: string) => {
-    if (!searchTags.includes(tag)) {
+    if (searchTags.includes(tag)) {
+      setSearchTags(searchTags.filter((t) => t !== tag));
+    } else {
       setSearchTags([...searchTags, tag]);
     }
   };
@@ -185,7 +187,7 @@ const CatalogPage = () => {
           </DropdownMenu>
         </div>
 
-        <FilterBar filters={filters} onChange={setFilters} topTags={topTags} onTagClick={handleTagClick} />
+        <FilterBar filters={filters} onChange={setFilters} topTags={topTags} selectedTags={searchTags} onTagClick={handleTagClick} />
 
         {/* Results count */}
         <p className="text-sm text-muted-foreground font-body">
