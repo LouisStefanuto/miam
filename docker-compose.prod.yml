@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:16
+    container_name: miam-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: recipes
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d recipes"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: ghcr.io/louisstefanuto/miam-backend:latest
+    container_name: miam-backend
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/recipes
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - images:/app/images
+
+  frontend:
+    image: ghcr.io/louisstefanuto/miam-frontend:latest
+    ports:
+      - "3000:80"
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  images:
