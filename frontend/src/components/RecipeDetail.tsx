@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { ArrowLeft, Star, Pencil, Save, X, Plus, Trash2, Minus, Camera, Check, ImagePlus, ImageMinus, Copy, ClipboardCheck, Sun, Snowflake, Flower, LeafyGreen, Vegan } from 'lucide-react';
@@ -85,6 +85,15 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (editing) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onBack();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editing, onBack]);
 
   const copyAsMarkdown = async () => {
     const md = recipeToMarkdown(recipe);
