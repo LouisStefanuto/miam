@@ -7,14 +7,14 @@ import pytest
 from sqlalchemy import Engine, create_engine, event, text
 from sqlalchemy.orm import Session, sessionmaker
 
-from miam.domain.entities import Category, Season
+from miam.domain.entities import AuthProvider, Category, Season
 from miam.domain.schemas import (
     IngredientCreate,
     RecipeCreate,
     SourceCreate,
 )
 from miam.infra.db.base import Base
-from miam.infra.repositories import RecipeRepository
+from miam.infra.repositories import RecipeRepository, UserRepository
 
 
 @pytest.fixture(scope="session")
@@ -48,6 +48,7 @@ def db_session(db_engine: Engine) -> Generator[Session]:
         "sources",
         "recipes",
         "ingredients",
+        "users",
     ]:
         session.execute(text(f"DELETE FROM {table}"))
     session.commit()
@@ -58,6 +59,26 @@ def db_session(db_engine: Engine) -> Generator[Session]:
 def repository(db_session: Session) -> RecipeRepository:
     """Provide a RecipeRepository backed by the test session."""
     return RecipeRepository(db_session)
+
+
+@pytest.fixture
+def user_repository(db_session: Session) -> UserRepository:
+    """Provide a UserRepository backed by the test session."""
+    return UserRepository(db_session)
+
+
+@pytest.fixture
+def default_owner_id(user_repository: UserRepository) -> "uuid.UUID":
+    """Create a default user and return its ID for recipe tests."""
+    import uuid as _uuid
+
+    user = user_repository.create_user(
+        email="default@test.local",
+        display_name="Default",
+        auth_provider=AuthProvider.google,
+        auth_provider_id="default-test",
+    )
+    return user.id
 
 
 def make_recipe_create(

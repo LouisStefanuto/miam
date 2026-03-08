@@ -24,13 +24,15 @@ class RecipeManagementService(RecipeServicePort):
         self.repository = repository
         self.image_storage = image_storage
 
-    def create_recipe(self, data: RecipeCreate) -> RecipeEntity:
+    def create_recipe(self, data: RecipeCreate, owner_id: UUID) -> RecipeEntity:
         """Create a new recipe with ingredients, images, and sources."""
-        return self.repository.add_recipe(data)
+        return self.repository.add_recipe(data, owner_id=owner_id)
 
-    def create_recipes(self, data: list[RecipeCreate]) -> list[RecipeEntity]:
+    def create_recipes(
+        self, data: list[RecipeCreate], owner_id: UUID
+    ) -> list[RecipeEntity]:
         """Create multiple recipes in a single atomic transaction."""
-        return self.repository.add_recipes(data)
+        return self.repository.add_recipes(data, owner_id=owner_id)
 
     def get_recipe_by_id(self, recipe_id: UUID) -> RecipeEntity | None:
         """Retrieve a recipe by ID via the persistence abstraction."""

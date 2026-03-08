@@ -36,6 +36,12 @@ class SourceType(Enum):
     photo = "photo"
 
 
+class AuthProvider(Enum):
+    """Supported SSO authentication providers."""
+
+    google = "google"
+
+
 @dataclass
 class IngredientEntity:
     name: str
@@ -58,11 +64,24 @@ class SourceEntity:
 
 
 @dataclass
+class UserEntity:
+    id: UUID
+    email: str
+    display_name: str
+    auth_provider: str
+    auth_provider_id: str
+    avatar_url: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+@dataclass
 class RecipeEntity:
     id: UUID
     title: str
     description: str
     category: str
+    owner_id: UUID
     prep_time_minutes: int | None = None
     cook_time_minutes: int | None = None
     rest_time_minutes: int | None = None

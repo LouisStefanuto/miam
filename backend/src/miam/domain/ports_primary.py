@@ -9,11 +9,13 @@ from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
 
 class RecipeServicePort(ABC):
     @abstractmethod
-    def create_recipe(self, data: RecipeCreate) -> RecipeEntity:
+    def create_recipe(self, data: RecipeCreate, owner_id: UUID) -> RecipeEntity:
         """Persist a new recipe with all related entities and return the created Recipe."""
 
     @abstractmethod
-    def create_recipes(self, data: list[RecipeCreate]) -> list[RecipeEntity]:
+    def create_recipes(
+        self, data: list[RecipeCreate], owner_id: UUID
+    ) -> list[RecipeEntity]:
         """Persist multiple recipes atomically and return all created Recipe entities."""
 
     @abstractmethod

@@ -7,20 +7,22 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
 from miam.domain.entities import (
+    AuthProvider,
     ImageEntity,
     IngredientEntity,
     PaginatedResult,
     RecipeEntity,
     SourceEntity,
+    UserEntity,
 )
-from miam.domain.ports_secondary import RecipeRepositoryPort
+from miam.domain.ports_secondary import RecipeRepositoryPort, UserRepositoryPort
 from miam.domain.schemas import (
     IngredientCreate,
     RecipeCreate,
     RecipeUpdate,
     SourceCreate,
 )
-from miam.infra.db.base import Image, Ingredient, Recipe, RecipeIngredient, Source
+from miam.infra.db.base import Image, Ingredient, Recipe, RecipeIngredient, Source, User
 
 
 class RecipeRepository(RecipeRepositoryPort):
@@ -36,6 +38,7 @@ class RecipeRepository(RecipeRepositoryPort):
             id=recipe.id,
             title=recipe.title,
             description=recipe.description,
+            owner_id=recipe.owner_id,
             prep_time_minutes=recipe.prep_time_minutes,
             cook_time_minutes=recipe.cook_time_minutes,
             rest_time_minutes=recipe.rest_time_minutes,
@@ -75,9 +78,10 @@ class RecipeRepository(RecipeRepositoryPort):
             created_at=recipe.created_at,
         )
 
-    def add_recipe(self, data: RecipeCreate) -> RecipeEntity:
+    def add_recipe(self, data: RecipeCreate, owner_id: UUID) -> RecipeEntity:
         """Persist a recipe from creation data and return a domain entity."""
         recipe = Recipe(
+            owner_id=owner_id,
             title=data.title,
             description=data.description,
             prep_time_minutes=data.prep_time_minutes,
@@ -125,7 +129,9 @@ class RecipeRepository(RecipeRepositoryPort):
         self.session.refresh(recipe)
         return self._to_entity(recipe)
 
-    def add_recipes(self, data: list[RecipeCreate]) -> list[RecipeEntity]:
+    def add_recipes(
+        self, data: list[RecipeCreate], owner_id: UUID
+    ) -> list[RecipeEntity]:
         """Persist multiple recipes in a single atomic transaction."""
         # Bulk-fetch/create all ingredients in one pass
         all_ingredient_names = {
@@ -136,6 +142,7 @@ class RecipeRepository(RecipeRepositoryPort):
         recipes = []
         for recipe_data in data:
             recipe = Recipe(
+                owner_id=owner_id,
                 title=recipe_data.title,
                 description=recipe_data.description,
                 prep_time_minutes=recipe_data.prep_time_minutes,
@@ -382,3 +389,67 @@ class RecipeRepository(RecipeRepositoryPort):
         self.session.delete(recipe)
         self.session.commit()
         return True
+
+
+class UserRepository(UserRepositoryPort):
+    """Concrete implementation of UserRepositoryPort using SQLAlchemy."""
+
+    def __init__(self, session: Session):
+        self.session = session
+
+    def _to_entity(self, user: User) -> UserEntity:
+        return UserEntity(
+            id=user.id,
+            email=user.email,
+            display_name=user.display_name,
+            avatar_url=user.avatar_url,
+            auth_provider=user.auth_provider.value,
+            auth_provider_id=user.auth_provider_id,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+        )
+
+    def create_user(
+        self,
+        email: str,
+        display_name: str,
+        auth_provider: AuthProvider,
+        auth_provider_id: str,
+        avatar_url: str | None = None,
+    ) -> UserEntity:
+        user = User(
+            email=email,
+            display_name=display_name,
+            auth_provider=auth_provider,
+            auth_provider_id=auth_provider_id,
+            avatar_url=avatar_url,
+        )
+        self.session.add(user)
+        self.session.commit()
+        self.session.refresh(user)
+        return self._to_entity(user)
+
+    def get_user_by_id(self, user_id: UUID) -> UserEntity | None:
+        user = self.session.get(User, user_id)
+        if user is None:
+            return None
+        return self._to_entity(user)
+
+    def get_user_by_email(self, email: str) -> UserEntity | None:
+        stmt = select(User).where(User.email == email)
+        user = self.session.execute(stmt).scalars().first()
+        if user is None:
+            return None
+        return self._to_entity(user)
+
+    def get_user_by_provider(
+        self, auth_provider: AuthProvider, auth_provider_id: str
+    ) -> UserEntity | None:
+        stmt = select(User).where(
+            User.auth_provider == auth_provider,
+            User.auth_provider_id == auth_provider_id,
+        )
+        user = self.session.execute(stmt).scalars().first()
+        if user is None:
+            return None
+        return self._to_entity(user)

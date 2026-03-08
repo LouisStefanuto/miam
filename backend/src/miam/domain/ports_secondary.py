@@ -3,7 +3,13 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from miam.domain.entities import ImageEntity, PaginatedResult, RecipeEntity
+from miam.domain.entities import (
+    AuthProvider,
+    ImageEntity,
+    PaginatedResult,
+    RecipeEntity,
+    UserEntity,
+)
 from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
 
 
@@ -15,11 +21,13 @@ class RecipeRepositoryPort(ABC):
     """
 
     @abstractmethod
-    def add_recipe(self, data: RecipeCreate) -> RecipeEntity:
+    def add_recipe(self, data: RecipeCreate, owner_id: UUID) -> RecipeEntity:
         """Persist a new recipe and return it as a domain entity."""
 
     @abstractmethod
-    def add_recipes(self, data: list[RecipeCreate]) -> list[RecipeEntity]:
+    def add_recipes(
+        self, data: list[RecipeCreate], owner_id: UUID
+    ) -> list[RecipeEntity]:
         """Persist multiple recipes atomically and return them as domain entities."""
 
     @abstractmethod
@@ -107,3 +115,32 @@ class MarkdownExporterPort(ABC):
     @abstractmethod
     def to_zip_bytes(self, recipes: list[RecipeEntity]) -> bytes:
         """Serialize recipes to a ZIP archive containing the Markdown file and images."""
+
+
+class UserRepositoryPort(ABC):
+    """Secondary port for user persistence."""
+
+    @abstractmethod
+    def create_user(
+        self,
+        email: str,
+        display_name: str,
+        auth_provider: AuthProvider,
+        auth_provider_id: str,
+        avatar_url: str | None = None,
+    ) -> UserEntity:
+        """Create a new user and return the domain entity."""
+
+    @abstractmethod
+    def get_user_by_id(self, user_id: UUID) -> UserEntity | None:
+        """Retrieve a user by ID."""
+
+    @abstractmethod
+    def get_user_by_email(self, email: str) -> UserEntity | None:
+        """Retrieve a user by email address."""
+
+    @abstractmethod
+    def get_user_by_provider(
+        self, auth_provider: AuthProvider, auth_provider_id: str
+    ) -> UserEntity | None:
+        """Retrieve a user by SSO provider and provider-specific ID."""

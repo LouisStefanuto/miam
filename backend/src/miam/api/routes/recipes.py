@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from pydantic import BaseModel
 
-from miam.api.deps import get_recipe_management_service
+from miam.api.deps import get_current_user_id, get_recipe_management_service
 from miam.domain.entities import RecipeEntity
 from miam.domain.schemas import BatchRecipeCreate, RecipeCreate, RecipeUpdate
 from miam.domain.services import RecipeManagementService
@@ -27,10 +27,11 @@ class BatchRecipeResponse(BaseModel):
 def create_recipes(
     batch_in: BatchRecipeCreate,
     service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
 ) -> BatchRecipeResponse:
     """Create multiple recipes in a single atomic operation."""
     try:
-        recipes = service.create_recipes(batch_in.recipes)
+        recipes = service.create_recipes(batch_in.recipes, owner_id=user_id)
         return BatchRecipeResponse(ids=[r.id for r in recipes])
     except ValueError as exc:
         raise HTTPException(
@@ -42,10 +43,11 @@ def create_recipes(
 def create_recipe(
     recipe_in: RecipeCreate,
     service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
 ) -> RecipeResponse:
     """Create a new recipe."""
     try:
-        recipe = service.create_recipe(recipe_in)
+        recipe = service.create_recipe(recipe_in, owner_id=user_id)
         return RecipeResponse(id=recipe.id)
     except ValueError as exc:
         raise HTTPException(

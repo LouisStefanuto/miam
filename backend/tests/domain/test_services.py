@@ -29,20 +29,25 @@ class StubRecipeRepository(RecipeRepositoryPort):
         self.images: dict[UUID, ImageEntity] = {}
         self._recipe_images: dict[UUID, list[UUID]] = {}
 
-    def add_recipe(self, data: RecipeCreate) -> RecipeEntity:
+    def add_recipe(
+        self, data: RecipeCreate, owner_id: UUID
+    ) -> RecipeEntity:
         uid = uuid4()
         entity = RecipeEntity(
             id=uid,
             title=data.title,
             description=data.description,
             category=data.category.value,
+            owner_id=owner_id,
         )
         self.recipes[uid] = entity
         self._recipe_images[uid] = []
         return entity
 
-    def add_recipes(self, data: list[RecipeCreate]) -> list[RecipeEntity]:
-        return [self.add_recipe(d) for d in data]
+    def add_recipes(
+        self, data: list[RecipeCreate], owner_id: UUID
+    ) -> list[RecipeEntity]:
+        return [self.add_recipe(d, owner_id=owner_id) for d in data]
 
     def get_recipe_by_id(self, recipe_id: UUID) -> RecipeEntity | None:
         return self.recipes.get(recipe_id)
@@ -77,6 +82,7 @@ class StubRecipeRepository(RecipeRepositoryPort):
             title=data.title,
             description=data.description,
             category=data.category.value,
+            owner_id=existing.owner_id,
             images=existing.images,
         )
         self.recipes[recipe_id] = updated
@@ -178,7 +184,7 @@ class TestRecipeManagementServiceCreate:
         from miam.domain.entities import Category
 
         data = RecipeCreate(title="Soup", category=Category.plat)
-        result = self.service.create_recipe(data)
+        result = self.service.create_recipe(data, owner_id=uuid4())
         assert result.title == "Soup"
         assert result.id in self.repo.recipes
 
@@ -189,7 +195,7 @@ class TestRecipeManagementServiceCreate:
             RecipeCreate(title="A", category=Category.plat),
             RecipeCreate(title="B", category=Category.dessert),
         ]
-        results = self.service.create_recipes(data)
+        results = self.service.create_recipes(data, owner_id=uuid4())
         assert len(results) == 2
         assert len(self.repo.recipes) == 2
 
@@ -204,7 +210,7 @@ class TestRecipeManagementServiceGet:
         from miam.domain.entities import Category
 
         created = self.service.create_recipe(
-            RecipeCreate(title="Cake", category=Category.dessert)
+            RecipeCreate(title="Cake", category=Category.dessert), owner_id=uuid4()
         )
         found = self.service.get_recipe_by_id(created.id)
         assert found is not None
@@ -224,8 +230,8 @@ class TestRecipeManagementServiceSearch:
     def test_search_all(self) -> None:
         from miam.domain.entities import Category
 
-        self.service.create_recipe(RecipeCreate(title="A", category=Category.plat))
-        self.service.create_recipe(RecipeCreate(title="B", category=Category.dessert))
+        self.service.create_recipe(RecipeCreate(title="A", category=Category.plat), owner_id=uuid4())
+        self.service.create_recipe(RecipeCreate(title="B", category=Category.dessert), owner_id=uuid4())
         result = self.service.search_recipes()
         assert result.total == 2
         assert len(result.items) == 2
@@ -234,10 +240,10 @@ class TestRecipeManagementServiceSearch:
         from miam.domain.entities import Category
 
         self.service.create_recipe(
-            RecipeCreate(title="Apple Pie", category=Category.dessert)
+            RecipeCreate(title="Apple Pie", category=Category.dessert), owner_id=uuid4()
         )
         self.service.create_recipe(
-            RecipeCreate(title="Beef Stew", category=Category.plat)
+            RecipeCreate(title="Beef Stew", category=Category.plat), owner_id=uuid4()
         )
         result = self.service.search_recipes(title="Apple")
         assert result.total == 1
@@ -248,7 +254,7 @@ class TestRecipeManagementServiceSearch:
 
         for i in range(5):
             self.service.create_recipe(
-                RecipeCreate(title=f"R{i}", category=Category.plat)
+                RecipeCreate(title=f"R{i}", category=Category.plat), owner_id=uuid4()
             )
         result = self.service.search_recipes(limit=2, offset=1)
         assert result.total == 5
@@ -265,7 +271,7 @@ class TestRecipeManagementServiceUpdate:
         from miam.domain.entities import Category
 
         created = self.service.create_recipe(
-            RecipeCreate(title="Old", category=Category.plat)
+            RecipeCreate(title="Old", category=Category.plat), owner_id=uuid4()
         )
         update_data = RecipeUpdate(
             title="New", description="Updated desc", category=Category.dessert
@@ -293,7 +299,7 @@ class TestRecipeManagementServiceDelete:
         from miam.domain.entities import Category
 
         created = self.service.create_recipe(
-            RecipeCreate(title="ToDelete", category=Category.plat)
+            RecipeCreate(title="ToDelete", category=Category.plat), owner_id=uuid4()
         )
         assert self.service.delete_recipe(created.id) is True
         assert self.service.get_recipe_by_id(created.id) is None
@@ -305,7 +311,7 @@ class TestRecipeManagementServiceDelete:
         from miam.domain.entities import Category
 
         created = self.service.create_recipe(
-            RecipeCreate(title="WithImages", category=Category.plat)
+            RecipeCreate(title="WithImages", category=Category.plat), owner_id=uuid4()
         )
         img_id = self.service.add_recipe_image(created.id, b"img1", "photo.jpg")
         assert self.service.delete_recipe(created.id) is True
@@ -322,7 +328,7 @@ class TestRecipeManagementServiceImages:
         from miam.domain.entities import Category
 
         created = self.service.create_recipe(
-            RecipeCreate(title="WithImg", category=Category.plat)
+            RecipeCreate(title="WithImg", category=Category.plat), owner_id=uuid4()
         )
         img_id = self.service.add_recipe_image(created.id, b"jpeg-bytes", "pic.jpg")
         assert isinstance(img_id, UUID)
@@ -332,7 +338,7 @@ class TestRecipeManagementServiceImages:
         from miam.domain.entities import Category
 
         created = self.service.create_recipe(
-            RecipeCreate(title="WithImg", category=Category.plat)
+            RecipeCreate(title="WithImg", category=Category.plat), owner_id=uuid4()
         )
         img_id = self.service.add_recipe_image(created.id, b"data", "pic.jpg")
         response = self.service.get_recipe_image(img_id)
@@ -348,7 +354,7 @@ class TestRecipeManagementServiceImages:
         from miam.domain.entities import Category
 
         created = self.service.create_recipe(
-            RecipeCreate(title="Img", category=Category.plat)
+            RecipeCreate(title="Img", category=Category.plat), owner_id=uuid4()
         )
         img_id = self.service.add_recipe_image(created.id, b"data", "pic.jpg")
         assert self.service.delete_recipe_image(img_id) is True
@@ -375,7 +381,7 @@ class TestRecipeExportService:
         mgmt = RecipeManagementService(self.repo, StubImageStorage())
         for i in range(count):
             mgmt.create_recipe(
-                RecipeCreate(title=f"Recipe {i}", category=Category.plat)
+                RecipeCreate(title=f"Recipe {i}", category=Category.plat), owner_id=uuid4()
             )
 
     def test_export_markdown(self) -> None:

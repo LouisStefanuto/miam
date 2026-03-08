@@ -23,6 +23,38 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     """Upgrade schema."""
     op.create_table(
+        "users",
+        sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("email", sa.String(length=255), nullable=False),
+        sa.Column("display_name", sa.String(length=200), nullable=False),
+        sa.Column("avatar_url", sa.String(length=500), nullable=True),
+        sa.Column(
+            "auth_provider",
+            sa.Enum("google", name="authprovider"),
+            nullable=False,
+        ),
+        sa.Column("auth_provider_id", sa.String(length=255), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.func.now(),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.func.now(),
+        ),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_users")),
+        sa.UniqueConstraint("email", name=op.f("uq_users_email")),
+        sa.UniqueConstraint(
+            "auth_provider",
+            "auth_provider_id",
+            name=op.f("uq_users_auth_provider"),
+        ),
+    )
+    op.create_table(
         "ingredients",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=100), nullable=False),
@@ -32,6 +64,7 @@ def upgrade() -> None:
     op.create_table(
         "recipes",
         sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("owner_id", sa.Uuid(), nullable=True),
         sa.Column("title", sa.String(length=200), nullable=False),
         sa.Column("description", sa.Text(), nullable=False),
         sa.Column("prep_time_minutes", sa.Integer(), nullable=True),
@@ -69,11 +102,18 @@ def upgrade() -> None:
             nullable=False,
             server_default=sa.func.now(),
         ),
+        sa.ForeignKeyConstraint(
+            ["owner_id"],
+            ["users.id"],
+            name=op.f("fk_recipes_owner_id_users"),
+            ondelete="CASCADE",
+        ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_recipes")),
     )
     op.create_index(op.f("ix_recipes_category"), "recipes", ["category"])
     op.create_index(op.f("ix_recipes_season"), "recipes", ["season"])
     op.create_index(op.f("ix_recipes_is_veggie"), "recipes", ["is_veggie"])
+    op.create_index(op.f("ix_recipes_owner_id"), "recipes", ["owner_id"])
     op.create_table(
         "images",
         sa.Column("id", sa.Uuid(), nullable=False),
@@ -146,8 +186,11 @@ def downgrade() -> None:
     op.drop_table("recipe_ingredients")
     op.drop_index(op.f("ix_images_recipe_id"), table_name="images")
     op.drop_table("images")
+    op.drop_index(op.f("ix_recipes_owner_id"), table_name="recipes")
     op.drop_index(op.f("ix_recipes_is_veggie"), table_name="recipes")
     op.drop_index(op.f("ix_recipes_season"), table_name="recipes")
     op.drop_index(op.f("ix_recipes_category"), table_name="recipes")
     op.drop_table("recipes")
     op.drop_table("ingredients")
+    op.drop_table("users")
+    op.execute("DROP TYPE IF EXISTS authprovider")
