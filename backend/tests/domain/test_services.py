@@ -29,9 +29,7 @@ class StubRecipeRepository(RecipeRepositoryPort):
         self.images: dict[UUID, ImageEntity] = {}
         self._recipe_images: dict[UUID, list[UUID]] = {}
 
-    def add_recipe(
-        self, data: RecipeCreate, owner_id: UUID
-    ) -> RecipeEntity:
+    def add_recipe(self, data: RecipeCreate, owner_id: UUID) -> RecipeEntity:
         uid = uuid4()
         entity = RecipeEntity(
             id=uid,
@@ -230,8 +228,12 @@ class TestRecipeManagementServiceSearch:
     def test_search_all(self) -> None:
         from miam.domain.entities import Category
 
-        self.service.create_recipe(RecipeCreate(title="A", category=Category.plat), owner_id=uuid4())
-        self.service.create_recipe(RecipeCreate(title="B", category=Category.dessert), owner_id=uuid4())
+        self.service.create_recipe(
+            RecipeCreate(title="A", category=Category.plat), owner_id=uuid4()
+        )
+        self.service.create_recipe(
+            RecipeCreate(title="B", category=Category.dessert), owner_id=uuid4()
+        )
         result = self.service.search_recipes()
         assert result.total == 2
         assert len(result.items) == 2
@@ -381,7 +383,8 @@ class TestRecipeExportService:
         mgmt = RecipeManagementService(self.repo, StubImageStorage())
         for i in range(count):
             mgmt.create_recipe(
-                RecipeCreate(title=f"Recipe {i}", category=Category.plat), owner_id=uuid4()
+                RecipeCreate(title=f"Recipe {i}", category=Category.plat),
+                owner_id=uuid4(),
             )
 
     def test_export_markdown(self) -> None:

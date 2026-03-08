@@ -1,13 +1,25 @@
-"""Orchestrate recipe operations."""
+"""Orchestrate recipe and authentication operations."""
 
 from uuid import UUID
 
-from miam.domain.entities import ImageEntity, PaginatedResult, RecipeEntity
-from miam.domain.ports_primary import RecipeExportServicePort, RecipeServicePort
+from miam.domain.entities import (
+    AuthProvider,
+    ImageEntity,
+    PaginatedResult,
+    RecipeEntity,
+)
+from miam.domain.ports_primary import (
+    AuthServicePort,
+    RecipeExportServicePort,
+    RecipeServicePort,
+)
 from miam.domain.ports_secondary import (
+    GoogleTokenVerifierPort,
     ImageStoragePort,
+    JwtTokenPort,
     MarkdownExporterPort,
     RecipeRepositoryPort,
+    UserRepositoryPort,
     WordExporterPort,
 )
 from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
@@ -89,6 +101,38 @@ class RecipeManagementService(RecipeServicePort):
         """Delete an image from storage and database."""
         self.image_storage.delete_image(image_id)
         return self.repository.delete_image(image_id)
+
+
+class AuthService(AuthServicePort):
+    """Service for authentication: Google login → find/create user → issue JWT."""
+
+    def __init__(
+        self,
+        google_verifier: GoogleTokenVerifierPort,
+        jwt_token: JwtTokenPort,
+        user_repository: UserRepositoryPort,
+    ):
+        self.google_verifier = google_verifier
+        self.jwt_token = jwt_token
+        self.user_repository = user_repository
+
+    def login_with_google(self, id_token: str) -> str:
+        """Verify Google ID token, find or create the user, return a JWT."""
+        user_info = self.google_verifier.verify(id_token)
+
+        user = self.user_repository.get_user_by_provider(
+            AuthProvider.google, user_info.google_id
+        )
+        if user is None:
+            user = self.user_repository.create_user(
+                email=user_info.email,
+                display_name=user_info.name,
+                auth_provider=AuthProvider.google,
+                auth_provider_id=user_info.google_id,
+                avatar_url=user_info.picture,
+            )
+
+        return self.jwt_token.create_access_token(user.id)
 
 
 class RecipeExportService(RecipeExportServicePort):

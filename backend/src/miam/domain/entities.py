@@ -76,6 +76,16 @@ class UserEntity:
 
 
 @dataclass
+class GoogleUserInfo:
+    """Verified user info returned by Google ID token verification."""
+
+    email: str
+    name: str
+    google_id: str
+    picture: str | None = None
+
+
+@dataclass
 class RecipeEntity:
     id: UUID
     title: str

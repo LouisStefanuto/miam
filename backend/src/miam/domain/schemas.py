@@ -107,3 +107,16 @@ class BatchRecipeCreate(BaseModel):
 class ImageResponse(BaseModel):
     media_type: str
     content: bytes
+
+
+class GoogleLoginRequest(BaseModel):
+    """Request body for Google OAuth login."""
+
+    id_token: str
+
+
+class TokenResponse(BaseModel):
+    """JWT token response."""
+
+    access_token: str
+    token_type: str = "bearer"

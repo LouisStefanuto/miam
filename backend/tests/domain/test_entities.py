@@ -6,6 +6,7 @@ from uuid import uuid4
 from miam.domain.entities import (
     AuthProvider,
     Category,
+    GoogleUserInfo,
     ImageEntity,
     IngredientEntity,
     PaginatedResult,
@@ -97,6 +98,24 @@ class TestSourceEntity:
         src = SourceEntity(type="url", raw_content="https://example.com/recipe")
         assert src.type == "url"
         assert src.raw_content == "https://example.com/recipe"
+
+
+class TestGoogleUserInfo:
+    def test_required_fields(self) -> None:
+        info = GoogleUserInfo(email="alice@gmail.com", name="Alice", google_id="g-123")
+        assert info.email == "alice@gmail.com"
+        assert info.name == "Alice"
+        assert info.google_id == "g-123"
+        assert info.picture is None
+
+    def test_all_fields(self) -> None:
+        info = GoogleUserInfo(
+            email="bob@gmail.com",
+            name="Bob",
+            google_id="g-456",
+            picture="https://example.com/bob.jpg",
+        )
+        assert info.picture == "https://example.com/bob.jpg"
 
 
 class TestUserEntity:

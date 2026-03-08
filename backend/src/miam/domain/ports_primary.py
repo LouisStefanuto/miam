@@ -56,6 +56,18 @@ class RecipeServicePort(ABC):
         """Delete an image from storage and database. Returns True if deleted, False if not found."""
 
 
+class AuthServicePort(ABC):
+    """Primary port for authentication operations."""
+
+    @abstractmethod
+    def login_with_google(self, id_token: str) -> str:
+        """Authenticate via Google and return a JWT access token.
+
+        Verifies the Google ID token, finds or creates the user,
+        and returns a signed JWT.
+        """
+
+
 class RecipeExportServicePort(ABC):
     @abstractmethod
     def export_recipes_to_markdown(self) -> bytes:

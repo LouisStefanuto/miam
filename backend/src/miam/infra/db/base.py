@@ -71,9 +71,7 @@ class User(Base):
 
     recipes = relationship("Recipe", back_populates="owner")
 
-    __table_args__ = (
-        UniqueConstraint("auth_provider", "auth_provider_id"),
-    )
+    __table_args__ = (UniqueConstraint("auth_provider", "auth_provider_id"),)
 
 
 class Image(Base):
@@ -135,8 +133,8 @@ class Recipe(Base):
     __tablename__ = "recipes"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    owner_id: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE")
+    owner_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)

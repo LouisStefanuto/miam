@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from miam import __version__
-from miam.api.routes import export, images, recipes, root
+from miam.api.routes import auth, export, images, recipes, root
 
 
 class CorsSettings(BaseSettings):
@@ -33,6 +33,7 @@ app.add_middleware(
 
 api_router = APIRouter(prefix="/api")
 
+api_router.include_router(auth.router)
 api_router.include_router(recipes.router)
 api_router.include_router(images.router)
 api_router.include_router(export.router)

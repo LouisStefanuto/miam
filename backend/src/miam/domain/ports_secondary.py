@@ -5,6 +5,7 @@ from uuid import UUID
 
 from miam.domain.entities import (
     AuthProvider,
+    GoogleUserInfo,
     ImageEntity,
     PaginatedResult,
     RecipeEntity,
@@ -144,3 +145,31 @@ class UserRepositoryPort(ABC):
         self, auth_provider: AuthProvider, auth_provider_id: str
     ) -> UserEntity | None:
         """Retrieve a user by SSO provider and provider-specific ID."""
+
+
+class GoogleTokenVerifierPort(ABC):
+    """Secondary port for verifying Google ID tokens."""
+
+    @abstractmethod
+    def verify(self, id_token: str) -> GoogleUserInfo:
+        """Verify a Google ID token and return user info.
+
+        Raises:
+            ValueError: If the token is invalid or expired.
+        """
+
+
+class JwtTokenPort(ABC):
+    """Secondary port for JWT token operations."""
+
+    @abstractmethod
+    def create_access_token(self, user_id: UUID) -> str:
+        """Create a JWT access token for the given user ID."""
+
+    @abstractmethod
+    def decode_access_token(self, token: str) -> UUID:
+        """Decode a JWT access token and return the user ID.
+
+        Raises:
+            ValueError: If the token is invalid or expired.
+        """

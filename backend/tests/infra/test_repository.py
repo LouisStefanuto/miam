@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from miam.domain.entities import AuthProvider, Category, Season, SourceType
+from miam.domain.entities import AuthProvider, Category, Season, SourceType, UserEntity
 from miam.domain.schemas import (
     IngredientCreate,
     RecipeUpdate,
@@ -444,9 +444,7 @@ class TestDeleteRecipe:
     def test_existing_returns_true_and_gone(
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
-        created = repository.add_recipe(
-            make_recipe_create(), owner_id=default_owner_id
-        )
+        created = repository.add_recipe(make_recipe_create(), owner_id=default_owner_id)
         assert repository.delete_recipe(created.id) is True
         assert repository.get_recipe_by_id(created.id) is None
 
@@ -456,9 +454,7 @@ class TestDeleteRecipe:
     def test_cascades_images(
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
-        created = repository.add_recipe(
-            make_recipe_create(), owner_id=default_owner_id
-        )
+        created = repository.add_recipe(make_recipe_create(), owner_id=default_owner_id)
         repository.add_image(created.id, caption="photo")
         repository.delete_recipe(created.id)
 
@@ -499,9 +495,7 @@ class TestAddImage:
     def test_creates_linked_image(
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
-        created = repository.add_recipe(
-            make_recipe_create(), owner_id=default_owner_id
-        )
+        created = repository.add_recipe(make_recipe_create(), owner_id=default_owner_id)
         img = repository.add_image(created.id, caption="My photo", display_order=1)
 
         assert img.caption == "My photo"
@@ -515,9 +509,7 @@ class TestAddImage:
     def test_default_display_order(
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
-        created = repository.add_recipe(
-            make_recipe_create(), owner_id=default_owner_id
-        )
+        created = repository.add_recipe(make_recipe_create(), owner_id=default_owner_id)
         img = repository.add_image(created.id)
         assert img.display_order == 0
 
@@ -526,9 +518,7 @@ class TestDeleteImage:
     def test_existing(
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
-        created = repository.add_recipe(
-            make_recipe_create(), owner_id=default_owner_id
-        )
+        created = repository.add_recipe(make_recipe_create(), owner_id=default_owner_id)
         img = repository.add_image(created.id, caption="to delete")
         assert repository.delete_image(img.id) is True
 
@@ -561,9 +551,7 @@ class TestUserRepositoryCreate:
         assert user.created_at is not None
         assert user.updated_at is not None
 
-    def test_creates_user_without_avatar(
-        self, user_repository: UserRepository
-    ) -> None:
+    def test_creates_user_without_avatar(self, user_repository: UserRepository) -> None:
         user = user_repository.create_user(
             email="bob@example.com",
             display_name="Bob",
@@ -614,16 +602,13 @@ class TestUserRepositoryGetByProvider:
             auth_provider=AuthProvider.google,
             auth_provider_id="google-123",
         )
-        found = user_repository.get_user_by_provider(
-            AuthProvider.google, "google-123"
-        )
+        found = user_repository.get_user_by_provider(AuthProvider.google, "google-123")
         assert found is not None
         assert found.auth_provider_id == "google-123"
 
     def test_not_found(self, user_repository: UserRepository) -> None:
         assert (
-            user_repository.get_user_by_provider(AuthProvider.google, "unknown")
-            is None
+            user_repository.get_user_by_provider(AuthProvider.google, "unknown") is None
         )
 
 
@@ -633,7 +618,7 @@ class TestUserRepositoryGetByProvider:
 
 
 class TestRecipeWithOwner:
-    def _create_user(self, user_repo: UserRepository) -> "UserEntity":  # noqa: F821
+    def _create_user(self, user_repo: UserRepository) -> UserEntity:
         return user_repo.create_user(
             email="owner@example.com",
             display_name="Owner",

@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from typing import Any
+from uuid import UUID
 
 import pytest
 from sqlalchemy import Engine, create_engine, event, text
@@ -68,10 +69,8 @@ def user_repository(db_session: Session) -> UserRepository:
 
 
 @pytest.fixture
-def default_owner_id(user_repository: UserRepository) -> "uuid.UUID":
+def default_owner_id(user_repository: UserRepository) -> UUID:
     """Create a default user and return its ID for recipe tests."""
-    import uuid as _uuid
-
     user = user_repository.create_user(
         email="default@test.local",
         display_name="Default",
