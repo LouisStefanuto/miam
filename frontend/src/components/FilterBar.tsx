@@ -113,7 +113,7 @@ function ToggleChip({ active, onClick, icon, label, activeClass, tooltip }: {
     <button
       onClick={(e) => { onClick(); e.currentTarget.blur(); }}
       style={{ WebkitTapHighlightColor: 'transparent' }}
-      className={`flex items-center gap-1.5 h-8 md:h-9 px-2.5 md:px-3 rounded-md border text-xs font-body font-medium transition-colors outline-none ${
+      className={`flex items-center gap-1.5 h-8 md:h-9 px-2.5 md:px-3 rounded-md border text-xs font-body font-medium md:transition-colors outline-none ${
         active ? activeClass : 'bg-card border-input text-muted-foreground [@media(hover:hover)_and_(pointer:fine)]:hover:bg-secondary'
       }`}
     >
