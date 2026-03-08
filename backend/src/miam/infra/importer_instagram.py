@@ -23,53 +23,79 @@ def clean_emojis_from_text(text):
     return emoji_pattern.sub("", text)
 
 
-def extract_data_from_instagram_item(instagram_item):
-    media = instagram_item.get("media", {})
+# ---- Factory Pattern ----
+class RecipeExtractor:
+    """Abstract base class for recipe extraction from different sources."""
 
-    # Owner extraction
-    owner_username = media.get("owner", {}).get("username", "unknown")
+    def extract(self, item):
+        raise NotImplementedError("Extractor must implement 'extract' method.")
 
-    # Title and Description
-    # Often the first line of an IG post is the "title"
-    caption_text = media.get("caption", {}).get("text", "")
-    caption_text = clean_emojis_from_text(caption_text)
 
-    lines = [l for l in re.split(r"[!\.\n]", caption_text) if l.strip()]
-    if lines:
-        title = lines[0][:50]
-    else:
-        words = caption_text.split()
-        if words:
-            title = words[0][:4]
-        else:
-            title = "Instagram Recipe"
+class InstagramRecipeExtractor(RecipeExtractor):
+    """Extractor for Instagram recipe posts."""
 
-    # Instantiate Recipe
-    recipe_json = {
-        "title": title,
-        "preparation": [caption_text],
-        "category": "plat",
-        "sources": [{"type": "instagram", "raw_content": owner_username}],
-        "tags": ["instagram"],
-        "is_veggie": "vegetarian" in caption_text.lower(),
-    }
+    def extract(self, instagram_response):
+        recipe_json_list = []
+        image_bytes_list = []
+        instagram_item_list = instagram_response["items"]
 
-    # Image Extraction
-    image_url = None
-    if "image_versions2" in media:
-        candidates = media["image_versions2"].get("candidates", [])
-        if candidates:
-            image_url = candidates[0].get("url")
-            image_bytes = None
-            headers = {
-                "User-Agent": "Mozilla/5.0",
-                "Referer": "https://www.instagram.com/",
+        for instagram_item in instagram_item_list:
+            media = instagram_item.get("media", {})
+
+            # Owner extraction
+            owner_username = media.get("owner", {}).get("username", "unknown")
+
+            # Title and Description
+            caption_text = media.get("caption", {}).get("text", "")
+            caption_text = clean_emojis_from_text(caption_text)
+
+            lines = [l for l in re.split(r"[!\.\n]", caption_text) if l.strip()]
+            if lines:
+                title = lines[0][:50]
+            else:
+                words = caption_text.split()
+                if words:
+                    title = words[0][:4]
+                else:
+                    title = "Instagram Recipe"
+
+            recipe_json = {
+                "title": title,
+                "preparation": [caption_text],
+                "category": "plat",
+                "sources": [{"type": "instagram", "raw_content": owner_username}],
+                "tags": ["instagram"],
+                "is_veggie": "vegetarian" in caption_text.lower(),
             }
-            with requests.get(image_url, headers=headers, stream=True) as r:
-                r.raise_for_status()
-                image_bytes = r.content
 
-    return recipe_json, image_bytes
+            image_bytes = None
+            if "image_versions2" in media:
+                candidates = media["image_versions2"].get("candidates", [])
+                if candidates:
+                    image_url = candidates[0].get("url")
+                    headers = {
+                        "User-Agent": "Mozilla/5.0",
+                        "Referer": "https://www.instagram.com/",
+                    }
+                    with requests.get(image_url, headers=headers, stream=True) as r:
+                        r.raise_for_status()
+                        image_bytes = r.content
+            recipe_json_list.append(recipe_json)
+            image_bytes_list.append(image_bytes)
+        return recipe_json_list, image_bytes_list
+
+
+# ---- Factory Function ----
+def get_recipe_extractor(source: str) -> RecipeExtractor:
+    """Factory function returning the right extractor for a source."""
+    if source.lower() == "instagram":
+        return InstagramRecipeExtractor()
+    # elif source.lower() == "marmiton":
+    #     return MarmitonRecipeExtractor()
+    # elif source.lower() == "kikoodo":
+    #     return KikoodoRecipeExtractor()
+    else:
+        raise ValueError(f"Unknown source: {source}")
 
 
 def post_recipe_to_api(recipe_json):
@@ -98,11 +124,11 @@ def post_image_to_api(image_bytes, recipe_id):
         raise Exception(f"Failed to create image: {response_image.text}")
 
 
-def create_recipe_from_instagram(instagram_response):
-    instagram_item_list = instagram_response["items"]
-    for instagram_item in instagram_item_list:
-        recipe_json, image_bytes = extract_data_from_instagram_item(instagram_item)
+def create_recipe_from_source(source_response, source="instagram"):
+    extractor = get_recipe_extractor(source)
+    recipe_json_list, image_bytes_list = extractor.extract(source_response)
 
+    for recipe_json, image_bytes in zip(recipe_json_list, image_bytes_list):
         # Instantiate recipe and image in the database
         recipe_id = post_recipe_to_api(recipe_json)
         if image_bytes:
@@ -111,4 +137,4 @@ def create_recipe_from_instagram(instagram_response):
 
 with open("/home/bulle/miam/backend/src/miam/infra/instagram_post_exampel.json") as f:
     instagram_response = json.load(f)
-    create_recipe_from_instagram(instagram_response)
+    create_recipe_from_source(instagram_response, source="instagram")
