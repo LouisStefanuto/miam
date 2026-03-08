@@ -48,7 +48,7 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
 
   return (
     <div>
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="flex gap-1 md:gap-2 lg:flex-wrap items-center">
         <FilterSelect placeholder="Type" value={filters.type} defaultValue="tous" options={types} onValueChange={(v) => set('type', v)} icon={<UtensilsCrossed size={13} />} />
         <FilterSelect placeholder="Saison" value={filters.season} defaultValue="toutes" options={seasons} onValueChange={(v) => set('season', v)} icon={<Sun size={13} />} />
         <FilterSelect placeholder="Difficulté" value={filters.difficulty} defaultValue="toutes" options={difficulties} onValueChange={(v) => set('difficulty', v)} icon={<Gauge size={13} />} />
@@ -82,9 +82,9 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
         />
 
         {/* Sort */}
-        <div className="md:ml-auto">
+        <div className="flex-1 lg:flex-none flex justify-end lg:ml-auto">
           <Select value={filters.sort} onValueChange={(v) => set('sort', v)}>
-            <SelectTrigger className="w-auto md:min-w-[140px] h-9 text-xs font-body bg-secondary border-0 gap-1.5 focus:ring-0 focus:ring-offset-0">
+            <SelectTrigger className="w-auto lg:min-w-[140px] h-8 md:h-9 px-2 md:px-3 text-xs font-body bg-secondary border-0 gap-1.5 focus:ring-0 focus:ring-offset-0">
               <ArrowUpDown size={13} className="text-muted-foreground" />
               {!isMobile && <SelectValue />}
             </SelectTrigger>
@@ -111,11 +111,11 @@ function ToggleChip({ active, onClick, icon, label, activeClass, tooltip }: {
   const chip = (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1.5 h-9 px-2.5 md:px-3 rounded-md border text-xs font-body font-medium transition-colors ${
+      className={`flex items-center gap-1.5 h-8 md:h-9 px-2.5 md:px-3 rounded-md border text-xs font-body font-medium transition-colors ${
         active ? activeClass : 'bg-card border-input text-muted-foreground [@media(hover:hover)]:hover:bg-secondary'
       }`}
     >
-      {icon}
+      <span className="md:hidden lg:inline">{icon}</span>
       <span className="hidden md:inline">{label}</span>
     </button>
   );
@@ -154,8 +154,8 @@ function FilterSelect({
 
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className="w-auto md:min-w-[120px] h-9 text-xs font-body capitalize bg-card focus:ring-0 focus:ring-offset-0">
-        {icon && <span className="text-muted-foreground shrink-0">{icon}</span>}
+      <SelectTrigger className="w-auto lg:min-w-[120px] h-8 md:h-9 px-2 md:px-3 text-xs font-body capitalize bg-card focus:ring-0 focus:ring-offset-0">
+        {icon && <span className="text-muted-foreground shrink-0 md:hidden lg:inline">{icon}</span>}
         {!isMobile && (
           <SelectValue placeholder={placeholder}>
             {isActive ? options.find((o) => o === value) : placeholder}
