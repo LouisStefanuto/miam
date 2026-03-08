@@ -45,11 +45,11 @@ export default function MobileAddButton() {
                 }}
                 className="flex items-center gap-3 group disabled:opacity-40"
               >
-                <span className="w-10 h-10 rounded-full bg-card border border-border shadow-lg flex items-center justify-center text-foreground group-hover:bg-secondary transition-colors">
-                  {action.icon}
-                </span>
                 <span className="text-sm font-body font-medium bg-card border border-border rounded-lg px-3 py-1.5 shadow-lg whitespace-nowrap">
                   {action.label}
+                </span>
+                <span className="w-10 h-10 rounded-full bg-card border border-border shadow-lg flex items-center justify-center text-foreground group-hover:bg-secondary transition-colors">
+                  {action.icon}
                 </span>
               </button>
             ))}
