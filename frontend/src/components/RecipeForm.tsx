@@ -300,16 +300,18 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
           <EditInfoCard icon={melangeIcon} label="Préparation (min)" value={data.prepTime} onChange={(v) => set('prepTime', +v)} />
           <EditInfoCard icon={cuissonIcon} label="Cuisson (min)" value={data.cookTime} onChange={(v) => set('cookTime', +v)} />
           <EditInfoCard icon={servingsIcon} label="Portions" value={data.servings} onChange={(v) => set('servings', +v)} />
-          <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
+          <button
+            type="button"
+            onClick={() => {
+              const idx = difficulties.indexOf(data.difficulty);
+              set('difficulty', difficulties[(idx + 1) % difficulties.length] as Difficulty);
+            }}
+            className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1 cursor-pointer hover:bg-secondary transition-colors"
+          >
             <DifficultyBars level={difficultyLevels[data.difficulty].bars} />
-            <Select value={data.difficulty} onValueChange={(v) => set('difficulty', v as Difficulty)}>
-              <SelectTrigger className="h-7 text-xs capitalize font-body border-0 w-auto"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {difficulties.map((d) => <SelectItem key={d} value={d} className="capitalize font-body text-xs">{d}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <span className="text-xs capitalize font-body">{data.difficulty}</span>
             <span className="text-xs text-muted-foreground font-body">Difficulté</span>
-          </div>
+          </button>
         </div>
 
         {/* Rating */}

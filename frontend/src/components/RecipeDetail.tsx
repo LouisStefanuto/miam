@@ -414,16 +414,20 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
               <EditInfoCard icon={melangeIcon} label="Préparation (min)" value={editData.prepTime} onChange={(v) => setEditData({ ...editData, prepTime: +v })} />
               <EditInfoCard icon={cuissonIcon} label="Cuisson (min)" value={editData.cookTime} onChange={(v) => setEditData({ ...editData, cookTime: +v })} />
               <EditInfoCard icon={servingsIcon} label="Portions" value={editData.servings} onChange={(v) => setEditData({ ...editData, servings: +v })} />
-              <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
-                <DifficultyBars level={difficultyLevels[editData.difficulty].bars} />
-                <Select value={editData.difficulty} onValueChange={(v) => setEditData({ ...editData, difficulty: v as Difficulty })}>
-                  <SelectTrigger className="h-7 text-xs capitalize font-body border-0 w-auto"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {difficulties.map((d) => <SelectItem key={d} value={d} className="capitalize font-body text-xs">{d}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <span className="text-xs text-muted-foreground font-body">Difficulté</span>
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const idx = difficulties.indexOf(editData.difficulty);
+                  setEditData({ ...editData, difficulty: difficulties[(idx + 1) % difficulties.length] });
+                }}
+                className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1 cursor-pointer hover:bg-secondary transition-colors"
+              >
+                <div className="w-10 h-10 flex items-center justify-center">
+                  <DifficultyBars level={difficultyLevels[editData.difficulty].bars} />
+                </div>
+                <span className="text-xs capitalize font-body">{editData.difficulty}</span>
+                <span className="text-xs text-muted-foreground font-body">Clic pour changer</span>
+              </button>
             </>
           ) : (
             <>
@@ -442,7 +446,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 </div>
                 <span className="text-xs text-muted-foreground font-body">Portions</span>
               </div>
-              <InfoCard icon={<DifficultyBars level={difficultyLevels[current.difficulty].bars} />} label="Difficulté" value={difficultyLabels[current.difficulty]} />
+              <InfoCard icon={<DifficultyBars level={difficultyLevels[current.difficulty].bars} />} label="Complexité" value={difficultyLabels[current.difficulty]} />
             </>
           )}
         </div>
