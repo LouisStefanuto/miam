@@ -335,7 +335,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 </SelectContent>
               </Select>
             ) : (
-              <Badge className="bg-primary text-primary-foreground capitalize font-body">{current.type}</Badge>
+              <span className="inline-flex items-center h-7 px-2 text-xs capitalize font-body rounded-md bg-primary text-primary-foreground">{current.type}</span>
             )}
             {editing ? (
               <Select value={editData.season} onValueChange={(v) => setEditData({ ...editData, season: v as Season })}>
@@ -347,12 +347,12 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 </SelectContent>
               </Select>
             ) : (
-              (() => { const SeasonIcon = seasonIcons[current.season]; return SeasonIcon ? <div className="w-7 h-7 rounded-full border-2 border-card/95 bg-card/95 backdrop-blur-sm flex items-center justify-center"><SeasonIcon size={14} className="text-gray-600 dark:text-gray-300" /></div> : null; })()
+              (() => { const SeasonIcon = seasonIcons[current.season]; return SeasonIcon ? <span className="inline-flex items-center gap-1 h-7 px-2 text-xs capitalize font-body rounded-md bg-card/80 backdrop-blur-sm text-card-foreground"><SeasonIcon size={14} className="text-gray-600 dark:text-gray-300" />{current.season}</span> : null; })()
             )}
             {current.diets.includes('végétarien') && (
-              <div className="w-7 h-7 rounded-full border-2 border-card/95 bg-card/95 backdrop-blur-sm flex items-center justify-center">
-                <Vegan size={14} className="text-green-600" />
-              </div>
+              <span className="inline-flex items-center gap-1 h-7 px-2 text-xs font-body rounded-md bg-card/80 backdrop-blur-sm text-card-foreground">
+                <Vegan size={14} className="text-green-600" />Végé
+              </span>
             )}
             {/* Testé toggle - always interactive */}
             <button
@@ -363,7 +363,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                   onTestedToggle?.(!current.tested);
                 }
               }}
-              className={`flex items-center gap-1 text-xs font-body px-2 py-1 rounded-full transition-colors cursor-pointer hover:opacity-80 ${
+              className={`inline-flex items-center gap-1 h-7 px-2 text-xs font-body rounded-md transition-colors cursor-pointer hover:opacity-80 ${
                 current.tested ? 'bg-primary text-primary-foreground' : 'bg-card/80 backdrop-blur-sm text-card-foreground'
               }`}
             >
