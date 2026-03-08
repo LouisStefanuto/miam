@@ -297,9 +297,45 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
       <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-8">
         {/* Quick info cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <EditInfoCard icon={melangeIcon} label="Préparation (min)" value={data.prepTime} onChange={(v) => set('prepTime', +v)} />
-          <EditInfoCard icon={cuissonIcon} label="Cuisson (min)" value={data.cookTime} onChange={(v) => set('cookTime', +v)} />
-          <EditInfoCard icon={servingsIcon} label="Portions" value={data.servings} onChange={(v) => set('servings', +v)} />
+          <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
+            <IconDisk><img src={melangeIcon} alt="Préparation" className="w-5 h-5" /></IconDisk>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={data.prepTime || ''}
+              onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); set('prepTime', v ? +v : 0); }}
+              placeholder="0"
+              className="h-7 w-16 text-center text-sm font-body font-semibold bg-transparent border-b-2 border-primary/30 focus:border-primary outline-none transition-colors"
+            />
+            <span className="text-xs text-muted-foreground font-body">Préparation (min)</span>
+          </div>
+          <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
+            <IconDisk><img src={cuissonIcon} alt="Cuisson" className="w-5 h-5" /></IconDisk>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={data.cookTime || ''}
+              onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); set('cookTime', v ? +v : 0); }}
+              placeholder="0"
+              className="h-7 w-16 text-center text-sm font-body font-semibold bg-transparent border-b-2 border-primary/30 focus:border-primary outline-none transition-colors"
+            />
+            <span className="text-xs text-muted-foreground font-body">Cuisson (min)</span>
+          </div>
+          <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
+            <IconDisk><img src={servingsIcon} alt="Portions" className="w-5 h-5" /></IconDisk>
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={() => set('servings', Math.max(1, data.servings - 1))} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors">
+                <Minus size={16} />
+              </button>
+              <span className="text-sm font-body font-semibold text-card-foreground min-w-[1.5rem] text-center">{data.servings}</span>
+              <button type="button" onClick={() => set('servings', data.servings + 1)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors">
+                <Plus size={16} />
+              </button>
+            </div>
+            <span className="text-xs text-muted-foreground font-body">Portions</span>
+          </div>
           <button
             type="button"
             onClick={() => {
@@ -308,9 +344,11 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             }}
             className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1 cursor-pointer hover:bg-secondary transition-colors"
           >
-            <DifficultyBars level={difficultyLevels[data.difficulty].bars} />
+            <div className="w-10 h-10 flex items-center justify-center">
+              <DifficultyBars level={difficultyLevels[data.difficulty].bars} />
+            </div>
             <span className="text-xs capitalize font-body">{data.difficulty}</span>
-            <span className="text-xs text-muted-foreground font-body">Difficulté</span>
+            <span className="text-xs text-muted-foreground font-body">Clic pour changer</span>
           </button>
         </div>
 
@@ -439,16 +477,6 @@ function IconDisk({ children }: { children: React.ReactNode }) {
   return (
     <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center [&>img]:[filter:brightness(0)_invert(1)] dark:[&>img]:[filter:brightness(0)]">
       {children}
-    </div>
-  );
-}
-
-function EditInfoCard({ icon, label, value, onChange }: { icon: string; label: string; value: number; onChange: (v: string) => void }) {
-  return (
-    <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
-      <IconDisk><img src={icon} alt={label} className="w-5 h-5" /></IconDisk>
-      <Input type="number" min={0} value={value} onChange={(e) => onChange(e.target.value)} className="h-7 w-16 text-center text-sm font-body font-semibold" />
-      <span className="text-xs text-muted-foreground font-body">{label}</span>
     </div>
   );
 }
