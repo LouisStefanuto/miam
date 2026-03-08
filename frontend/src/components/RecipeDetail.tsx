@@ -298,7 +298,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         {editing && (
           <>
             <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-            <div className="absolute inset-0 flex items-center justify-center z-20">
+            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none [&>*]:pointer-events-auto">
               {editData.image ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
