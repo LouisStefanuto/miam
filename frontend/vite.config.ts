@@ -28,6 +28,17 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["icon.png"],
+      workbox: {
+        // Don't cache-bust already-hashed assets (Vite adds hashes to filenames)
+        dontCacheBustURLsMatching: /\.[a-f0-9]{8}\./,
+        // Only precache these file types (avoid caching everything)
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,woff2}"],
+        // Remove outdated caches from previous service worker versions
+        cleanupOutdatedCaches: true,
+        // Immediately take control on activation (don't wait for tab close)
+        clientsClaim: true,
+        skipWaiting: true,
+      },
       manifest: {
         name: "Miam",
         short_name: "Miam",
