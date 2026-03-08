@@ -32,12 +32,13 @@ class RecipeRepositoryPort(ABC):
         """Persist multiple recipes atomically and return them as domain entities."""
 
     @abstractmethod
-    def get_recipe_by_id(self, recipe_id: UUID) -> RecipeEntity | None:
-        """Retrieve a recipe by ID with all relationships loaded."""
+    def get_recipe_by_id(self, recipe_id: UUID, user_id: UUID) -> RecipeEntity | None:
+        """Retrieve a recipe by ID, scoped to the given user."""
 
     @abstractmethod
     def search_recipes(
         self,
+        user_id: UUID,
         recipe_id: UUID | None = None,
         title: str | None = None,
         category: str | None = None,
@@ -46,28 +47,31 @@ class RecipeRepositoryPort(ABC):
         limit: int | None = None,
         offset: int = 0,
     ) -> PaginatedResult:
-        """Query recipes with dynamic filtering and pagination."""
+        """Query recipes with dynamic filtering and pagination, scoped to the given user."""
 
     @abstractmethod
-    def update_recipe(self, recipe_id: UUID, data: RecipeUpdate) -> RecipeEntity | None:
-        """Full replacement of a recipe. Returns None if not found."""
+    def update_recipe(
+        self, recipe_id: UUID, data: RecipeUpdate, user_id: UUID
+    ) -> RecipeEntity | None:
+        """Full replacement of a recipe. Returns None if not found or not owned."""
 
     @abstractmethod
-    def delete_recipe(self, recipe_id: UUID) -> bool:
-        """Delete a recipe by ID. Returns True if deleted, False if not found."""
+    def delete_recipe(self, recipe_id: UUID, user_id: UUID) -> bool:
+        """Delete a recipe by ID. Returns True if deleted, False if not found/owned."""
 
     @abstractmethod
     def add_image(
         self,
         recipe_id: UUID,
+        user_id: UUID,
         caption: str | None = None,
         display_order: int | None = 0,
     ) -> ImageEntity:
-        """Persist an Image record for a recipe and return the created ImageEntity."""
+        """Persist an Image record for a recipe owned by user_id."""
 
     @abstractmethod
-    def delete_image(self, image_id: UUID) -> bool:
-        """Delete an Image record by ID. Returns True if deleted, False if not found."""
+    def delete_image(self, image_id: UUID, user_id: UUID) -> bool:
+        """Delete an Image record by ID. Returns True if deleted, False if not found/owned."""
 
 
 class ImageStoragePort(ABC):

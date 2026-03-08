@@ -19,12 +19,13 @@ class RecipeServicePort(ABC):
         """Persist multiple recipes atomically and return all created Recipe entities."""
 
     @abstractmethod
-    def get_recipe_by_id(self, recipe_id: UUID) -> RecipeEntity | None:
-        """Retrieve a recipe by its ID, including all related entities."""
+    def get_recipe_by_id(self, recipe_id: UUID, user_id: UUID) -> RecipeEntity | None:
+        """Retrieve a recipe by its ID, scoped to the given user."""
 
     @abstractmethod
     def search_recipes(
         self,
+        user_id: UUID,
         recipe_id: UUID | None = None,
         title: str | None = None,
         category: str | None = None,
@@ -33,27 +34,31 @@ class RecipeServicePort(ABC):
         limit: int | None = None,
         offset: int = 0,
     ) -> PaginatedResult:
-        """Search for recipes using dynamic filters with pagination."""
+        """Search for recipes using dynamic filters, scoped to the given user."""
 
     @abstractmethod
-    def update_recipe(self, recipe_id: UUID, data: RecipeUpdate) -> RecipeEntity | None:
-        """Full replacement of a recipe (PUT semantics). Returns None if not found."""
+    def update_recipe(
+        self, recipe_id: UUID, data: RecipeUpdate, user_id: UUID
+    ) -> RecipeEntity | None:
+        """Full replacement of a recipe (PUT semantics). Returns None if not found/owned."""
 
     @abstractmethod
-    def delete_recipe(self, recipe_id: UUID) -> bool:
-        """Delete a recipe by ID. Returns True if deleted, False if not found."""
+    def delete_recipe(self, recipe_id: UUID, user_id: UUID) -> bool:
+        """Delete a recipe by ID. Returns True if deleted, False if not found/owned."""
 
     @abstractmethod
-    def add_recipe_image(self, recipe_id: UUID, content: bytes, filename: str) -> UUID:
-        """Add an image to a recipe and return its image ID."""
+    def add_recipe_image(
+        self, recipe_id: UUID, user_id: UUID, content: bytes, filename: str
+    ) -> UUID:
+        """Add an image to a recipe owned by user_id and return its image ID."""
 
     @abstractmethod
     def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
         """Retrieve image bytes for a given image ID."""
 
     @abstractmethod
-    def delete_recipe_image(self, image_id: UUID) -> bool:
-        """Delete an image from storage and database. Returns True if deleted, False if not found."""
+    def delete_recipe_image(self, image_id: UUID, user_id: UUID) -> bool:
+        """Delete an image from storage and database. Returns True if deleted, False if not found/owned."""
 
 
 class AuthServicePort(ABC):
@@ -70,9 +75,9 @@ class AuthServicePort(ABC):
 
 class RecipeExportServicePort(ABC):
     @abstractmethod
-    def export_recipes_to_markdown(self) -> bytes:
-        """Export all recipes as a ZIP archive containing Markdown and images."""
+    def export_recipes_to_markdown(self, user_id: UUID) -> bytes:
+        """Export the user's recipes as a ZIP archive containing Markdown and images."""
 
     @abstractmethod
-    def export_recipes_to_word(self) -> bytes:
-        """Export all recipes as Word document."""
+    def export_recipes_to_word(self, user_id: UUID) -> bytes:
+        """Export the user's recipes as Word document."""

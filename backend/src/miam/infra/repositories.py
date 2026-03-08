@@ -206,8 +206,8 @@ class RecipeRepository(RecipeRepositoryPort):
 
         return existing
 
-    def _load_recipe(self, recipe_id: UUID) -> Recipe | None:
-        """Load a recipe ORM object with all relationships eagerly loaded."""
+    def _load_recipe(self, recipe_id: UUID, user_id: UUID) -> Recipe | None:
+        """Load a recipe ORM object with all relationships, scoped to user."""
         stmt = (
             select(Recipe)
             .options(
@@ -215,7 +215,7 @@ class RecipeRepository(RecipeRepositoryPort):
                 joinedload(Recipe.images),
                 joinedload(Recipe.sources),
             )
-            .where(Recipe.id == recipe_id)
+            .where(Recipe.id == recipe_id, Recipe.owner_id == user_id)
         )
         return self.session.execute(stmt).unique().scalars().first()
 
@@ -247,8 +247,10 @@ class RecipeRepository(RecipeRepositoryPort):
             source = Source(type=src.type, raw_content=src.raw_content)
             recipe.sources.append(source)
 
-    def update_recipe(self, recipe_id: UUID, data: RecipeUpdate) -> RecipeEntity | None:
-        recipe = self._load_recipe(recipe_id)
+    def update_recipe(
+        self, recipe_id: UUID, data: RecipeUpdate, user_id: UUID
+    ) -> RecipeEntity | None:
+        recipe = self._load_recipe(recipe_id, user_id)
         if recipe is None:
             return None
 
@@ -274,8 +276,8 @@ class RecipeRepository(RecipeRepositoryPort):
         self.session.refresh(recipe)
         return self._to_entity(recipe)
 
-    def get_recipe_by_id(self, recipe_id: UUID) -> RecipeEntity | None:
-        """Retrieve a recipe with all relationships loaded."""
+    def get_recipe_by_id(self, recipe_id: UUID, user_id: UUID) -> RecipeEntity | None:
+        """Retrieve a recipe with all relationships loaded, scoped to user."""
         stmt = (
             select(Recipe)
             .options(
@@ -283,7 +285,7 @@ class RecipeRepository(RecipeRepositoryPort):
                 joinedload(Recipe.images),
                 joinedload(Recipe.sources),
             )
-            .where(Recipe.id == recipe_id)
+            .where(Recipe.id == recipe_id, Recipe.owner_id == user_id)
         )
 
         recipe = self.session.execute(stmt).scalars().first()
@@ -315,6 +317,7 @@ class RecipeRepository(RecipeRepositoryPort):
 
     def search_recipes(
         self,
+        user_id: UUID,
         recipe_id: UUID | None = None,
         title: str | None = None,
         category: str | None = None,
@@ -323,19 +326,23 @@ class RecipeRepository(RecipeRepositoryPort):
         limit: int | None = None,
         offset: int = 0,
     ) -> PaginatedResult:
-        """Search recipes with dynamic filtering and pagination."""
+        """Search recipes with dynamic filtering and pagination, scoped to user."""
         # Count total matching recipes
-        count_stmt = select(func.count(Recipe.id))
+        count_stmt = select(func.count(Recipe.id)).where(Recipe.owner_id == user_id)
         count_stmt = self._apply_filters(
             count_stmt, recipe_id, title, category, is_veggie, season
         )
         total = self.session.execute(count_stmt).scalar_one()
 
         # Fetch recipes with eager loading
-        stmt = select(Recipe).options(
-            joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
-            joinedload(Recipe.images),
-            joinedload(Recipe.sources),
+        stmt = (
+            select(Recipe)
+            .options(
+                joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
+                joinedload(Recipe.images),
+                joinedload(Recipe.sources),
+            )
+            .where(Recipe.owner_id == user_id)
         )
         stmt = self._apply_filters(stmt, recipe_id, title, category, is_veggie, season)
         stmt = stmt.order_by(Recipe.created_at.desc())
@@ -353,10 +360,21 @@ class RecipeRepository(RecipeRepositoryPort):
     def add_image(
         self,
         recipe_id: UUID,
+        user_id: UUID,
         caption: str | None = None,
         display_order: int | None = 0,
     ) -> ImageEntity:
-        """Create and persist an Image linked to a recipe."""
+        """Create and persist an Image linked to a recipe owned by user_id."""
+        recipe = (
+            self.session.execute(
+                select(Recipe).where(Recipe.id == recipe_id, Recipe.owner_id == user_id)
+            )
+            .scalars()
+            .first()
+        )
+        if recipe is None:
+            msg = f"Recipe {recipe_id} not found or not owned by user"
+            raise ValueError(msg)
         image = Image(
             recipe_id=recipe_id,
             caption=caption,
@@ -372,18 +390,23 @@ class RecipeRepository(RecipeRepositoryPort):
             display_order=image.display_order,
         )
 
-    def delete_image(self, image_id: UUID) -> bool:
-        """Delete an Image record by ID."""
-        image = self.session.get(Image, image_id)
+    def delete_image(self, image_id: UUID, user_id: UUID) -> bool:
+        """Delete an Image record by ID, only if its recipe is owned by user_id."""
+        stmt = (
+            select(Image)
+            .join(Recipe, Image.recipe_id == Recipe.id)
+            .where(Image.id == image_id, Recipe.owner_id == user_id)
+        )
+        image = self.session.execute(stmt).scalars().first()
         if image is None:
             return False
         self.session.delete(image)
         self.session.commit()
         return True
 
-    def delete_recipe(self, recipe_id: UUID) -> bool:
-        """Delete a recipe and all related entities (via cascade)."""
-        recipe = self._load_recipe(recipe_id)
+    def delete_recipe(self, recipe_id: UUID, user_id: UUID) -> bool:
+        """Delete a recipe and all related entities, scoped to user."""
+        recipe = self._load_recipe(recipe_id, user_id)
         if recipe is None:
             return False
         self.session.delete(recipe)

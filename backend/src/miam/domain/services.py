@@ -46,12 +46,13 @@ class RecipeManagementService(RecipeServicePort):
         """Create multiple recipes in a single atomic transaction."""
         return self.repository.add_recipes(data, owner_id=owner_id)
 
-    def get_recipe_by_id(self, recipe_id: UUID) -> RecipeEntity | None:
-        """Retrieve a recipe by ID via the persistence abstraction."""
-        return self.repository.get_recipe_by_id(recipe_id)
+    def get_recipe_by_id(self, recipe_id: UUID, user_id: UUID) -> RecipeEntity | None:
+        """Retrieve a recipe by ID, scoped to the given user."""
+        return self.repository.get_recipe_by_id(recipe_id, user_id)
 
     def search_recipes(
         self,
+        user_id: UUID,
         recipe_id: UUID | None = None,
         title: str | None = None,
         category: str | None = None,
@@ -60,8 +61,9 @@ class RecipeManagementService(RecipeServicePort):
         limit: int | None = None,
         offset: int = 0,
     ) -> PaginatedResult:
-        """Search/filter recipes via the repository abstraction."""
+        """Search/filter recipes via the repository abstraction, scoped to user."""
         return self.repository.search_recipes(
+            user_id=user_id,
             recipe_id=recipe_id,
             title=title,
             category=category,
@@ -71,21 +73,26 @@ class RecipeManagementService(RecipeServicePort):
             offset=offset,
         )
 
-    def update_recipe(self, recipe_id: UUID, data: RecipeUpdate) -> RecipeEntity | None:
-        return self.repository.update_recipe(recipe_id, data)
+    def update_recipe(
+        self, recipe_id: UUID, data: RecipeUpdate, user_id: UUID
+    ) -> RecipeEntity | None:
+        return self.repository.update_recipe(recipe_id, data, user_id)
 
-    def delete_recipe(self, recipe_id: UUID) -> bool:
-        recipe = self.repository.get_recipe_by_id(recipe_id)
+    def delete_recipe(self, recipe_id: UUID, user_id: UUID) -> bool:
+        recipe = self.repository.get_recipe_by_id(recipe_id, user_id)
         if recipe is None:
             return False
         for image in recipe.images:
             self.image_storage.delete_image(image.id)
-        return self.repository.delete_recipe(recipe_id)
+        return self.repository.delete_recipe(recipe_id, user_id)
 
-    def add_recipe_image(self, recipe_id: UUID, content: bytes, filename: str) -> UUID:
-        """Add an image to a recipe and return its image ID."""
+    def add_recipe_image(
+        self, recipe_id: UUID, user_id: UUID, content: bytes, filename: str
+    ) -> UUID:
+        """Add an image to a recipe owned by user_id and return its image ID."""
         img: ImageEntity = self.repository.add_image(
             recipe_id=recipe_id,
+            user_id=user_id,
             caption=None,
             display_order=0,
         )
@@ -97,10 +104,10 @@ class RecipeManagementService(RecipeServicePort):
         """Retrieve image bytes from storage by image ID."""
         return self.image_storage.get_recipe_image(image_id)
 
-    def delete_recipe_image(self, image_id: UUID) -> bool:
+    def delete_recipe_image(self, image_id: UUID, user_id: UUID) -> bool:
         """Delete an image from storage and database."""
         self.image_storage.delete_image(image_id)
-        return self.repository.delete_image(image_id)
+        return self.repository.delete_image(image_id, user_id)
 
 
 class AuthService(AuthServicePort):
@@ -148,12 +155,12 @@ class RecipeExportService(RecipeExportServicePort):
         self.word_exporter = word_exporter
         self.markdown_exporter = markdown_exporter
 
-    def export_recipes_to_markdown(self) -> bytes:
-        """Export all recipes as a ZIP archive containing Markdown and images."""
-        result = self.repository.search_recipes()
+    def export_recipes_to_markdown(self, user_id: UUID) -> bytes:
+        """Export the user's recipes as a ZIP archive containing Markdown and images."""
+        result = self.repository.search_recipes(user_id=user_id)
         return self.markdown_exporter.to_zip_bytes(result.items)
 
-    def export_recipes_to_word(self) -> bytes:
-        """Export all recipes as Word binary format (in-memory)."""
-        result = self.repository.search_recipes()
+    def export_recipes_to_word(self, user_id: UUID) -> bytes:
+        """Export the user's recipes as Word binary format (in-memory)."""
+        result = self.repository.search_recipes(user_id=user_id)
         return self.word_exporter.to_bytes(result.items)

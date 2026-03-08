@@ -6,7 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
 from pydantic import BaseModel
 
-from miam.api.deps import get_recipe_management_service
+from miam.api.deps import get_current_user_id, get_recipe_management_service
 from miam.domain.services import RecipeManagementService
 
 router = APIRouter(prefix="/images", tags=["images"])
@@ -23,6 +23,7 @@ async def upload_image(
     recipe_id: Annotated[UUID, Form()],
     image: Annotated[UploadFile, File()],
     service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
 ) -> ImageUploadResponse:
     if not image.filename:
         raise HTTPException(
@@ -38,6 +39,7 @@ async def upload_image(
     # Save image via service
     image_id = service.add_recipe_image(
         recipe_id=recipe_id,
+        user_id=user_id,
         content=content,
         filename=image.filename,
     )
@@ -51,8 +53,9 @@ async def upload_image(
 async def delete_image(
     image_id: UUID,
     service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
 ) -> None:
-    deleted = service.delete_recipe_image(image_id)
+    deleted = service.delete_recipe_image(image_id, user_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Image not found")
 

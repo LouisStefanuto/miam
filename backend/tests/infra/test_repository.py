@@ -2,6 +2,7 @@
 
 from uuid import UUID, uuid4
 
+import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -122,7 +123,7 @@ class TestAddRecipe:
         data = make_recipe_create(tags=["italian", "quick"])
         entity = repository.add_recipe(data, owner_id=default_owner_id)
 
-        fetched = repository.get_recipe_by_id(entity.id)
+        fetched = repository.get_recipe_by_id(entity.id, default_owner_id)
         assert fetched is not None
         assert fetched.tags == ["italian", "quick"]
 
@@ -132,7 +133,7 @@ class TestAddRecipe:
         data = make_recipe_create(preparation=["Step 1", "Step 2"])
         entity = repository.add_recipe(data, owner_id=default_owner_id)
 
-        fetched = repository.get_recipe_by_id(entity.id)
+        fetched = repository.get_recipe_by_id(entity.id, default_owner_id)
         assert fetched is not None
         assert fetched.preparation == ["Step 1", "Step 2"]
 
@@ -204,7 +205,7 @@ class TestGetRecipeById:
         )
         created = repository.add_recipe(data, owner_id=default_owner_id)
 
-        fetched = repository.get_recipe_by_id(created.id)
+        fetched = repository.get_recipe_by_id(created.id, default_owner_id)
 
         assert fetched is not None
         assert fetched.title == "Full"
@@ -212,8 +213,17 @@ class TestGetRecipeById:
         assert fetched.ingredients[0].name == "Egg"
         assert len(fetched.sources) == 1
 
-    def test_not_found_returns_none(self, repository: RecipeRepository) -> None:
-        assert repository.get_recipe_by_id(uuid4()) is None
+    def test_not_found_returns_none(
+        self, repository: RecipeRepository, default_owner_id: UUID
+    ) -> None:
+        assert repository.get_recipe_by_id(uuid4(), default_owner_id) is None
+
+    def test_other_user_returns_none(
+        self, repository: RecipeRepository, default_owner_id: UUID
+    ) -> None:
+        created = repository.add_recipe(make_recipe_create(), owner_id=default_owner_id)
+        other_user = uuid4()
+        assert repository.get_recipe_by_id(created.id, other_user) is None
 
 
 # ---------------------------------------------------------------------------
@@ -255,7 +265,7 @@ class TestSearchRecipes:
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         self._seed(repository, default_owner_id)
-        result = repository.search_recipes()
+        result = repository.search_recipes(default_owner_id)
         assert result.total == 3
         assert len(result.items) == 3
 
@@ -263,7 +273,7 @@ class TestSearchRecipes:
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         self._seed(repository, default_owner_id)
-        result = repository.search_recipes(title="Apple")
+        result = repository.search_recipes(default_owner_id, title="Apple")
         assert result.total == 2
         titles = {r.title for r in result.items}
         assert titles == {"Apple Pie", "Apple Tart"}
@@ -272,28 +282,28 @@ class TestSearchRecipes:
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         self._seed(repository, default_owner_id)
-        result = repository.search_recipes(title="apple")
+        result = repository.search_recipes(default_owner_id, title="apple")
         assert result.total == 2
 
     def test_by_category(
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         self._seed(repository, default_owner_id)
-        result = repository.search_recipes(category="dessert")
+        result = repository.search_recipes(default_owner_id, category="dessert")
         assert result.total == 2
 
     def test_by_is_veggie(
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         self._seed(repository, default_owner_id)
-        result = repository.search_recipes(is_veggie=True)
+        result = repository.search_recipes(default_owner_id, is_veggie=True)
         assert result.total == 2
 
     def test_by_season(
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         self._seed(repository, default_owner_id)
-        result = repository.search_recipes(season="winter")
+        result = repository.search_recipes(default_owner_id, season="winter")
         assert result.total == 1
         assert result.items[0].title == "Beef Stew"
 
@@ -301,7 +311,7 @@ class TestSearchRecipes:
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         self._seed(repository, default_owner_id)
-        result = repository.search_recipes(limit=2)
+        result = repository.search_recipes(default_owner_id, limit=2)
         assert result.total == 3
         assert len(result.items) == 2
 
@@ -309,7 +319,7 @@ class TestSearchRecipes:
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         self._seed(repository, default_owner_id)
-        result = repository.search_recipes(offset=1)
+        result = repository.search_recipes(default_owner_id, offset=1)
         assert result.total == 3
         assert len(result.items) == 2
 
@@ -317,7 +327,7 @@ class TestSearchRecipes:
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         self._seed(repository, default_owner_id)
-        result = repository.search_recipes(limit=1, offset=1)
+        result = repository.search_recipes(default_owner_id, limit=1, offset=1)
         assert result.total == 3
         assert len(result.items) == 1
 
@@ -325,14 +335,25 @@ class TestSearchRecipes:
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         self._seed(repository, default_owner_id)
-        result = repository.search_recipes(category="dessert", is_veggie=True)
+        result = repository.search_recipes(
+            default_owner_id, category="dessert", is_veggie=True
+        )
         assert result.total == 2
 
     def test_no_results(
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         self._seed(repository, default_owner_id)
-        result = repository.search_recipes(title="Nonexistent")
+        result = repository.search_recipes(default_owner_id, title="Nonexistent")
+        assert result.total == 0
+        assert result.items == []
+
+    def test_other_user_sees_nothing(
+        self, repository: RecipeRepository, default_owner_id: UUID
+    ) -> None:
+        self._seed(repository, default_owner_id)
+        other_user = uuid4()
+        result = repository.search_recipes(other_user)
         assert result.total == 0
         assert result.items == []
 
@@ -358,7 +379,7 @@ class TestUpdateRecipe:
             tags=["updated"],
             preparation=["New step"],
         )
-        updated = repository.update_recipe(created.id, update)
+        updated = repository.update_recipe(created.id, update, default_owner_id)
 
         assert updated is not None
         assert updated.title == "New"
@@ -383,7 +404,7 @@ class TestUpdateRecipe:
             category=Category.plat,
             ingredients=[IngredientCreate(name="Rice", quantity=300, unit="g")],
         )
-        updated = repository.update_recipe(created.id, update)
+        updated = repository.update_recipe(created.id, update, default_owner_id)
 
         assert updated is not None
         assert len(updated.ingredients) == 1
@@ -404,15 +425,27 @@ class TestUpdateRecipe:
             category=Category.plat,
             sources=[SourceCreate(type=SourceType.url, raw_content="https://new.com")],
         )
-        updated = repository.update_recipe(created.id, update)
+        updated = repository.update_recipe(created.id, update, default_owner_id)
 
         assert updated is not None
         assert len(updated.sources) == 1
         assert updated.sources[0].type == "url"
 
-    def test_not_found(self, repository: RecipeRepository) -> None:
+    def test_not_found(
+        self, repository: RecipeRepository, default_owner_id: UUID
+    ) -> None:
         update = RecipeUpdate(title="X", description="Y", category=Category.plat)
-        assert repository.update_recipe(uuid4(), update) is None
+        assert repository.update_recipe(uuid4(), update, default_owner_id) is None
+
+    def test_other_user_cannot_update(
+        self, repository: RecipeRepository, default_owner_id: UUID
+    ) -> None:
+        created = repository.add_recipe(
+            make_recipe_create(title="Protected"), owner_id=default_owner_id
+        )
+        update = RecipeUpdate(title="Hacked", description="No", category=Category.plat)
+        other_user = uuid4()
+        assert repository.update_recipe(created.id, update, other_user) is None
 
     def test_clears_ingredients(
         self, repository: RecipeRepository, default_owner_id: UUID
@@ -429,7 +462,7 @@ class TestUpdateRecipe:
             category=Category.plat,
             ingredients=[],
         )
-        updated = repository.update_recipe(created.id, update)
+        updated = repository.update_recipe(created.id, update, default_owner_id)
 
         assert updated is not None
         assert updated.ingredients == []
@@ -445,21 +478,30 @@ class TestDeleteRecipe:
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         created = repository.add_recipe(make_recipe_create(), owner_id=default_owner_id)
-        assert repository.delete_recipe(created.id) is True
-        assert repository.get_recipe_by_id(created.id) is None
+        assert repository.delete_recipe(created.id, default_owner_id) is True
+        assert repository.get_recipe_by_id(created.id, default_owner_id) is None
 
-    def test_not_found_returns_false(self, repository: RecipeRepository) -> None:
-        assert repository.delete_recipe(uuid4()) is False
+    def test_not_found_returns_false(
+        self, repository: RecipeRepository, default_owner_id: UUID
+    ) -> None:
+        assert repository.delete_recipe(uuid4(), default_owner_id) is False
+
+    def test_other_user_cannot_delete(
+        self, repository: RecipeRepository, default_owner_id: UUID
+    ) -> None:
+        created = repository.add_recipe(make_recipe_create(), owner_id=default_owner_id)
+        other_user = uuid4()
+        assert repository.delete_recipe(created.id, other_user) is False
 
     def test_cascades_images(
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         created = repository.add_recipe(make_recipe_create(), owner_id=default_owner_id)
-        repository.add_image(created.id, caption="photo")
-        repository.delete_recipe(created.id)
+        repository.add_image(created.id, default_owner_id, caption="photo")
+        repository.delete_recipe(created.id, default_owner_id)
 
         # Image should be gone (FK CASCADE)
-        fetched = repository.get_recipe_by_id(created.id)
+        fetched = repository.get_recipe_by_id(created.id, default_owner_id)
         assert fetched is None
 
     def test_source_gets_recipe_id_null(
@@ -478,7 +520,7 @@ class TestDeleteRecipe:
         assert source_before is not None
         source_id = source_before.id
 
-        repository.delete_recipe(created.id)
+        repository.delete_recipe(created.id, default_owner_id)
 
         # Source should still exist but with recipe_id = NULL
         source_after = db_session.get(Source, source_id)
@@ -496,12 +538,14 @@ class TestAddImage:
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         created = repository.add_recipe(make_recipe_create(), owner_id=default_owner_id)
-        img = repository.add_image(created.id, caption="My photo", display_order=1)
+        img = repository.add_image(
+            created.id, default_owner_id, caption="My photo", display_order=1
+        )
 
         assert img.caption == "My photo"
         assert img.display_order == 1
 
-        fetched = repository.get_recipe_by_id(created.id)
+        fetched = repository.get_recipe_by_id(created.id, default_owner_id)
         assert fetched is not None
         assert len(fetched.images) == 1
         assert fetched.images[0].id == img.id
@@ -510,8 +554,16 @@ class TestAddImage:
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         created = repository.add_recipe(make_recipe_create(), owner_id=default_owner_id)
-        img = repository.add_image(created.id)
+        img = repository.add_image(created.id, default_owner_id)
         assert img.display_order == 0
+
+    def test_other_user_cannot_add_image(
+        self, repository: RecipeRepository, default_owner_id: UUID
+    ) -> None:
+        created = repository.add_recipe(make_recipe_create(), owner_id=default_owner_id)
+        other_user = uuid4()
+        with pytest.raises(ValueError, match="not found or not owned"):
+            repository.add_image(created.id, other_user, caption="Nope")
 
 
 class TestDeleteImage:
@@ -519,11 +571,21 @@ class TestDeleteImage:
         self, repository: RecipeRepository, default_owner_id: UUID
     ) -> None:
         created = repository.add_recipe(make_recipe_create(), owner_id=default_owner_id)
-        img = repository.add_image(created.id, caption="to delete")
-        assert repository.delete_image(img.id) is True
+        img = repository.add_image(created.id, default_owner_id, caption="to delete")
+        assert repository.delete_image(img.id, default_owner_id) is True
 
-    def test_not_found(self, repository: RecipeRepository) -> None:
-        assert repository.delete_image(uuid4()) is False
+    def test_not_found(
+        self, repository: RecipeRepository, default_owner_id: UUID
+    ) -> None:
+        assert repository.delete_image(uuid4(), default_owner_id) is False
+
+    def test_other_user_cannot_delete(
+        self, repository: RecipeRepository, default_owner_id: UUID
+    ) -> None:
+        created = repository.add_recipe(make_recipe_create(), owner_id=default_owner_id)
+        img = repository.add_image(created.id, default_owner_id, caption="protected")
+        other_user = uuid4()
+        assert repository.delete_image(img.id, other_user) is False
 
 
 # ---------------------------------------------------------------------------
@@ -646,7 +708,7 @@ class TestRecipeWithOwner:
         data = make_recipe_create(title="Fetch Me")
         created = repository.add_recipe(data, owner_id=user.id)
 
-        fetched = repository.get_recipe_by_id(created.id)
+        fetched = repository.get_recipe_by_id(created.id, user.id)
         assert fetched is not None
         assert fetched.owner_id == user.id
 
