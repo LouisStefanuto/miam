@@ -108,6 +108,7 @@ function ToggleChip({ active, onClick, icon, label, activeClass, tooltip }: {
   activeClass: string;
   tooltip?: string;
 }) {
+  const isMobile = useIsMobile();
   const chip = (
     <button
       onClick={onClick}
@@ -120,7 +121,7 @@ function ToggleChip({ active, onClick, icon, label, activeClass, tooltip }: {
     </button>
   );
 
-  if (!tooltip) return chip;
+  if (!tooltip || isMobile) return chip;
 
   return (
     <TooltipProvider delayDuration={800}>
