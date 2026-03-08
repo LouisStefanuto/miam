@@ -218,6 +218,11 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'Image trop volumineuse', description: 'La taille maximale est de 5 Mo.', variant: 'destructive' });
+      e.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (ev) => setEditData({ ...editData, image: ev.target?.result as string });
     reader.readAsDataURL(file);

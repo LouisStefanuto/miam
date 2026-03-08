@@ -277,19 +277,10 @@ export async function importRecipesBatch(jsonPayload: { recipes: unknown[] }): P
   return res.json();
 }
 
-function dataUrlToBlob(dataUrl: string): Blob {
-  const [header, base64] = dataUrl.split(',');
-  const mime = header.match(/:(.*?);/)?.[1] || 'image/jpeg';
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return new Blob([bytes], { type: mime });
-}
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
 
-/** Compress image to fit within maxWidth and target a reasonable file size. */
-function compressImage(dataUrl: string, maxWidth = 1600, quality = 0.8): Promise<string> {
+/** Resize and compress image to JPEG. */
+function compressImage(dataUrl: string, maxWidth = 1600, quality = 0.8): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -300,7 +291,11 @@ function compressImage(dataUrl: string, maxWidth = 1600, quality = 0.8): Promise
       const ctx = canvas.getContext('2d');
       if (!ctx) return reject(new Error('Canvas not supported'));
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL('image/jpeg', quality));
+      canvas.toBlob(
+        (blob) => blob ? resolve(blob) : reject(new Error('Compression failed')),
+        'image/jpeg',
+        quality,
+      );
     };
     img.onerror = () => reject(new Error('Failed to load image for compression'));
     img.src = dataUrl;
@@ -308,8 +303,10 @@ function compressImage(dataUrl: string, maxWidth = 1600, quality = 0.8): Promise
 }
 
 async function uploadImage(recipeId: string, dataUrl: string): Promise<void> {
-  const compressed = await compressImage(dataUrl);
-  const blob = dataUrlToBlob(compressed);
+  const blob = await compressImage(dataUrl);
+  if (blob.size > MAX_IMAGE_SIZE) {
+    throw new Error('Image trop volumineuse (max 5 Mo)');
+  }
   const formData = new FormData();
   formData.append('recipe_id', recipeId);
   formData.append('image', blob, 'recipe.jpg');
