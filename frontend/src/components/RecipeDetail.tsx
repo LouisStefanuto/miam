@@ -330,7 +330,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           <div className="flex items-center gap-2 mb-2">
             {editing ? (
               <Select value={editData.type} onValueChange={(v) => setEditData({ ...editData, type: v as RecipeType })}>
-                <SelectTrigger className={`w-auto border-0 ${chipPrimary}`}>
+                <SelectTrigger className={`${chipBase} ${chipPrimary} w-auto border-0 capitalize`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -342,7 +342,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
             )}
             {editing ? (
               <Select value={editData.season} onValueChange={(v) => setEditData({ ...editData, season: v as Season })}>
-                <SelectTrigger className={`w-auto border-0 ${chipSecondary}`}>
+                <SelectTrigger className={`${chipBase} ${chipSecondary} w-auto border-0 capitalize gap-1`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
