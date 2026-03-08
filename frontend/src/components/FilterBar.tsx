@@ -155,9 +155,8 @@ function FilterSelect({
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className="w-auto md:min-w-[120px] h-9 text-xs font-body capitalize bg-card focus:ring-0 focus:ring-offset-0">
-        {icon && isMobile ? (
-          <span className="text-muted-foreground shrink-0">{icon}</span>
-        ) : (
+        {icon && <span className="text-muted-foreground shrink-0">{icon}</span>}
+        {!isMobile && (
           <SelectValue placeholder={placeholder}>
             {isActive ? options.find((o) => o === value) : placeholder}
           </SelectValue>
