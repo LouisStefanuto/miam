@@ -23,11 +23,17 @@ export default function MobileAddButton() {
   ];
 
   return (
+    <>
+      {/* Backdrop overlay */}
+      <div
+        className={`fixed inset-x-0 bottom-0 top-14 z-20 bg-black/50 backdrop-blur-[1px] md:hidden transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setOpen(false)}
+      />
+
     <div className={`fixed bottom-6 right-6 z-30 md:hidden transition-all duration-300 ${visible || open ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
       {/* Speed dial actions */}
       {open && (
         <>
-          <div className="fixed inset-0 bg-black/20 z-[-1]" onClick={() => setOpen(false)} />
           <div className="absolute bottom-16 right-0 flex flex-col-reverse gap-3 mb-2 items-end">
             {actions.map((action) => (
               <button
@@ -59,5 +65,6 @@ export default function MobileAddButton() {
         {open ? <X size={24} /> : <Plus size={24} />}
       </button>
     </div>
+    </>
   );
 }
