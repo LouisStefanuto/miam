@@ -1,10 +1,9 @@
-import json
 import re
 
 import requests
 
 
-def clean_emojis_from_text(text):
+def clean_emojis_from_text(text) -> str:
     text = re.sub(r"#\w+", "", text)  # remove hashtags
     emoji_pattern = re.compile(
         "["
@@ -128,13 +127,10 @@ def create_recipe_from_source(source_response, source="instagram"):
     extractor = get_recipe_extractor(source)
     recipe_json_list, image_bytes_list = extractor.extract(source_response)
 
-    for recipe_json, image_bytes in zip(recipe_json_list, image_bytes_list):
+    for recipe_json, image_bytes in zip(
+        recipe_json_list, image_bytes_list, strict=False
+    ):
         # Instantiate recipe and image in the database
         recipe_id = post_recipe_to_api(recipe_json)
         if image_bytes:
             post_image_to_api(image_bytes, recipe_id)
-
-
-with open("/home/bulle/miam/backend/src/miam/infra/instagram_post_exampel.json") as f:
-    instagram_response = json.load(f)
-    create_recipe_from_source(instagram_response, source="instagram")
