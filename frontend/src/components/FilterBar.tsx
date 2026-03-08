@@ -111,9 +111,10 @@ function ToggleChip({ active, onClick, icon, label, activeClass, tooltip }: {
   const isMobile = useIsMobile();
   const chip = (
     <button
-      onClick={onClick}
-      className={`flex items-center gap-1.5 h-8 md:h-9 px-2.5 md:px-3 rounded-md border text-xs font-body font-medium transition-colors ${
-        active ? activeClass : 'bg-card border-input text-muted-foreground [@media(hover:hover)]:hover:bg-secondary'
+      onClick={(e) => { onClick(); e.currentTarget.blur(); }}
+      style={{ WebkitTapHighlightColor: 'transparent' }}
+      className={`flex items-center gap-1.5 h-8 md:h-9 px-2.5 md:px-3 rounded-md border text-xs font-body font-medium transition-colors outline-none ${
+        active ? activeClass : 'bg-card border-input text-muted-foreground [@media(hover:hover)_and_(pointer:fine)]:hover:bg-secondary'
       }`}
     >
       <span className="md:hidden lg:inline">{icon}</span>
