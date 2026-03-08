@@ -55,6 +55,9 @@ const types: RecipeType[] = ['apéro', 'entrée', 'plat', 'pâtes', 'dessert', '
 const seasons: Season[] = ['printemps', 'été', 'automne', 'hiver'];
 const difficulties: Difficulty[] = ['facile', 'moyen', 'difficile'];
 const dietOptions: Diet[] = ['végétarien'];
+const chipBase = 'inline-flex items-center h-7 px-2 text-xs font-body rounded-md';
+const chipPrimary = 'bg-primary text-primary-foreground';
+const chipSecondary = 'bg-card text-card-foreground';
 
 interface RecipeDetailProps {
   recipe: Recipe;
@@ -327,7 +330,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           <div className="flex items-center gap-2 mb-2">
             {editing ? (
               <Select value={editData.type} onValueChange={(v) => setEditData({ ...editData, type: v as RecipeType })}>
-                <SelectTrigger className="w-auto h-7 text-xs capitalize font-body bg-primary text-primary-foreground border-0">
+                <SelectTrigger className={`w-auto border-0 ${chipPrimary}`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -335,11 +338,11 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 </SelectContent>
               </Select>
             ) : (
-              <span className="inline-flex items-center h-7 px-2 text-xs capitalize font-body rounded-md bg-primary text-primary-foreground">{current.type}</span>
+              <span className={`${chipBase} ${chipPrimary} capitalize`}>{current.type}</span>
             )}
             {editing ? (
               <Select value={editData.season} onValueChange={(v) => setEditData({ ...editData, season: v as Season })}>
-                <SelectTrigger className="w-auto h-7 text-xs capitalize font-body bg-card/80 backdrop-blur-sm border-0">
+                <SelectTrigger className={`w-auto border-0 ${chipSecondary}`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -347,10 +350,10 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 </SelectContent>
               </Select>
             ) : (
-              (() => { const SeasonIcon = seasonIcons[current.season]; return SeasonIcon ? <span className="inline-flex items-center gap-1 h-7 px-2 text-xs capitalize font-body rounded-md bg-card/80 backdrop-blur-sm text-card-foreground"><SeasonIcon size={14} className="text-gray-600 dark:text-gray-300" />{current.season}</span> : null; })()
+              (() => { const SeasonIcon = seasonIcons[current.season]; return SeasonIcon ? <span className={`${chipBase} ${chipSecondary} capitalize gap-1`}><SeasonIcon size={14} className="text-gray-600 dark:text-gray-300" />{current.season}</span> : null; })()
             )}
             {current.diets.includes('végétarien') && (
-              <span className="inline-flex items-center gap-1 h-7 px-2 text-xs font-body rounded-md bg-card/80 backdrop-blur-sm text-card-foreground">
+              <span className={`${chipBase} ${chipSecondary} gap-1`}>
                 <Vegan size={14} className="text-green-600" />Végé
               </span>
             )}
@@ -363,8 +366,8 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                   onTestedToggle?.(!current.tested);
                 }
               }}
-              className={`inline-flex items-center gap-1 h-7 px-2 text-xs font-body rounded-md transition-colors cursor-pointer hover:opacity-80 ${
-                current.tested ? 'bg-primary text-primary-foreground' : 'bg-card/80 backdrop-blur-sm text-card-foreground'
+              className={`${chipBase} transition-colors cursor-pointer active:scale-95 gap-1 ${
+                current.tested ? chipPrimary : chipSecondary
               }`}
             >
               {current.tested && <Check size={12} />} {current.tested ? 'Testé' : 'À tester'}
