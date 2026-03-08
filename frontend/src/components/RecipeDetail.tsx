@@ -679,4 +679,3 @@ function InfoCard({ icon, label, value }: { icon: string | React.ReactNode; labe
     </div>
   );
 }
-
