@@ -277,12 +277,42 @@ export async function importRecipesBatch(jsonPayload: { recipes: unknown[] }): P
   return res.json();
 }
 
+function dataUrlToBlob(dataUrl: string): Blob {
+  const [header, base64] = dataUrl.split(',');
+  const mime = header.match(/:(.*?);/)?.[1] || 'image/jpeg';
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: mime });
+}
+
+/** Compress image to fit within maxWidth and target a reasonable file size. */
+function compressImage(dataUrl: string, maxWidth = 1600, quality = 0.8): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Canvas not supported'));
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => reject(new Error('Failed to load image for compression'));
+    img.src = dataUrl;
+  });
+}
+
 async function uploadImage(recipeId: string, dataUrl: string): Promise<void> {
-  const blob = await fetch(dataUrl).then((r) => r.blob());
-  const ext = blob.type.split('/')[1] || 'jpg';
+  const compressed = await compressImage(dataUrl);
+  const blob = dataUrlToBlob(compressed);
   const formData = new FormData();
   formData.append('recipe_id', recipeId);
-  formData.append('image', blob, `recipe.${ext}`);
+  formData.append('image', blob, 'recipe.jpg');
   const res = await fetch(`${API_BASE}/images`, {
     method: 'POST',
     body: formData,
