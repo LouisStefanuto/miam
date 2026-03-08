@@ -411,8 +411,32 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {editing ? (
             <>
-              <EditInfoCard icon={melangeIcon} label="Préparation (min)" value={editData.prepTime} onChange={(v) => setEditData({ ...editData, prepTime: +v })} />
-              <EditInfoCard icon={cuissonIcon} label="Cuisson (min)" value={editData.cookTime} onChange={(v) => setEditData({ ...editData, cookTime: +v })} />
+              <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
+                <IconDisk><img src={melangeIcon} alt="Préparation" className="w-5 h-5" /></IconDisk>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={editData.prepTime || ''}
+                  onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); setEditData({ ...editData, prepTime: v ? +v : 0 }); }}
+                  placeholder="0"
+                  className="h-7 w-16 text-center text-sm font-body font-semibold bg-transparent border-b-2 border-primary/30 focus:border-primary outline-none transition-colors"
+                />
+                <span className="text-xs text-muted-foreground font-body">Préparation (min)</span>
+              </div>
+              <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
+                <IconDisk><img src={cuissonIcon} alt="Cuisson" className="w-5 h-5" /></IconDisk>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={editData.cookTime || ''}
+                  onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); setEditData({ ...editData, cookTime: v ? +v : 0 }); }}
+                  placeholder="0"
+                  className="h-7 w-16 text-center text-sm font-body font-semibold bg-transparent border-b-2 border-primary/30 focus:border-primary outline-none transition-colors"
+                />
+                <span className="text-xs text-muted-foreground font-body">Cuisson (min)</span>
+              </div>
               <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
                 <IconDisk><img src={servingsIcon} alt="Portions" className="w-5 h-5" /></IconDisk>
                 <div className="flex items-center gap-3">
@@ -653,12 +677,3 @@ function InfoCard({ icon, label, value }: { icon: string | React.ReactNode; labe
   );
 }
 
-function EditInfoCard({ icon, label, value, onChange }: { icon: string; label: string; value: number; onChange: (v: string) => void }) {
-  return (
-    <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
-      <IconDisk><img src={icon} alt={label} className="w-5 h-5" /></IconDisk>
-      <Input type="number" min={0} value={value} onChange={(e) => onChange(e.target.value)} className="h-7 w-16 text-center text-sm font-body font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-      <span className="text-xs text-muted-foreground font-body">{label}</span>
-    </div>
-  );
-}
