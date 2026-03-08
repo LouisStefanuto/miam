@@ -168,3 +168,6 @@ cython_debug/
 images/
 claude/
 *.dump
+
+# Tar files (ex. zipped Docker images)
+*.tar

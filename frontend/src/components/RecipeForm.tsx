@@ -12,7 +12,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 import { SortableIngredientItem } from './SortableIngredientItem';
-import { useToast } from '@/hooks/use-toast';
 import veganIcon from '@/assets/icons/vegetalien.png';
 import cuissonIcon from '@/assets/icons/cuisson.png';
 import melangeIcon from '@/assets/icons/melange.png';
@@ -72,7 +71,6 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     () => data.ingredients.map(() => crypto.randomUUID())
   );
   const imageRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -130,11 +128,6 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: 'Image trop volumineuse', description: 'La taille maximale est de 5 Mo.', variant: 'destructive' });
-      e.target.value = '';
-      return;
-    }
     const reader = new FileReader();
     reader.onload = (ev) => set('image', ev.target?.result as string);
     reader.readAsDataURL(file);

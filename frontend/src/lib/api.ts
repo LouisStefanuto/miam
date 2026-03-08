@@ -279,34 +279,56 @@ export async function importRecipesBatch(jsonPayload: { recipes: unknown[] }): P
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
 
-/** Resize and compress image to JPEG. */
-function compressImage(dataUrl: string, maxWidth = 1600, quality = 0.8): Promise<Blob> {
+/** Load a data URL into an HTMLImageElement. */
+function loadImage(dataUrl: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, maxWidth / img.width);
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return reject(new Error('Canvas not supported'));
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        (blob) => blob ? resolve(blob) : reject(new Error('Compression failed')),
-        'image/jpeg',
-        quality,
-      );
-    };
-    img.onerror = () => reject(new Error('Failed to load image for compression'));
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Failed to load image'));
     img.src = dataUrl;
   });
 }
 
+/** Resize and compress an image to JPEG via canvas. */
+function canvasToBlob(img: HTMLImageElement, maxWidth: number, quality: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const scale = Math.min(1, maxWidth / img.width);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(img.width * scale);
+    canvas.height = Math.round(img.height * scale);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return reject(new Error('Canvas not supported'));
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(
+      (blob) => blob ? resolve(blob) : reject(new Error('Compression failed')),
+      'image/jpeg',
+      quality,
+    );
+  });
+}
+
+/**
+ * Progressively compress an image until it fits under MAX_IMAGE_SIZE.
+ * Tries reducing quality first, then resolution.
+ */
+async function compressImage(dataUrl: string): Promise<Blob> {
+  const img = await loadImage(dataUrl);
+  const attempts = [
+    { maxWidth: 1600, quality: 0.8 },
+    { maxWidth: 1600, quality: 0.6 },
+    { maxWidth: 1200, quality: 0.6 },
+    { maxWidth: 1200, quality: 0.4 },
+    { maxWidth: 800,  quality: 0.4 },
+  ];
+  for (const { maxWidth, quality } of attempts) {
+    const blob = await canvasToBlob(img, maxWidth, quality);
+    if (blob.size <= MAX_IMAGE_SIZE) return blob;
+  }
+  throw new Error('Image trop volumineuse, même après compression');
+}
+
 async function uploadImage(recipeId: string, dataUrl: string): Promise<void> {
   const blob = await compressImage(dataUrl);
-  if (blob.size > MAX_IMAGE_SIZE) {
-    throw new Error('Image trop volumineuse (max 5 Mo)');
-  }
   const formData = new FormData();
   formData.append('recipe_id', recipeId);
   formData.append('image', blob, 'recipe.jpg');
