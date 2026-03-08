@@ -413,7 +413,19 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
             <>
               <EditInfoCard icon={melangeIcon} label="Préparation (min)" value={editData.prepTime} onChange={(v) => setEditData({ ...editData, prepTime: +v })} />
               <EditInfoCard icon={cuissonIcon} label="Cuisson (min)" value={editData.cookTime} onChange={(v) => setEditData({ ...editData, cookTime: +v })} />
-              <EditInfoCard icon={servingsIcon} label="Portions" value={editData.servings} onChange={(v) => setEditData({ ...editData, servings: +v })} />
+              <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
+                <IconDisk><img src={servingsIcon} alt="Portions" className="w-5 h-5" /></IconDisk>
+                <div className="flex items-center gap-3">
+                  <button type="button" onClick={() => setEditData({ ...editData, servings: Math.max(1, editData.servings - 1) })} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors">
+                    <Minus size={16} />
+                  </button>
+                  <span className="text-sm font-body font-semibold text-card-foreground min-w-[1.5rem] text-center">{editData.servings}</span>
+                  <button type="button" onClick={() => setEditData({ ...editData, servings: editData.servings + 1 })} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors">
+                    <Plus size={16} />
+                  </button>
+                </div>
+                <span className="text-xs text-muted-foreground font-body">Portions</span>
+              </div>
               <button
                 type="button"
                 onClick={() => {
@@ -435,13 +447,13 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
               <InfoCard icon={cuissonIcon} label="Cuisson" value={current.cookTime ? `${current.cookTime} min` : '-'} />
               <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
                 <IconDisk><img src={servingsIcon} alt="Portions" className="w-5 h-5" /></IconDisk>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setDisplayServings(Math.max(1, displayServings - 1))} className="w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors">
-                    <Minus size={12} />
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setDisplayServings(Math.max(1, displayServings - 1))} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors">
+                    <Minus size={16} />
                   </button>
                   <span className="text-sm font-body font-semibold text-card-foreground min-w-[1.5rem] text-center">{displayServings}</span>
-                  <button onClick={() => setDisplayServings(displayServings + 1)} className="w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors">
-                    <Plus size={12} />
+                  <button onClick={() => setDisplayServings(displayServings + 1)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors">
+                    <Plus size={16} />
                   </button>
                 </div>
                 <span className="text-xs text-muted-foreground font-body">Portions</span>
