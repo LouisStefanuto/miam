@@ -112,7 +112,7 @@ function ToggleChip({ active, onClick, icon, label, activeClass, tooltip }: {
     <button
       onClick={onClick}
       className={`flex items-center gap-1.5 h-9 px-2.5 md:px-3 rounded-md border text-xs font-body font-medium transition-colors ${
-        active ? activeClass : 'bg-card border-input text-muted-foreground hover:bg-secondary'
+        active ? activeClass : 'bg-card border-input text-muted-foreground [@media(hover:hover)]:hover:bg-secondary'
       }`}
     >
       {icon}
