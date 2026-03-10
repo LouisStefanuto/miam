@@ -4,7 +4,9 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from miam.domain.entities import (
+    AuthProvider,
     Category,
+    GoogleUserInfo,
     ImageEntity,
     IngredientEntity,
     PaginatedResult,
@@ -12,6 +14,7 @@ from miam.domain.entities import (
     Season,
     SourceEntity,
     SourceType,
+    UserEntity,
 )
 
 
@@ -38,6 +41,14 @@ class TestCategory:
 
     def test_member_count(self) -> None:
         assert len(Category) == 7
+
+
+class TestAuthProvider:
+    def test_values(self) -> None:
+        assert AuthProvider.google.value == "google"
+
+    def test_member_count(self) -> None:
+        assert len(AuthProvider) == 1
 
 
 class TestSourceType:
@@ -89,16 +100,77 @@ class TestSourceEntity:
         assert src.raw_content == "https://example.com/recipe"
 
 
+class TestGoogleUserInfo:
+    def test_required_fields(self) -> None:
+        info = GoogleUserInfo(email="alice@gmail.com", name="Alice", google_id="g-123")
+        assert info.email == "alice@gmail.com"
+        assert info.name == "Alice"
+        assert info.google_id == "g-123"
+        assert info.picture is None
+
+    def test_all_fields(self) -> None:
+        info = GoogleUserInfo(
+            email="bob@gmail.com",
+            name="Bob",
+            google_id="g-456",
+            picture="https://example.com/bob.jpg",
+        )
+        assert info.picture == "https://example.com/bob.jpg"
+
+
+class TestUserEntity:
+    def test_minimal(self) -> None:
+        uid = uuid4()
+        user = UserEntity(
+            id=uid,
+            email="alice@example.com",
+            display_name="Alice",
+            auth_provider=AuthProvider.google,
+            auth_provider_id="google-123",
+        )
+        assert user.id == uid
+        assert user.email == "alice@example.com"
+        assert user.display_name == "Alice"
+        assert user.auth_provider == AuthProvider.google
+        assert user.auth_provider_id == "google-123"
+        assert user.avatar_url is None
+        assert user.created_at is None
+        assert user.updated_at is None
+
+    def test_full(self) -> None:
+        uid = uuid4()
+        now = datetime.now(tz=UTC)
+        user = UserEntity(
+            id=uid,
+            email="bob@example.com",
+            display_name="Bob",
+            avatar_url="https://example.com/avatar.jpg",
+            auth_provider=AuthProvider.google,
+            auth_provider_id="google-456",
+            created_at=now,
+            updated_at=now,
+        )
+        assert user.avatar_url == "https://example.com/avatar.jpg"
+        assert user.created_at == now
+        assert user.updated_at == now
+
+
 class TestRecipeEntity:
     def test_minimal(self) -> None:
         uid = uuid4()
+        owner_id = uuid4()
         recipe = RecipeEntity(
-            id=uid, title="Pasta", description="Simple pasta", category="plat"
+            id=uid,
+            title="Pasta",
+            description="Simple pasta",
+            category="plat",
+            owner_id=owner_id,
         )
         assert recipe.id == uid
         assert recipe.title == "Pasta"
         assert recipe.description == "Simple pasta"
         assert recipe.category == "plat"
+        assert recipe.owner_id == owner_id
         assert recipe.prep_time_minutes is None
         assert recipe.cook_time_minutes is None
         assert recipe.rest_time_minutes is None
@@ -117,6 +189,7 @@ class TestRecipeEntity:
 
     def test_full(self) -> None:
         uid = uuid4()
+        owner_id = uuid4()
         img_id = uuid4()
         now = datetime.now(tz=UTC)
         recipe = RecipeEntity(
@@ -124,6 +197,7 @@ class TestRecipeEntity:
             title="Ratatouille",
             description="French classic",
             category="plat",
+            owner_id=owner_id,
             prep_time_minutes=30,
             cook_time_minutes=60,
             rest_time_minutes=10,
@@ -140,6 +214,7 @@ class TestRecipeEntity:
             sources=[SourceEntity(type="manual", raw_content="Family recipe")],
             created_at=now,
         )
+        assert recipe.owner_id == owner_id
         assert recipe.prep_time_minutes == 30
         assert recipe.cook_time_minutes == 60
         assert recipe.rest_time_minutes == 10
@@ -158,17 +233,31 @@ class TestRecipeEntity:
 
     def test_list_fields_are_independent(self) -> None:
         """Each instance should have its own list (no shared mutable defaults)."""
-        r1 = RecipeEntity(id=uuid4(), title="A", description="", category="plat")
-        r2 = RecipeEntity(id=uuid4(), title="B", description="", category="plat")
+        oid = uuid4()
+        r1 = RecipeEntity(
+            id=uuid4(), title="A", description="", category="plat", owner_id=oid
+        )
+        r2 = RecipeEntity(
+            id=uuid4(), title="B", description="", category="plat", owner_id=oid
+        )
         r1.tags.append("tag1")
         assert r2.tags == []
 
 
 class TestPaginatedResult:
     def test_fields(self) -> None:
+        oid = uuid4()
         recipes = [
-            RecipeEntity(id=uuid4(), title="A", description="", category="plat"),
-            RecipeEntity(id=uuid4(), title="B", description="", category="dessert"),
+            RecipeEntity(
+                id=uuid4(), title="A", description="", category="plat", owner_id=oid
+            ),
+            RecipeEntity(
+                id=uuid4(),
+                title="B",
+                description="",
+                category="dessert",
+                owner_id=oid,
+            ),
         ]
         result = PaginatedResult(items=recipes, total=10)
         assert len(result.items) == 2

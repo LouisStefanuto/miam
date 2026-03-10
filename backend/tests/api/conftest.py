@@ -9,7 +9,11 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from miam.api.deps import get_recipe_export_service, get_recipe_management_service
+from miam.api.deps import (
+    get_current_user_id,
+    get_recipe_export_service,
+    get_recipe_management_service,
+)
 from miam.api.main import app
 from miam.domain.entities import (
     ImageEntity,
@@ -19,6 +23,8 @@ from miam.domain.entities import (
     SourceEntity,
 )
 from miam.domain.services import RecipeExportService, RecipeManagementService
+
+TEST_USER_ID = UUID("00000000-0000-0000-0000-000000000001")
 
 
 @pytest.fixture
@@ -42,6 +48,7 @@ def client(
         mock_recipe_service
     )
     app.dependency_overrides[get_recipe_export_service] = lambda: mock_export_service
+    app.dependency_overrides[get_current_user_id] = lambda: TEST_USER_ID
     yield TestClient(app)
     app.dependency_overrides.clear()
 
@@ -52,6 +59,7 @@ def make_recipe(
     title: str = "Test Recipe",
     description: str = "A test recipe",
     category: str = "plat",
+    owner_id: UUID = TEST_USER_ID,
     ingredients: list[IngredientEntity] | None = None,
     images: list[ImageEntity] | None = None,
     sources: list[SourceEntity] | None = None,
@@ -62,6 +70,7 @@ def make_recipe(
         title=title,
         description=description,
         category=category,
+        owner_id=owner_id,
         ingredients=ingredients or [],
         images=images or [],
         sources=sources or [],

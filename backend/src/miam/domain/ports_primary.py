@@ -9,20 +9,23 @@ from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
 
 class RecipeServicePort(ABC):
     @abstractmethod
-    def create_recipe(self, data: RecipeCreate) -> RecipeEntity:
+    def create_recipe(self, data: RecipeCreate, owner_id: UUID) -> RecipeEntity:
         """Persist a new recipe with all related entities and return the created Recipe."""
 
     @abstractmethod
-    def create_recipes(self, data: list[RecipeCreate]) -> list[RecipeEntity]:
+    def create_recipes(
+        self, data: list[RecipeCreate], owner_id: UUID
+    ) -> list[RecipeEntity]:
         """Persist multiple recipes atomically and return all created Recipe entities."""
 
     @abstractmethod
-    def get_recipe_by_id(self, recipe_id: UUID) -> RecipeEntity | None:
-        """Retrieve a recipe by its ID, including all related entities."""
+    def get_recipe_by_id(self, recipe_id: UUID, user_id: UUID) -> RecipeEntity | None:
+        """Retrieve a recipe by its ID, scoped to the given user."""
 
     @abstractmethod
     def search_recipes(
         self,
+        user_id: UUID,
         recipe_id: UUID | None = None,
         title: str | None = None,
         category: str | None = None,
@@ -31,34 +34,54 @@ class RecipeServicePort(ABC):
         limit: int | None = None,
         offset: int = 0,
     ) -> PaginatedResult:
-        """Search for recipes using dynamic filters with pagination."""
+        """Search for recipes using dynamic filters, scoped to the given user."""
 
     @abstractmethod
-    def update_recipe(self, recipe_id: UUID, data: RecipeUpdate) -> RecipeEntity | None:
-        """Full replacement of a recipe (PUT semantics). Returns None if not found."""
+    def update_recipe(
+        self, recipe_id: UUID, data: RecipeUpdate, user_id: UUID
+    ) -> RecipeEntity | None:
+        """Full replacement of a recipe (PUT semantics). Returns None if not found/owned."""
 
     @abstractmethod
-    def delete_recipe(self, recipe_id: UUID) -> bool:
-        """Delete a recipe by ID. Returns True if deleted, False if not found."""
+    def delete_recipe(self, recipe_id: UUID, user_id: UUID) -> bool:
+        """Delete a recipe by ID. Returns True if deleted, False if not found/owned."""
 
     @abstractmethod
-    def add_recipe_image(self, recipe_id: UUID, content: bytes, filename: str) -> UUID:
-        """Add an image to a recipe and return its image ID."""
+    def add_recipe_image(
+        self, recipe_id: UUID, user_id: UUID, content: bytes, filename: str
+    ) -> UUID:
+        """Add an image to a recipe owned by user_id and return its image ID."""
 
     @abstractmethod
-    def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
-        """Retrieve image bytes for a given image ID."""
+    def get_recipe_image(self, image_id: UUID, user_id: UUID) -> ImageResponse | None:
+        """Retrieve image bytes for a given image ID, scoped to the given user."""
 
     @abstractmethod
-    def delete_recipe_image(self, image_id: UUID) -> bool:
-        """Delete an image from storage and database. Returns True if deleted, False if not found."""
+    def get_recipe_image_public(self, image_id: UUID) -> ImageResponse | None:
+        """Retrieve image bytes by ID without ownership check (IDs are unguessable UUIDs)."""
+
+    @abstractmethod
+    def delete_recipe_image(self, image_id: UUID, user_id: UUID) -> bool:
+        """Delete an image from storage and database. Returns True if deleted, False if not found/owned."""
+
+
+class AuthServicePort(ABC):
+    """Primary port for authentication operations."""
+
+    @abstractmethod
+    def login_with_google(self, id_token: str) -> str:
+        """Authenticate via Google and return a JWT access token.
+
+        Verifies the Google ID token, finds or creates the user,
+        and returns a signed JWT.
+        """
 
 
 class RecipeExportServicePort(ABC):
     @abstractmethod
-    def export_recipes_to_markdown(self) -> bytes:
-        """Export all recipes as a ZIP archive containing Markdown and images."""
+    def export_recipes_to_markdown(self, user_id: UUID) -> bytes:
+        """Export the user's recipes as a ZIP archive containing Markdown and images."""
 
     @abstractmethod
-    def export_recipes_to_word(self) -> bytes:
-        """Export all recipes as Word document."""
+    def export_recipes_to_word(self, user_id: UUID) -> bytes:
+        """Export the user's recipes as Word document."""

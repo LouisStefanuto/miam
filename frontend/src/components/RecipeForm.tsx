@@ -268,7 +268,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
               </SelectContent>
             </Select>
             <Select value={data.season} onValueChange={(v) => set('season', v as Season)}>
-              <SelectTrigger className="w-auto h-7 text-xs capitalize font-body bg-card/80 backdrop-blur-sm border-0">
+              <SelectTrigger className="w-auto h-7 text-xs capitalize font-body bg-card text-card-foreground border-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -277,8 +277,8 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             </Select>
             <button
               onClick={() => set('tested', !data.tested)}
-              className={`flex items-center gap-1 text-xs font-body px-2 py-1 rounded-full transition-colors cursor-pointer hover:opacity-80 ${
-                data.tested ? 'bg-primary text-primary-foreground' : 'bg-card/80 backdrop-blur-sm text-card-foreground'
+              className={`inline-flex items-center h-7 px-2 text-xs font-body rounded-md transition-colors cursor-pointer active:scale-95 gap-1 ${
+                data.tested ? 'bg-primary text-primary-foreground' : 'bg-card text-card-foreground'
               }`}
             >
               {data.tested && <Check size={12} />} {data.tested ? 'Testé' : 'À tester'}

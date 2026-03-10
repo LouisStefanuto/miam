@@ -9,6 +9,8 @@ from loguru import logger
 from miam.domain.ports_secondary import ImageStoragePort
 from miam.domain.schemas import ImageResponse
 
+ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+
 
 class LocalImageStorage(ImageStoragePort):
     def __init__(self, base_folder: str) -> None:
@@ -33,7 +35,11 @@ class LocalImageStorage(ImageStoragePort):
         """Save image to local filesystem using predictable path {image_id}{ext}."""
         try:
             self.base_folder.mkdir(parents=True, exist_ok=True)
-            ext = Path(filename).suffix
+            ext = Path(filename).suffix.lower()
+            if ext not in ALLOWED_IMAGE_EXTENSIONS:
+                raise ValueError(
+                    f"Unsupported image type '{ext}'. Allowed: {', '.join(sorted(ALLOWED_IMAGE_EXTENSIONS))}"
+                )
             image_path = self.base_folder / f"{image_id}{ext}"
             with open(image_path, "wb") as f:
                 f.write(image)

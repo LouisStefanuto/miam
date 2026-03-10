@@ -22,6 +22,7 @@ from miam.infra.exporter_word import WordExporter
 def _make_recipe(
     *,
     recipe_id: UUID | None = None,
+    owner_id: UUID | None = None,
     title: str = "Test Cake",
     description: str = "A delicious cake",
     category: str = "dessert",
@@ -46,6 +47,7 @@ def _make_recipe(
         title=title,
         description=description,
         category=category,
+        owner_id=owner_id or uuid4(),
         season=season,
         is_veggie=is_veggie,
         difficulty=difficulty,

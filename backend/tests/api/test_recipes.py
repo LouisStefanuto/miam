@@ -10,7 +10,7 @@ from miam.domain.entities import (
     IngredientEntity,
     SourceEntity,
 )
-from tests.api.conftest import make_paginated_result, make_recipe
+from tests.api.conftest import TEST_USER_ID, make_paginated_result, make_recipe
 
 
 class TestCreateRecipe:
@@ -109,6 +109,7 @@ class TestSearchRecipes:
         client.get("/api/recipes/search?title=Soup")
 
         mock_recipe_service.search_recipes.assert_called_once_with(
+            user_id=TEST_USER_ID,
             recipe_id=None,
             title="Soup",
             category=None,

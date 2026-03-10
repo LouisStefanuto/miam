@@ -16,11 +16,13 @@ from sqlalchemy import (
     MetaData,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from miam.domain.entities import (
+    AuthProvider,
     Category,
     Season,
     SourceType,
@@ -40,6 +42,36 @@ metadata = MetaData(naming_convention=convention)
 
 class Base(DeclarativeBase):
     metadata = metadata
+
+
+class User(Base):
+    """Stores user accounts linked to SSO providers."""
+
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    display_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    avatar_url: Mapped[str | None] = mapped_column(String(500))
+    auth_provider: Mapped[AuthProvider] = mapped_column(
+        Enum(AuthProvider, name="authprovider"), nullable=False
+    )
+    auth_provider_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
+    recipes = relationship("Recipe", back_populates="owner")
+
+    __table_args__ = (UniqueConstraint("auth_provider", "auth_provider_id"),)
 
 
 class Image(Base):
@@ -101,6 +133,9 @@ class Recipe(Base):
     __tablename__ = "recipes"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    owner_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
 
@@ -125,6 +160,8 @@ class Recipe(Base):
         default=lambda: datetime.now(UTC),
         nullable=False,
     )
+
+    owner = relationship("User", back_populates="recipes")
 
     ingredients = relationship(
         "RecipeIngredient",

@@ -171,3 +171,6 @@ claude/
 
 # Tar files (ex. zipped Docker images)
 *.tar
+
+# Claude
+.claude/

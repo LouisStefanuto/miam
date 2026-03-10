@@ -3,7 +3,14 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from miam.domain.entities import ImageEntity, PaginatedResult, RecipeEntity
+from miam.domain.entities import (
+    AuthProvider,
+    GoogleUserInfo,
+    ImageEntity,
+    PaginatedResult,
+    RecipeEntity,
+    UserEntity,
+)
 from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
 
 
@@ -15,20 +22,23 @@ class RecipeRepositoryPort(ABC):
     """
 
     @abstractmethod
-    def add_recipe(self, data: RecipeCreate) -> RecipeEntity:
+    def add_recipe(self, data: RecipeCreate, owner_id: UUID) -> RecipeEntity:
         """Persist a new recipe and return it as a domain entity."""
 
     @abstractmethod
-    def add_recipes(self, data: list[RecipeCreate]) -> list[RecipeEntity]:
+    def add_recipes(
+        self, data: list[RecipeCreate], owner_id: UUID
+    ) -> list[RecipeEntity]:
         """Persist multiple recipes atomically and return them as domain entities."""
 
     @abstractmethod
-    def get_recipe_by_id(self, recipe_id: UUID) -> RecipeEntity | None:
-        """Retrieve a recipe by ID with all relationships loaded."""
+    def get_recipe_by_id(self, recipe_id: UUID, user_id: UUID) -> RecipeEntity | None:
+        """Retrieve a recipe by ID, scoped to the given user."""
 
     @abstractmethod
     def search_recipes(
         self,
+        user_id: UUID,
         recipe_id: UUID | None = None,
         title: str | None = None,
         category: str | None = None,
@@ -37,28 +47,35 @@ class RecipeRepositoryPort(ABC):
         limit: int | None = None,
         offset: int = 0,
     ) -> PaginatedResult:
-        """Query recipes with dynamic filtering and pagination."""
+        """Query recipes with dynamic filtering and pagination, scoped to the given user."""
 
     @abstractmethod
-    def update_recipe(self, recipe_id: UUID, data: RecipeUpdate) -> RecipeEntity | None:
-        """Full replacement of a recipe. Returns None if not found."""
+    def update_recipe(
+        self, recipe_id: UUID, data: RecipeUpdate, user_id: UUID
+    ) -> RecipeEntity | None:
+        """Full replacement of a recipe. Returns None if not found or not owned."""
 
     @abstractmethod
-    def delete_recipe(self, recipe_id: UUID) -> bool:
-        """Delete a recipe by ID. Returns True if deleted, False if not found."""
+    def delete_recipe(self, recipe_id: UUID, user_id: UUID) -> bool:
+        """Delete a recipe by ID. Returns True if deleted, False if not found/owned."""
 
     @abstractmethod
     def add_image(
         self,
         recipe_id: UUID,
+        user_id: UUID,
         caption: str | None = None,
         display_order: int | None = 0,
     ) -> ImageEntity:
-        """Persist an Image record for a recipe and return the created ImageEntity."""
+        """Persist an Image record for a recipe owned by user_id."""
 
     @abstractmethod
-    def delete_image(self, image_id: UUID) -> bool:
-        """Delete an Image record by ID. Returns True if deleted, False if not found."""
+    def delete_image(self, image_id: UUID, user_id: UUID) -> bool:
+        """Delete an Image record by ID. Returns True if deleted, False if not found/owned."""
+
+    @abstractmethod
+    def image_belongs_to_user(self, image_id: UUID, user_id: UUID) -> bool:
+        """Check if an image belongs to a recipe owned by the given user."""
 
 
 class ImageStoragePort(ABC):
@@ -107,3 +124,60 @@ class MarkdownExporterPort(ABC):
     @abstractmethod
     def to_zip_bytes(self, recipes: list[RecipeEntity]) -> bytes:
         """Serialize recipes to a ZIP archive containing the Markdown file and images."""
+
+
+class UserRepositoryPort(ABC):
+    """Secondary port for user persistence."""
+
+    @abstractmethod
+    def create_user(
+        self,
+        email: str,
+        display_name: str,
+        auth_provider: AuthProvider,
+        auth_provider_id: str,
+        avatar_url: str | None = None,
+    ) -> UserEntity:
+        """Create a new user and return the domain entity."""
+
+    @abstractmethod
+    def get_user_by_id(self, user_id: UUID) -> UserEntity | None:
+        """Retrieve a user by ID."""
+
+    @abstractmethod
+    def get_user_by_email(self, email: str) -> UserEntity | None:
+        """Retrieve a user by email address."""
+
+    @abstractmethod
+    def get_user_by_provider(
+        self, auth_provider: AuthProvider, auth_provider_id: str
+    ) -> UserEntity | None:
+        """Retrieve a user by SSO provider and provider-specific ID."""
+
+
+class GoogleTokenVerifierPort(ABC):
+    """Secondary port for verifying Google ID tokens."""
+
+    @abstractmethod
+    def verify(self, id_token: str) -> GoogleUserInfo:
+        """Verify a Google ID token and return user info.
+
+        Raises:
+            ValueError: If the token is invalid or expired.
+        """
+
+
+class JwtTokenPort(ABC):
+    """Secondary port for JWT token operations."""
+
+    @abstractmethod
+    def create_access_token(self, user_id: UUID) -> str:
+        """Create a JWT access token for the given user ID."""
+
+    @abstractmethod
+    def decode_access_token(self, token: str) -> UUID:
+        """Decode a JWT access token and return the user ID.
+
+        Raises:
+            ValueError: If the token is invalid or expired.
+        """

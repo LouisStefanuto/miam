@@ -25,6 +25,7 @@ def sample_recipes() -> list[RecipeEntity]:
         id=uuid.uuid4(),
         title="Test Cake",
         description="Delicious test cake.",
+        owner_id=uuid.uuid4(),
         prep_time_minutes=10,
         cook_time_minutes=30,
         rest_time_minutes=5,
