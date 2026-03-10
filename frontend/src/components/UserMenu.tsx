@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
+
 
 export default function UserMenu() {
   const { user, logout } = useAuth();
@@ -14,19 +14,21 @@ export default function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="shrink-0 rounded-full">
+        <button className="shrink-0 h-7 w-7 md:h-9 md:w-9 rounded-full overflow-hidden ring-1 ring-border hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {user?.picture ? (
             <img
               src={user.picture}
               alt={user.name}
-              className="w-7 h-7 rounded-full object-cover"
+              className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />
           ) : (
-            <User size={18} />
+            <span className="flex items-center justify-center w-full h-full bg-muted">
+              <User size={18} />
+            </span>
           )}
           <span className="sr-only">Compte</span>
-        </Button>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="font-body">
         {user && (
