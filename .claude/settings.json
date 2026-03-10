@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(docker compose logs backend --tail=30)",
-      "Bash(docker compose exec backend sh -c 'echo \"\"GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID\"\"')",
-      "Bash(docker compose up -d backend)"
-    ]
-  }
-}
