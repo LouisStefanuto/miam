@@ -106,6 +106,10 @@ class RecipeManagementService(RecipeServicePort):
             return None
         return self.image_storage.get_recipe_image(image_id)
 
+    def get_recipe_image_public(self, image_id: UUID) -> ImageResponse | None:
+        """Retrieve image bytes by ID without ownership check (IDs are unguessable UUIDs)."""
+        return self.image_storage.get_recipe_image(image_id)
+
     def delete_recipe_image(self, image_id: UUID, user_id: UUID) -> bool:
         """Delete an image from storage and database."""
         self.image_storage.delete_image(image_id)
