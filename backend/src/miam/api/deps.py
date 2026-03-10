@@ -25,7 +25,7 @@ from miam.infra.repositories import RecipeRepository, UserRepository
 class AuthSettings(BaseSettings):
     """Auth configuration loaded from environment variables."""
 
-    jwt_secret_key: str = "dev-secret-change-in-production"
+    jwt_secret_key: str
     jwt_algorithm: str = "HS256"
     jwt_expiration_minutes: int = 1440  # 24 hours
     google_client_id: str = ""

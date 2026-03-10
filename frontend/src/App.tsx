@@ -21,7 +21,10 @@ const ImportJSONPage = lazy(() => import("./pages/ImportJSONPage"));
 const ExportPage = lazy(() => import("./pages/ExportPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+const GOOGLE_CLIENT_ID =
+  (window as any).__RUNTIME_CONFIG__?.VITE_GOOGLE_CLIENT_ID ||
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+  "";
 
 const queryClient = new QueryClient({
   defaultOptions: {

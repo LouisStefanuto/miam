@@ -22,6 +22,9 @@ class GoogleTokenVerifier(GoogleTokenVerifierPort):
         except ValueError as exc:
             raise ValueError(f"Invalid Google token: {exc}") from exc
 
+        if not idinfo.get("email_verified"):
+            raise ValueError("Google email not verified")
+
         return GoogleUserInfo(
             email=idinfo["email"],
             name=idinfo["name"],
