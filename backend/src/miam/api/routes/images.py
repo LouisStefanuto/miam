@@ -37,12 +37,15 @@ async def upload_image(
         raise HTTPException(status_code=413, detail="Image too large (max 5 MB)")
 
     # Save image via service
-    image_id = service.add_recipe_image(
-        recipe_id=recipe_id,
-        user_id=user_id,
-        content=content,
-        filename=image.filename,
-    )
+    try:
+        image_id = service.add_recipe_image(
+            recipe_id=recipe_id,
+            user_id=user_id,
+            content=content,
+            filename=image.filename,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from None
 
     return ImageUploadResponse(
         title=image.filename or "untitled", recipe=recipe_id, image_id=image_id
@@ -70,5 +73,10 @@ async def get_image(
         raise HTTPException(status_code=404, detail="Image not found")
 
     return Response(
-        content=image_response.content, media_type=image_response.media_type
+        content=image_response.content,
+        media_type=image_response.media_type,
+        headers={
+            "Content-Security-Policy": "script-src 'none'",
+            "X-Content-Type-Options": "nosniff",
+        },
     )
