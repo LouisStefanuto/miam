@@ -64,7 +64,7 @@ def upgrade() -> None:
     op.create_table(
         "recipes",
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("owner_id", sa.Uuid(), nullable=True),
+        sa.Column("owner_id", sa.Uuid(), nullable=False),
         sa.Column("title", sa.String(length=200), nullable=False),
         sa.Column("description", sa.Text(), nullable=False),
         sa.Column("prep_time_minutes", sa.Integer(), nullable=True),

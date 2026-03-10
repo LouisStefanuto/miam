@@ -67,7 +67,7 @@ class StubUserRepository(UserRepositoryPort):
             id=uid,
             email=email,
             display_name=display_name,
-            auth_provider=auth_provider.value,
+            auth_provider=auth_provider,
             auth_provider_id=auth_provider_id,
             avatar_url=avatar_url,
         )
@@ -126,7 +126,7 @@ class TestLoginWithGoogle:
         user = next(iter(repo.users.values()))
         assert user.email == "alice@gmail.com"
         assert user.display_name == "Alice"
-        assert user.auth_provider == "google"
+        assert user.auth_provider == AuthProvider.google
         assert user.auth_provider_id == "google-alice-123"
         assert user.avatar_url == "https://example.com/alice.jpg"
 

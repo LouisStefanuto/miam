@@ -112,8 +112,10 @@ class RecipeManagementService(RecipeServicePort):
 
     def delete_recipe_image(self, image_id: UUID, user_id: UUID) -> bool:
         """Delete an image from storage and database."""
-        self.image_storage.delete_image(image_id)
-        return self.repository.delete_image(image_id, user_id)
+        deleted = self.repository.delete_image(image_id, user_id)
+        if deleted:
+            self.image_storage.delete_image(image_id)
+        return deleted
 
 
 class AuthService(AuthServicePort):

@@ -95,10 +95,11 @@ class StubRecipeRepository(RecipeRepositoryPort):
         return updated
 
     def delete_recipe(self, recipe_id: UUID, user_id: UUID) -> bool:
-        if recipe_id in self.recipes and self.recipes[recipe_id].owner_id == user_id:
-            del self.recipes[recipe_id]
-            return True
-        return False
+        recipe = self.recipes.get(recipe_id)
+        if recipe is None or recipe.owner_id != user_id:
+            return False
+        self.recipes.pop(recipe_id)
+        return True
 
     def add_image(
         self,
@@ -115,10 +116,14 @@ class StubRecipeRepository(RecipeRepositoryPort):
         return img
 
     def delete_image(self, image_id: UUID, user_id: UUID) -> bool:
-        if image_id in self.images:
-            del self.images[image_id]
-            return True
-        return False
+        if not self.image_belongs_to_user(image_id, user_id):
+            return False
+        if image_id not in self.images:
+            return False
+        self.images.pop(image_id)
+        for recipe in self.recipes.values():
+            recipe.images = [img for img in recipe.images if img.id != image_id]
+        return True
 
     def image_belongs_to_user(self, image_id: UUID, user_id: UUID) -> bool:
         for recipe in self.recipes.values():
@@ -150,7 +155,7 @@ class StubImageStorage(ImageStoragePort):
     def delete_image(self, image_id: UUID) -> bool:
         self.delete_calls.append(image_id)
         if image_id in self.stored:
-            del self.stored[image_id]
+            self.stored.pop(image_id)
             return True
         return False
 
@@ -451,6 +456,22 @@ class TestRecipeManagementServiceImages:
         )
         assert self.service.delete_recipe_image(img_id, _TEST_USER) is True
         assert self.service.get_recipe_image(img_id, _TEST_USER) is None
+
+    def test_delete_image_wrong_user_does_not_remove_storage(self) -> None:
+        from miam.domain.entities import Category
+
+        created = self.service.create_recipe(
+            RecipeCreate(title="Img", category=Category.plat), owner_id=_TEST_USER
+        )
+        img_id = self.service.add_recipe_image(
+            created.id, _TEST_USER, b"data", "pic.jpg"
+        )
+        other_user = uuid4()
+        assert self.service.delete_recipe_image(img_id, other_user) is False
+        # Storage should NOT have been called for deletion
+        assert img_id not in self.storage.delete_calls
+        # Image should still be accessible by the real owner
+        assert self.service.get_recipe_image(img_id, _TEST_USER) is not None
 
 
 # ---------------------------------------------------------------------------

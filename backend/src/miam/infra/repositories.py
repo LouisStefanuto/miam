@@ -435,7 +435,7 @@ class UserRepository(UserRepositoryPort):
             email=user.email,
             display_name=user.display_name,
             avatar_url=user.avatar_url,
-            auth_provider=user.auth_provider.value,
+            auth_provider=user.auth_provider,
             auth_provider_id=user.auth_provider_id,
             created_at=user.created_at,
             updated_at=user.updated_at,

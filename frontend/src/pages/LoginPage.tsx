@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,6 +7,7 @@ import { toast } from 'sonner';
 export default function LoginPage() {
   const { loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
@@ -18,24 +20,30 @@ export default function LoginPage() {
         </div>
 
         <div className="flex justify-center">
-          <GoogleLogin
-            onSuccess={async (response) => {
-              if (!response.credential) return;
-              try {
-                await loginWithGoogle(response.credential);
-                navigate('/', { replace: true });
-              } catch {
-                toast.error('Échec de la connexion. Veuillez réessayer.');
-              }
-            }}
-            onError={() => {
-              toast.error('Échec de la connexion Google.');
-            }}
-            theme="outline"
-            size="large"
-            text="signin_with"
-            shape="pill"
-          />
+          {isLoggingIn ? (
+            <p className="text-sm text-muted-foreground">Connexion en cours...</p>
+          ) : (
+            <GoogleLogin
+              onSuccess={async (response) => {
+                if (!response.credential) return;
+                setIsLoggingIn(true);
+                try {
+                  await loginWithGoogle(response.credential);
+                  navigate('/', { replace: true });
+                } catch {
+                  setIsLoggingIn(false);
+                  toast.error('Échec de la connexion. Veuillez réessayer.');
+                }
+              }}
+              onError={() => {
+                toast.error('Échec de la connexion Google.');
+              }}
+              theme="outline"
+              size="large"
+              text="signin_with"
+              shape="pill"
+            />
+          )}
         </div>
       </div>
     </div>

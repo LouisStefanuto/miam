@@ -137,7 +137,7 @@ def _build_sources() -> list[dict]:
 def build_update_payload() -> dict:
     """Generate a recipe update payload (same as create, minus images)."""
     payload = build_recipe_payload()
-    del payload["images"]
+    payload.pop("images", None)
     return payload
 
 

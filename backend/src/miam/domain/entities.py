@@ -68,7 +68,7 @@ class UserEntity:
     id: UUID
     email: str
     display_name: str
-    auth_provider: str
+    auth_provider: AuthProvider
     auth_provider_id: str
     avatar_url: str | None = None
     created_at: datetime | None = None

@@ -606,7 +606,7 @@ class TestUserRepositoryCreate:
         )
         assert user.email == "alice@example.com"
         assert user.display_name == "Alice"
-        assert user.auth_provider == "google"
+        assert user.auth_provider == AuthProvider.google
         assert user.auth_provider_id == "google-123"
         assert user.avatar_url == "https://example.com/avatar.jpg"
         assert user.id is not None

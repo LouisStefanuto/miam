@@ -8,8 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+import { API_BASE } from '@/lib/config';
 
 interface User {
   name: string;
@@ -37,12 +36,16 @@ const USER_KEY = 'miam-auth-user';
 
 /** Decode the payload of a Google ID token (JWT) to extract user info. */
 function parseGoogleCredential(credential: string): User {
-  const payload = JSON.parse(atob(credential.split('.')[1]));
-  return {
-    name: payload.name ?? payload.email,
-    email: payload.email,
-    picture: payload.picture,
-  };
+  try {
+    const payload = JSON.parse(atob(credential.split('.')[1]));
+    return {
+      name: payload.name ?? payload.email ?? 'User',
+      email: payload.email ?? '',
+      picture: payload.picture,
+    };
+  } catch {
+    return { name: 'User', email: '' };
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

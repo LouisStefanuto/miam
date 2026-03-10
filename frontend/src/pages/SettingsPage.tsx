@@ -119,7 +119,7 @@ export default function SettingsPage() {
           <h2 className="text-sm font-semibold font-body text-muted-foreground uppercase tracking-wide">Compte</h2>
           <Button
             variant="outline"
-            className="w-full justify-start gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="w-full justify-start gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 dark:bg-muted dark:text-red-500 dark:hover:text-red-400 dark:hover:bg-red-900/40"
             onClick={logout}
           >
             <LogOut size={16} />
