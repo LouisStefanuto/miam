@@ -73,6 +73,10 @@ class RecipeRepositoryPort(ABC):
     def delete_image(self, image_id: UUID, user_id: UUID) -> bool:
         """Delete an Image record by ID. Returns True if deleted, False if not found/owned."""
 
+    @abstractmethod
+    def image_belongs_to_user(self, image_id: UUID, user_id: UUID) -> bool:
+        """Check if an image belongs to a recipe owned by the given user."""
+
 
 class ImageStoragePort(ABC):
     @abstractmethod

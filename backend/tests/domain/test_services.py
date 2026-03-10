@@ -120,6 +120,13 @@ class StubRecipeRepository(RecipeRepositoryPort):
             return True
         return False
 
+    def image_belongs_to_user(self, image_id: UUID, user_id: UUID) -> bool:
+        for recipe in self.recipes.values():
+            if recipe.owner_id == user_id:
+                if any(img.id == image_id for img in recipe.images):
+                    return True
+        return False
+
 
 class StubImageStorage(ImageStoragePort):
     """In-memory image storage for testing."""
@@ -411,13 +418,26 @@ class TestRecipeManagementServiceImages:
         img_id = self.service.add_recipe_image(
             created.id, _TEST_USER, b"data", "pic.jpg"
         )
-        response = self.service.get_recipe_image(img_id)
+        response = self.service.get_recipe_image(img_id, _TEST_USER)
         assert response is not None
         assert response.content == b"data"
         assert response.media_type == "image/jpeg"
 
     def test_get_image_not_found(self) -> None:
-        result = self.service.get_recipe_image(uuid4())
+        result = self.service.get_recipe_image(uuid4(), _TEST_USER)
+        assert result is None
+
+    def test_get_image_wrong_user(self) -> None:
+        from miam.domain.entities import Category
+
+        created = self.service.create_recipe(
+            RecipeCreate(title="WithImg", category=Category.plat), owner_id=_TEST_USER
+        )
+        img_id = self.service.add_recipe_image(
+            created.id, _TEST_USER, b"data", "pic.jpg"
+        )
+        other_user = uuid4()
+        result = self.service.get_recipe_image(img_id, other_user)
         assert result is None
 
     def test_delete_image(self) -> None:
@@ -430,7 +450,7 @@ class TestRecipeManagementServiceImages:
             created.id, _TEST_USER, b"data", "pic.jpg"
         )
         assert self.service.delete_recipe_image(img_id, _TEST_USER) is True
-        assert self.service.get_recipe_image(img_id) is None
+        assert self.service.get_recipe_image(img_id, _TEST_USER) is None
 
 
 # ---------------------------------------------------------------------------

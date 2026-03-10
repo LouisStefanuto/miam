@@ -173,4 +173,4 @@ claude/
 *.tar
 
 # Claude
-.claude
+.claude/

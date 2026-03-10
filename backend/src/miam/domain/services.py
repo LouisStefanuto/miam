@@ -100,8 +100,10 @@ class RecipeManagementService(RecipeServicePort):
         self.image_storage.add_recipe_image(recipe_id, content, filename, img.id)
         return img.id
 
-    def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
-        """Retrieve image bytes from storage by image ID."""
+    def get_recipe_image(self, image_id: UUID, user_id: UUID) -> ImageResponse | None:
+        """Retrieve image bytes from storage by image ID, only if owned by user."""
+        if not self.repository.image_belongs_to_user(image_id, user_id):
+            return None
         return self.image_storage.get_recipe_image(image_id)
 
     def delete_recipe_image(self, image_id: UUID, user_id: UUID) -> bool:

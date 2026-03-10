@@ -404,6 +404,15 @@ class RecipeRepository(RecipeRepositoryPort):
         self.session.commit()
         return True
 
+    def image_belongs_to_user(self, image_id: UUID, user_id: UUID) -> bool:
+        """Check if an image belongs to a recipe owned by the given user."""
+        stmt = (
+            select(Image)
+            .join(Recipe, Image.recipe_id == Recipe.id)
+            .where(Image.id == image_id, Recipe.owner_id == user_id)
+        )
+        return self.session.execute(stmt).scalars().first() is not None
+
     def delete_recipe(self, recipe_id: UUID, user_id: UUID) -> bool:
         """Delete a recipe and all related entities, scoped to user."""
         recipe = self._load_recipe(recipe_id, user_id)

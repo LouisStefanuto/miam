@@ -53,8 +53,8 @@ class RecipeServicePort(ABC):
         """Add an image to a recipe owned by user_id and return its image ID."""
 
     @abstractmethod
-    def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
-        """Retrieve image bytes for a given image ID."""
+    def get_recipe_image(self, image_id: UUID, user_id: UUID) -> ImageResponse | None:
+        """Retrieve image bytes for a given image ID, scoped to the given user."""
 
     @abstractmethod
     def delete_recipe_image(self, image_id: UUID, user_id: UUID) -> bool:

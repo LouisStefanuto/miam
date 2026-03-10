@@ -67,8 +67,9 @@ async def delete_image(
 async def get_image(
     image_id: UUID,
     service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
 ) -> Response:
-    image_response = service.get_recipe_image(image_id)
+    image_response = service.get_recipe_image(image_id, user_id)
     if not image_response:
         raise HTTPException(status_code=404, detail="Image not found")
 
