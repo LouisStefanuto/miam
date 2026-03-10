@@ -33,7 +33,6 @@ class AuthSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
-_auth_settings = AuthSettings()
 _security = HTTPBearer()
 
 
@@ -45,19 +44,24 @@ def get_db() -> Generator[Session]:
         db.close()
 
 
-def _get_jwt_handler() -> JwtTokenHandler:
+def get_auth_settings() -> AuthSettings:
+    return AuthSettings()
+
+
+def _get_jwt_handler(settings: AuthSettings) -> JwtTokenHandler:
     return JwtTokenHandler(
-        secret_key=_auth_settings.jwt_secret_key,
-        algorithm=_auth_settings.jwt_algorithm,
-        expiration_minutes=_auth_settings.jwt_expiration_minutes,
+        secret_key=settings.jwt_secret_key,
+        algorithm=settings.jwt_algorithm,
+        expiration_minutes=settings.jwt_expiration_minutes,
     )
 
 
 def get_current_user_id(
     credentials: HTTPAuthorizationCredentials = Depends(_security),  # noqa: B008
+    settings: AuthSettings = Depends(get_auth_settings),  # noqa: B008
 ) -> UUID:
     """Extract and validate the JWT from the Authorization header."""
-    handler = _get_jwt_handler()
+    handler = _get_jwt_handler(settings)
     try:
         return handler.decode_access_token(credentials.credentials)
     except ValueError as exc:
@@ -70,9 +74,10 @@ def get_current_user_id(
 
 def get_auth_service(
     db: Session = Depends(get_db),  # noqa: B008
+    settings: AuthSettings = Depends(get_auth_settings),  # noqa: B008
 ) -> AuthService:
-    google_verifier = GoogleTokenVerifier(client_id=_auth_settings.google_client_id)
-    jwt_handler = _get_jwt_handler()
+    google_verifier = GoogleTokenVerifier(client_id=settings.google_client_id)
+    jwt_handler = _get_jwt_handler(settings)
     user_repo = UserRepository(db)
     return AuthService(
         google_verifier=google_verifier,
