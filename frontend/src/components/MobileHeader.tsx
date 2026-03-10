@@ -2,6 +2,7 @@ import { Search, ShoppingCart, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AppearanceSheet from '@/components/AppearanceSheet';
 import CartSheet from '@/components/CartSheet';
+import UserMenu from '@/components/UserMenu';
 import { useCart } from '@/contexts/CartContext';
 
 interface MobileHeaderProps {
@@ -17,6 +18,8 @@ export default function MobileHeader({ onSearchToggle, searchOpen }: MobileHeade
       <h1 className="font-display text-xl font-bold text-foreground">Miam</h1>
 
       <div className="flex items-center gap-1.5">
+        <UserMenu />
+
         <AppearanceSheet
           trigger={
             <Button variant="ghost" size="icon" className="shrink-0">

@@ -2,6 +2,11 @@ import { Recipe, RecipeType, Season, Difficulty } from '@/data/recipes';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
+function authHeaders(): Record<string, string> {
+  const token = localStorage.getItem('miam-auth-token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 // --- Mapping: Frontend (French) ↔ Backend (English/numeric) ---
 
 const seasonToBackend: Record<Season, string> = {
@@ -99,7 +104,7 @@ function getImageIdFromUrl(url: string): string | null {
 }
 
 async function deleteImage(imageId: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/images/${imageId}`, { method: 'DELETE' });
+  const res = await fetch(`${API_BASE}/images/${imageId}`, { method: 'DELETE', headers: authHeaders() });
   if (!res.ok && res.status !== 404) throw new Error(`Failed to delete image: ${res.status}`);
 }
 
@@ -171,14 +176,14 @@ interface PaginatedResponse<T> {
 // --- API functions ---
 
 export async function fetchRecipes(): Promise<Recipe[]> {
-  const res = await fetch(`${API_BASE}/recipes`);
+  const res = await fetch(`${API_BASE}/recipes`, { headers: authHeaders() });
   if (!res.ok) throw new Error(`Failed to fetch recipes: ${res.status}`);
   const data: PaginatedResponse<BackendRecipe> = await res.json();
   return data.items.map(backendToFrontend);
 }
 
 export async function fetchRecipe(id: string): Promise<Recipe> {
-  const res = await fetch(`${API_BASE}/recipes/${id}`);
+  const res = await fetch(`${API_BASE}/recipes/${id}`, { headers: authHeaders() });
   if (!res.ok) throw new Error(`Failed to fetch recipe: ${res.status}`);
   const data: BackendRecipe = await res.json();
   return backendToFrontend(data);
@@ -188,7 +193,7 @@ export async function updateRecipe(recipe: Recipe, originalImage?: string): Prom
   const body = frontendToBackendCreate(recipe);
   const res = await fetch(`${API_BASE}/recipes/${recipe.id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`Failed to update recipe: ${res.status}`);
@@ -220,7 +225,7 @@ export async function createRecipe(recipe: Recipe): Promise<{ id: string }> {
   const body = frontendToBackendCreate(recipe);
   const res = await fetch(`${API_BASE}/recipes`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`Failed to create recipe: ${res.status}`);
@@ -235,7 +240,7 @@ export async function createRecipe(recipe: Recipe): Promise<{ id: string }> {
 }
 
 export async function deleteRecipe(id: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/recipes/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${API_BASE}/recipes/${id}`, { method: 'DELETE', headers: authHeaders() });
   if (!res.ok) throw new Error(`Failed to delete recipe: ${res.status}`);
 }
 
@@ -251,14 +256,14 @@ function downloadBlob(blob: Blob, filename: string) {
 }
 
 export async function exportToMarkdown(): Promise<void> {
-  const res = await fetch(`${API_BASE}/export/markdown`, { method: 'POST' });
+  const res = await fetch(`${API_BASE}/export/markdown`, { method: 'POST', headers: authHeaders() });
   if (!res.ok) throw new Error(`Failed to export: ${res.status}`);
   const blob = await res.blob();
   downloadBlob(blob, 'recipes.zip');
 }
 
 export async function exportToWord(): Promise<void> {
-  const res = await fetch(`${API_BASE}/export/word`, { method: 'POST' });
+  const res = await fetch(`${API_BASE}/export/word`, { method: 'POST', headers: authHeaders() });
   if (!res.ok) throw new Error(`Failed to export: ${res.status}`);
   const blob = await res.blob();
   downloadBlob(blob, 'recipes.docx');
@@ -267,7 +272,7 @@ export async function exportToWord(): Promise<void> {
 export async function importRecipesBatch(jsonPayload: { recipes: unknown[] }): Promise<{ ids: string[] }> {
   const res = await fetch(`${API_BASE}/recipes/batch`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(jsonPayload),
   });
   if (!res.ok) {
@@ -334,6 +339,7 @@ async function uploadImage(recipeId: string, dataUrl: string): Promise<void> {
   formData.append('image', blob, 'recipe.jpg');
   const res = await fetch(`${API_BASE}/images`, {
     method: 'POST',
+    headers: authHeaders(),
     body: formData,
   });
   if (!res.ok) throw new Error(`Failed to upload image: ${res.status}`);
