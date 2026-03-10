@@ -1,6 +1,5 @@
-import { Search, ShoppingCart, Palette } from 'lucide-react';
+import { Search, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import AppearanceSheet from '@/components/AppearanceSheet';
 import CartSheet from '@/components/CartSheet';
 import UserMenu from '@/components/UserMenu';
 import { useCart } from '@/contexts/CartContext';
@@ -19,15 +18,6 @@ export default function MobileHeader({ onSearchToggle, searchOpen }: MobileHeade
 
       <div className="flex items-center gap-1.5">
         <UserMenu />
-
-        <AppearanceSheet
-          trigger={
-            <Button variant="ghost" size="icon" className="shrink-0">
-              <Palette size={18} />
-              <span className="sr-only">Apparence</span>
-            </Button>
-          }
-        />
 
         <Button
           variant={searchOpen ? 'secondary' : 'ghost'}
