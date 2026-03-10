@@ -1,7 +1,6 @@
 import { useMemo, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, PenLine, Camera, Instagram, Download, FileJson, X } from 'lucide-react';
-import AppearanceSheet from '@/components/AppearanceSheet';
 import CartSheet from '@/components/CartSheet';
 import UserMenu from '@/components/UserMenu';
 import MobileHeader from '@/components/MobileHeader';
@@ -150,7 +149,6 @@ const CatalogPage = () => {
         <HeroSection />
         <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
           <UserMenu />
-          <AppearanceSheet />
           <Button onClick={() => navigate('/export')} variant="outline" className="font-body font-semibold gap-2 shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0">
             <Download size={18} />
             Exporter
