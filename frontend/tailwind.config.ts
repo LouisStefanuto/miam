@@ -100,12 +100,18 @@ export default {
           from: { opacity: "0", transform: "scale(0.95)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
+        "bounce-in": {
+          "0%": { opacity: "0", transform: "scale(0) translateY(20px)" },
+          "50%": { transform: "scale(1.2) translateY(-4px)" },
+          "100%": { opacity: "1", transform: "scale(1) translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.4s ease-out",
         "scale-in": "scale-in 0.3s ease-out",
+        "bounce-in": "bounce-in 0.25s ease-out",
       },
     },
   },
