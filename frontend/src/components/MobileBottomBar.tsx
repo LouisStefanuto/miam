@@ -1,6 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { BookOpen, Plus, ShoppingCart } from 'lucide-react';
-import CartSheet from '@/components/CartSheet';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -14,6 +13,7 @@ export default function MobileBottomBar() {
 
   const isRecipes = location.pathname === '/';
   const isAdd = location.pathname === '/add' || location.pathname === '/recipes/new' || location.pathname.startsWith('/import');
+  const isCart = location.pathname === '/cart';
 
   return (
     <nav className="fixed bottom-0 inset-x-0 z-30 md:hidden bg-background border-t border-border">
@@ -41,25 +41,22 @@ export default function MobileBottomBar() {
         </button>
 
         {/* Cart */}
-        <CartSheet
-          trigger={
-            <button
-              className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full relative transition-colors ${
-                'text-muted-foreground'
-              }`}
-            >
-              <span className="relative">
-                <ShoppingCart size={22} />
-                {count > 0 && (
-                  <span className="absolute -top-1.5 -right-2.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
-                    {count}
-                  </span>
-                )}
+        <button
+          onClick={() => navigate('/cart')}
+          className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
+            isCart ? 'text-primary' : 'text-muted-foreground'
+          }`}
+        >
+          <span className="relative">
+            <ShoppingCart size={22} strokeWidth={isCart ? 2.5 : 2} />
+            {count > 0 && (
+              <span className="absolute -top-1.5 -right-2.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
+                {count}
               </span>
-              <span className="text-[11px] font-body font-medium">Panier</span>
-            </button>
-          }
-        />
+            )}
+          </span>
+          <span className="text-[11px] font-body font-medium">Panier</span>
+        </button>
       </div>
     </nav>
   );
