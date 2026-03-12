@@ -7,7 +7,6 @@ const BeaverCatchGame = lazy(() => import('@/components/BeaverCatchGame'));
 import CartSheet from '@/components/CartSheet';
 import UserMenu from '@/components/UserMenu';
 import MobileHeader from '@/components/MobileHeader';
-import MobileAddButton from '@/components/MobileAddButton';
 import { useRecipes } from '@/hooks/use-recipes';
 import { useCatalogFilters } from '@/contexts/CatalogFilterContext';
 import HeroSection from '@/components/HeroSection';
@@ -175,10 +174,7 @@ const CatalogPage = () => {
         </div>
       </div>
 
-      {/* Mobile FAB */}
-      <MobileAddButton />
-
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-2 md:py-8 space-y-3 md:space-y-6">
+      <main className="max-w-7xl mx-auto px-4 md:px-8 py-2 md:py-8 pb-20 md:pb-8 space-y-3 md:space-y-6">
 
         <div className="space-y-2">
           {/* Search + Add button on same line */}
