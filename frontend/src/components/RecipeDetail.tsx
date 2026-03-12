@@ -229,7 +229,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const current = editing ? editData : recipe;
 
   return (
-    <div className="animate-fade-in">
+    <div>
       {/* Sticky save/cancel bar when editing */}
       {editing && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-card px-4 py-3 flex items-center justify-between">
@@ -249,7 +249,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
       )}
 
       {/* Header image */}
-      <div className={`relative h-[300px] md:h-[400px] overflow-hidden select-none ${editing ? 'mt-14' : ''}`}>
+      <div className={`animate-fade-in relative h-[300px] md:h-[400px] overflow-hidden select-none ${editing ? 'mt-14' : ''}`}>
         {current.image ? (
           <img src={current.image} alt={current.title} className="w-full h-full object-cover" />
         ) : (
