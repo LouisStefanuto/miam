@@ -233,9 +233,10 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
       {/* Sticky save/cancel bar when editing */}
       {editing && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-card px-4 py-3 flex items-center justify-between">
-          <button onClick={onBack} className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground font-body transition-colors">
-            <ArrowLeft size={16} /> Menu
-          </button>
+          <Button variant="ghost" size="icon" onClick={onBack}>
+            <ArrowLeft size={20} />
+            <span className="sr-only">Menu</span>
+          </Button>
           <div className="flex gap-2">
           <Button size="sm" variant="outline" className="font-body gap-1.5" onClick={cancelEdit}>
             <X size={14} /> Annuler
@@ -256,12 +257,15 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 to-transparent" />
         {!editing && (
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onBack}
-            className="absolute top-4 left-4 bg-card/80 backdrop-blur-sm rounded-full p-2 hover:bg-card transition-colors"
+            className="absolute top-4 left-4 bg-card/80 backdrop-blur-sm hover:bg-card"
           >
             <ArrowLeft size={20} className="text-card-foreground" />
-          </button>
+            <span className="sr-only">Retour</span>
+          </Button>
         )}
         {/* Action buttons top right */}
         <div className="absolute top-4 right-4 flex gap-2">

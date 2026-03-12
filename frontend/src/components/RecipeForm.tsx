@@ -202,9 +202,10 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     <div className="animate-fade-in">
       {/* Sticky top bar */}
       <div className="fixed top-0 left-0 right-0 z-[60] bg-card/95 backdrop-blur-sm border-b border-border shadow-card px-4 py-3 flex items-center justify-between">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground font-body transition-colors">
-          <ArrowLeft size={16} /> Retour
-        </button>
+        <Button variant="ghost" size="icon" onClick={onBack}>
+          <ArrowLeft size={20} />
+          <span className="sr-only">Retour</span>
+        </Button>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" className="font-body gap-1.5" onClick={onBack}>
             <X size={14} /> Annuler

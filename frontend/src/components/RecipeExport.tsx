@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft, FileText, FileDown, Loader2 } from 'lucide-react';
 import { exportToMarkdown, exportToWord } from '@/lib/api';
 import { toast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 
 interface RecipeExportProps {
   onBack: () => void;
@@ -29,9 +30,10 @@ export default function RecipeExport({ onBack }: RecipeExportProps) {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 animate-fade-in">
-      <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-body mb-6 transition-colors">
-        <ArrowLeft size={18} /> Retour
-      </button>
+      <Button variant="ghost" size="icon" onClick={onBack} className="mb-6">
+        <ArrowLeft size={20} />
+        <span className="sr-only">Retour</span>
+      </Button>
       <h1 className="font-display text-2xl font-bold text-foreground mb-2">Exporter les recettes</h1>
       <p className="font-body text-muted-foreground mb-8 text-sm">
         Choisissez le format d'export pour télécharger toutes vos recettes.
