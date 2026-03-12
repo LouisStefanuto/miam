@@ -12,6 +12,7 @@ import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SwipeBack from "./components/SwipeBack";
+import MobileBottomBar from "./components/MobileBottomBar";
 import CatalogPage from "./pages/CatalogPage";
 import LoginPage from "./pages/LoginPage";
 
@@ -19,6 +20,8 @@ const RecipeDetailPage = lazy(() => import("./pages/RecipeDetailPage"));
 const CreateRecipePage = lazy(() => import("./pages/CreateRecipePage"));
 const ImportOCRPage = lazy(() => import("./pages/ImportOCRPage"));
 const ImportJSONPage = lazy(() => import("./pages/ImportJSONPage"));
+const AddRecipePage = lazy(() => import("./pages/AddRecipePage"));
+const CartPage = lazy(() => import("./pages/CartPage"));
 const ExportPage = lazy(() => import("./pages/ExportPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -53,15 +56,18 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/" element={<ProtectedRoute><CatalogPage /></ProtectedRoute>} />
+            <Route path="/add" element={<ProtectedRoute><AddRecipePage /></ProtectedRoute>} />
             <Route path="/recipes/new" element={<ProtectedRoute><CreateRecipePage /></ProtectedRoute>} />
             <Route path="/recipes/:id" element={<ProtectedRoute><RecipeDetailPage /></ProtectedRoute>} />
             <Route path="/import/ocr" element={<ProtectedRoute><ImportOCRPage /></ProtectedRoute>} />
             <Route path="/import/json" element={<ProtectedRoute><ImportJSONPage /></ProtectedRoute>} />
+            <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
             <Route path="/export" element={<ProtectedRoute><ExportPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
+          <MobileBottomBar />
           </SwipeBack>
         </CatalogFilterProvider>
         </CartProvider>

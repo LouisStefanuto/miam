@@ -2,13 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { ShoppingCart, Trash2, ClipboardCopy, X } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { useRecipes } from '@/hooks/use-recipes';
 import { toast } from 'sonner';
 import type { Recipe } from '@/data/recipes';
-import { SortableCartIngredientItem } from './SortableCartIngredientItem';
+import { SortableCartIngredientItem } from '@/components/SortableCartIngredientItem';
 
 interface AggregatedIngredient {
   id: string;
@@ -30,7 +29,6 @@ function aggregateIngredients(recipes: Recipe[]): AggregatedIngredient[] {
   const result: AggregatedIngredient[] = [];
 
   for (const [name, { quantities }] of map) {
-    // Group by unit and sum numeric quantities
     const byUnit = new Map<string, number | null>();
     for (const { qty, unit } of quantities) {
       const u = unit.toLowerCase().trim();
@@ -70,25 +68,9 @@ function generateShoppingListText(recipes: Recipe[], ingredients: AggregatedIngr
   return lines.join('\n');
 }
 
-export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNode; hotkey?: string } = {}) {
+const CartPage = () => {
   const { items, remove, clear, count } = useCart();
   const { data: allRecipes = [] } = useRecipes();
-  const [open, setOpen] = useState(false);
-
-  // Keyboard shortcut to toggle cart
-  useEffect(() => {
-    if (!hotkey) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key.toLowerCase() === hotkey) {
-        e.preventDefault();
-        setOpen((prev) => !prev);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [hotkey]);
 
   const cartRecipes = useMemo(
     () => allRecipes.filter((r) => items.has(r.id)),
@@ -97,17 +79,14 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
 
   const rawIngredients = useMemo(() => aggregateIngredients(cartRecipes), [cartRecipes]);
 
-  // Local state for user-reordered / removed ingredients
   const [ingredients, setIngredients] = useState<AggregatedIngredient[]>(rawIngredients);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
 
-  // Sync when recipes change (new recipe added/removed from cart)
   useEffect(() => {
     setIngredients((prev) => {
       const prevIds = new Set(prev.map((i) => i.id));
       const rawIds = new Set(rawIngredients.map((i) => i.id));
 
-      // Keep existing order for ingredients that are still present, update their details
       const kept = prev
         .filter((i) => rawIds.has(i.id))
         .map((i) => {
@@ -115,9 +94,7 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
           return { ...i, details: updated.details, name: updated.name };
         });
 
-      // Append new ingredients at the end
       const added = rawIngredients.filter((i) => !prevIds.has(i.id));
-
       return [...kept, ...added];
     });
 
@@ -178,33 +155,19 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
   };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      {trigger ? (
-        <SheetTrigger asChild>{trigger}</SheetTrigger>
-      ) : (
-        <SheetTrigger asChild>
-          <Button variant="outline" className="font-body font-semibold gap-2 shrink-0 relative focus-visible:ring-0 focus-visible:ring-offset-0">
-            <ShoppingCart size={18} />
-            Panier
-            {count > 0 && (
-              <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
-                {count}
-              </span>
-            )}
-          </Button>
-        </SheetTrigger>
-      )}
-      <SheetContent className="w-full sm:max-w-lg flex flex-col" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <SheetHeader>
-          <SheetTitle className="font-display">Panier ({count})</SheetTitle>
-        </SheetHeader>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-20 flex items-center gap-3 px-4 h-14 bg-background border-b border-border md:hidden">
+        <ShoppingCart size={20} className="text-primary" />
+        <h1 className="font-display text-lg font-bold text-foreground">Panier ({count})</h1>
+      </header>
 
+      <main className="max-w-lg mx-auto px-4 py-4 pb-24 space-y-6">
         {cartRecipes.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex items-center justify-center py-20">
             <p className="text-muted-foreground font-body">Aucune recette dans le panier</p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto space-y-6 pr-2">
+          <>
             {/* Selected recipes */}
             <div className="space-y-2">
               <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -223,7 +186,7 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
                   </div>
                   <button
                     onClick={() => remove(recipe.id)}
-                    className="shrink-0 p-1.5 rounded-full text-muted-foreground md:text-muted-foreground/0 md:group-hover:text-muted-foreground hover:!text-destructive hover:bg-destructive/10 transition-colors"
+                    className="shrink-0 p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                     title="Retirer du panier"
                   >
                     <X size={16} />
@@ -232,7 +195,7 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
               ))}
             </div>
 
-            {/* Shopping list preview */}
+            {/* Shopping list */}
             {ingredients.length > 0 && (
               <div className="space-y-2">
                 <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -257,23 +220,23 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
                 </DndContext>
               </div>
             )}
-          </div>
-        )}
 
-        {/* Actions */}
-        {cartRecipes.length > 0 && (
-          <div className="border-t pt-4 space-y-2">
-            <Button onClick={copyShoppingList} className="w-full gradient-warm text-primary-foreground font-body font-semibold gap-2">
-              <ClipboardCopy size={16} />
-              Copier la liste de courses
-            </Button>
-            <Button onClick={clear} variant="ghost" className="w-full font-body text-muted-foreground gap-2">
-              <Trash2 size={16} />
-              Vider le panier
-            </Button>
-          </div>
+            {/* Actions */}
+            <div className="space-y-2">
+              <Button onClick={copyShoppingList} className="w-full gradient-warm text-primary-foreground font-body font-semibold gap-2">
+                <ClipboardCopy size={16} />
+                Copier la liste de courses
+              </Button>
+              <Button onClick={clear} variant="ghost" className="w-full font-body text-muted-foreground gap-2">
+                <Trash2 size={16} />
+                Vider le panier
+              </Button>
+            </div>
+          </>
         )}
-      </SheetContent>
-    </Sheet>
+      </main>
+    </div>
   );
-}
+};
+
+export default CartPage;

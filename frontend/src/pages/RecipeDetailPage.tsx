@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useRecipe, useRecipes, useUpdateRecipe, useDeleteRecipe } from '@/hooks/use-recipes';
 import RecipeDetail from '@/components/RecipeDetail';
 import { toast } from '@/hooks/use-toast';
+import { useCart } from '@/contexts/CartContext';
 import { Recipe } from '@/data/recipes';
 
 const RecipeDetailPage = () => {
@@ -12,6 +13,7 @@ const RecipeDetailPage = () => {
   const { data: recipes = [] } = useRecipes();
   const updateMutation = useUpdateRecipe();
   const deleteMutation = useDeleteRecipe();
+  const { remove: removeFromCart } = useCart();
   const [customTags, setCustomTags] = useState<string[]>([]);
 
   useEffect(() => {
@@ -50,6 +52,7 @@ const RecipeDetailPage = () => {
     if (!id) return;
     deleteMutation.mutate(id, {
       onSuccess: () => {
+        removeFromCart(id);
         toast({ title: 'Recette supprimée', description: recipe?.title });
         navigate('/');
       },
