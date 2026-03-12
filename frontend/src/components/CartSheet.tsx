@@ -70,10 +70,25 @@ function generateShoppingListText(recipes: Recipe[], ingredients: AggregatedIngr
   return lines.join('\n');
 }
 
-export default function CartSheet({ trigger }: { trigger?: React.ReactNode } = {}) {
+export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNode; hotkey?: string } = {}) {
   const { items, remove, clear, count } = useCart();
   const { data: allRecipes = [] } = useRecipes();
   const [open, setOpen] = useState(false);
+
+  // Keyboard shortcut to toggle cart
+  useEffect(() => {
+    if (!hotkey) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key.toLowerCase() === hotkey) {
+        e.preventDefault();
+        setOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hotkey]);
 
   const cartRecipes = useMemo(
     () => allRecipes.filter((r) => items.has(r.id)),
@@ -172,7 +187,7 @@ export default function CartSheet({ trigger }: { trigger?: React.ReactNode } = {
           </Button>
         </SheetTrigger>
       )}
-      <SheetContent className="w-full sm:max-w-lg flex flex-col">
+      <SheetContent className="w-full sm:max-w-lg flex flex-col" onOpenAutoFocus={(e) => e.preventDefault()}>
         <SheetHeader>
           <SheetTitle className="font-display">Panier ({count})</SheetTitle>
         </SheetHeader>

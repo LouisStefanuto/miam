@@ -11,6 +11,7 @@ import { AccentColorProvider } from "./contexts/ThemeContext";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import SwipeBack from "./components/SwipeBack";
 import CatalogPage from "./pages/CatalogPage";
 import LoginPage from "./pages/LoginPage";
 
@@ -47,6 +48,7 @@ const App = () => (
         <AuthProvider>
         <CartProvider>
         <CatalogFilterProvider>
+          <SwipeBack>
           <Suspense>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
@@ -60,6 +62,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
+          </SwipeBack>
         </CatalogFilterProvider>
         </CartProvider>
         </AuthProvider>

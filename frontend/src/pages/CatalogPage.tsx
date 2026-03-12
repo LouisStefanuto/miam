@@ -1,6 +1,9 @@
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, PenLine, Camera, Instagram, Download, FileJson, X } from 'lucide-react';
+import { useShake } from '@/hooks/use-shake';
+
+const BeaverCatchGame = lazy(() => import('@/components/BeaverCatchGame'));
 import CartSheet from '@/components/CartSheet';
 import UserMenu from '@/components/UserMenu';
 import MobileHeader from '@/components/MobileHeader';
@@ -30,6 +33,21 @@ const CatalogPage = () => {
   const { data: recipes = [], isLoading } = useRecipes();
   const { searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage } = useCatalogFilters();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [showBeaverGame, setShowBeaverGame] = useState(false);
+  const openBeaverGame = useCallback(() => setShowBeaverGame(true), []);
+  useShake(openBeaverGame);
+
+  // Dev shortcut: Shift+B to test the easter egg on desktop
+  useEffect(() => {
+    if (import.meta.env.PROD) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.shiftKey && e.key === 'B' && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+        setShowBeaverGame(true);
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
 
   const filtered = useMemo(() => {
     let result = recipes.filter((r) => {
@@ -153,7 +171,7 @@ const CatalogPage = () => {
             <Download size={18} />
             Exporter
           </Button>
-          <CartSheet />
+          <CartSheet hotkey="p" />
         </div>
       </div>
 
@@ -295,6 +313,12 @@ const CatalogPage = () => {
           </Pagination>
         )}
       </main>
+
+      {showBeaverGame && (
+        <Suspense>
+          <BeaverCatchGame onClose={() => setShowBeaverGame(false)} />
+        </Suspense>
+      )}
     </div>
   );
 };

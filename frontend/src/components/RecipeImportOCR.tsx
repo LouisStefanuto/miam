@@ -104,11 +104,15 @@ export default function RecipeImportOCR({ onBack, onImportRecipes }: RecipeImpor
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 animate-fade-in">
-      <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-body mb-6 transition-colors">
-        <ArrowLeft size={18} /> Retour
-      </button>
-      <h1 className="font-display text-2xl font-bold text-foreground mb-2">Importer depuis des photos</h1>
+    <div className="min-h-screen bg-background animate-fade-in">
+      <header className="sticky top-0 z-20 flex items-center gap-3 px-4 h-14 bg-background border-b border-border">
+        <Button variant="ghost" size="icon" onClick={onBack}>
+          <ArrowLeft size={20} />
+          <span className="sr-only">Retour</span>
+        </Button>
+        <h1 className="font-display text-lg font-bold">Importer depuis des photos</h1>
+      </header>
+      <div className="max-w-4xl mx-auto px-4 py-8">
       <p className="font-body text-muted-foreground mb-6 text-sm">
         Uploadez des photos de recettes. L'IA extrait automatiquement le titre, les ingrédients, les étapes, et détecte les photos du plat.
       </p>
@@ -210,6 +214,7 @@ export default function RecipeImportOCR({ onBack, onImportRecipes }: RecipeImpor
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
