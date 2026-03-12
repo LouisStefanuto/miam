@@ -32,13 +32,12 @@ export default function MobileBottomBar() {
         {/* Add */}
         <button
           onClick={() => navigate('/add')}
-          className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full"
+          className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
+            isAdd ? 'text-primary' : 'text-muted-foreground'
+          }`}
         >
-          <span className={`w-11 h-11 rounded-full flex items-center justify-center gradient-warm text-primary-foreground shadow-md ${
-            isAdd ? 'ring-2 ring-primary/30 ring-offset-2 ring-offset-background' : ''
-          }`}>
-            <Plus size={24} strokeWidth={2.5} />
-          </span>
+          <Plus size={22} strokeWidth={isAdd ? 2.5 : 2} />
+          <span className="text-[11px] font-body font-medium">Ajouter</span>
         </button>
 
         {/* Cart */}

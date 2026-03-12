@@ -31,7 +31,6 @@ const CatalogPage = () => {
   const navigate = useNavigate();
   const { data: recipes = [], isLoading } = useRecipes();
   const { searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage } = useCatalogFilters();
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showBeaverGame, setShowBeaverGame] = useState(false);
   const openBeaverGame = useCallback(() => setShowBeaverGame(true), []);
   useShake(openBeaverGame);
@@ -157,8 +156,10 @@ const CatalogPage = () => {
     <div className="min-h-screen bg-background">
       {/* Mobile header */}
       <MobileHeader
-        onSearchToggle={() => setMobileSearchOpen((v) => !v)}
-        searchOpen={mobileSearchOpen}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        searchTags={searchTags}
+        onSearchTagsChange={setSearchTags}
       />
 
       {/* Desktop hero + action buttons (hidden on mobile) */}
@@ -179,8 +180,8 @@ const CatalogPage = () => {
         <div className="space-y-2">
           {/* Search + Add button on same line */}
           <div className="flex flex-col md:flex-row gap-4 items-start">
-            {/* Desktop: always visible. Mobile: toggled via header search button */}
-            <div className={`w-full md:contents ${mobileSearchOpen ? '' : 'hidden md:contents'}`}>
+            {/* Desktop only — mobile search is in the header */}
+            <div className="hidden md:contents">
               <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
             </div>
             {hasActiveFilters && (
