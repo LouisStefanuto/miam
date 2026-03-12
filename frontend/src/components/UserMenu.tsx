@@ -24,7 +24,7 @@ export default function UserMenu() {
     return (
       <button
         onClick={() => navigate('/settings')}
-        className="shrink-0 h-7 w-7 md:h-9 md:w-9 rounded-full overflow-hidden ring-1 ring-border hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="shrink-0 h-7 w-7 md:h-9 md:w-9 rounded-full md:rounded-lg overflow-hidden ring-1 ring-border hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {user?.picture ? (
           <img
