@@ -153,7 +153,7 @@ const CatalogPage = () => {
             <Download size={18} />
             Exporter
           </Button>
-          <CartSheet />
+          <CartSheet hotkey="p" />
         </div>
       </div>
 
