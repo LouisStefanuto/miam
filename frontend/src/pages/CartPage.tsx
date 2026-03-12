@@ -97,6 +97,13 @@ const CartPage = () => {
       const added = rawIngredients.filter((i) => !prevIds.has(i.id));
       return [...kept, ...added];
     });
+
+    // Clean up checked IDs for ingredients that no longer exist
+    setCheckedIds((prev) => {
+      const rawIds = new Set(rawIngredients.map((i) => i.id));
+      const next = new Set([...prev].filter((id) => rawIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
   }, [rawIngredients]);
 
   const sensors = useSensors(
