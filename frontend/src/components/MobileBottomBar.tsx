@@ -2,8 +2,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { BookOpen, Plus, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useScrollDirection } from '@/hooks/use-scroll-direction';
 
 export default function MobileBottomBar() {
+  const { hidden } = useScrollDirection();
   const location = useLocation();
   const navigate = useNavigate();
   const { count } = useCart();
@@ -16,7 +18,7 @@ export default function MobileBottomBar() {
   const isCart = location.pathname === '/cart';
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-30 md:hidden bg-background border-t border-border">
+    <nav className={`fixed bottom-0 inset-x-0 z-30 md:hidden bg-background border-t border-border transition-transform duration-300 ${hidden ? 'translate-y-full' : 'translate-y-0'}`}>
       <div className="flex items-center justify-around h-16 px-2 pb-[env(safe-area-inset-bottom)]">
         {/* Recipes */}
         <button

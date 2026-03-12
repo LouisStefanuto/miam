@@ -1,6 +1,7 @@
 import { KeyboardEvent, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import UserMenu from '@/components/UserMenu';
+import { useScrollDirection } from '@/hooks/use-scroll-direction';
 
 interface MobileHeaderProps {
   searchQuery: string;
@@ -10,6 +11,7 @@ interface MobileHeaderProps {
 }
 
 export default function MobileHeader({ searchQuery, onSearchQueryChange, searchTags, onSearchTagsChange }: MobileHeaderProps) {
+  const { headerOffset } = useScrollDirection();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const addTag = () => {
@@ -31,7 +33,10 @@ export default function MobileHeader({ searchQuery, onSearchQueryChange, searchT
   };
 
   return (
-    <header className="sticky top-0 z-20 flex items-center gap-3 px-3 h-14 bg-background border-b border-border md:hidden">
+    <header
+      className="sticky top-0 z-20 flex items-center gap-3 px-3 h-14 bg-background border-b border-border md:hidden will-change-transform"
+      style={{ transform: `translateY(${headerOffset}px)` }}
+    >
       <img src="/icon.png" alt="Miam" className="w-8 h-8 shrink-0" />
 
       <div
