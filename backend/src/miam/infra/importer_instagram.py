@@ -2,10 +2,7 @@
 
 import re
 
-import requests
-
 from miam.domain.entities import Category, SourceType
-from miam.domain.exceptions import ImageDownloadError
 from miam.domain.ports_secondary import InstagramParserPort
 from miam.domain.schemas import (
     InstagramMedia,
@@ -17,23 +14,13 @@ from miam.domain.schemas import (
 
 
 def _clean_emojis_from_text(text: str) -> str:
-    """Remove hashtags and emojis from text."""
+    """Remove hashtags and emojis/symbols from text.
+
+    Uses an allowlist approach: keeps letters, digits, common punctuation,
+    and whitespace. Everything else (emojis, dingbats, symbols) is stripped.
+    """
     text = re.sub(r"#\w+", "", text)
-    emoji_pattern = re.compile(
-        "["
-        "\U0001f600-\U0001f64f"
-        "\U0001f300-\U0001f5ff"
-        "\U0001f680-\U0001f6ff"
-        "\U0001f1e0-\U0001f1ff"
-        "\U00002700-\U000027bf"
-        "\U0001f900-\U0001f9ff"
-        "\U0001fa70-\U0001faff"
-        "\U00002600-\U000026ff"
-        "\U00002300-\U000023ff"
-        "]+",
-        flags=re.UNICODE,
-    )
-    return emoji_pattern.sub("", text)
+    return re.sub(r"[^\w\s.,;:!?'\"()\-–—/&@°€$£%+*=\n]", "", text)
 
 
 def _extract_title(caption_text: str) -> str:
@@ -42,16 +29,16 @@ def _extract_title(caption_text: str) -> str:
     if lines:
         return lines[0].strip()[:50]
     words = caption_text.split()
-    if words:
-        return words[0][:4]
+    if words and re.search(r"\w", words[0]):
+        return words[0][:50]
     return "Instagram Recipe"
 
 
 class InstagramParser(InstagramParserPort):
-    """Infra adapter that parses Instagram JSON and downloads images."""
+    """Infra adapter that parses Instagram JSON into RecipeCreate schemas."""
 
     def parse(self, data: InstagramResponse) -> list[ParsedRecipe]:
-        """Parse validated Instagram data, download images, return ParsedRecipe list."""
+        """Parse validated Instagram data, return ParsedRecipe list with image URLs."""
         results: list[ParsedRecipe] = []
 
         for item in data.items:
@@ -75,8 +62,7 @@ class InstagramParser(InstagramParserPort):
             )
 
             image_url = self._get_best_image_url(media)
-            image_bytes = self._download_image(image_url) if image_url else None
-            results.append(ParsedRecipe(recipe=recipe, image=image_bytes))
+            results.append(ParsedRecipe(recipe=recipe, image_url=image_url))
 
         return results
 
@@ -89,17 +75,3 @@ class InstagramParser(InstagramParserPort):
         if not candidates:
             return None
         return candidates[0].url
-
-    @staticmethod
-    def _download_image(url: str) -> bytes:
-        """Download image bytes from an Instagram CDN URL."""
-        headers = {
-            "User-Agent": "Mozilla/5.0",
-            "Referer": "https://www.instagram.com/",
-        }
-        try:
-            resp = requests.get(url, headers=headers, timeout=30)
-            resp.raise_for_status()
-        except requests.RequestException as exc:
-            raise ImageDownloadError(f"Failed to download image from {url}") from exc
-        return resp.content

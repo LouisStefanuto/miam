@@ -107,10 +107,10 @@ class BatchRecipeCreate(BaseModel):
 
 @dataclass
 class ParsedRecipe:
-    """A recipe parsed from an external source, with optional image data."""
+    """A recipe parsed from an external source, with optional image URL."""
 
     recipe: RecipeCreate
-    image: bytes | None = None
+    image_url: str | None = None
 
 
 class ImageResponse(BaseModel):
@@ -129,6 +129,14 @@ class InstagramImageCandidate(_InstagramBase):
     url: str
     width: int
     height: int
+
+    @field_validator("url")
+    @classmethod
+    def validate_https_url(cls, v: str) -> str:
+        """Only allow HTTPS URLs to prevent javascript:, file://, data: etc."""
+        if not v.startswith("https://"):
+            raise ValueError("Image URL must use HTTPS scheme")
+        return v
 
 
 class InstagramImageVersions(_InstagramBase):

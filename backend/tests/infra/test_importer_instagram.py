@@ -1,14 +1,11 @@
 """Tests for Instagram parser adapter."""
 
 from typing import Any
-from unittest.mock import patch
 
 import pytest
-import requests
 from pydantic import ValidationError
 
 from miam.domain.entities import Category, SourceType
-from miam.domain.exceptions import ImageDownloadError
 from miam.domain.schemas import (
     InstagramCaption,
     InstagramImageCandidate,
@@ -17,7 +14,6 @@ from miam.domain.schemas import (
     InstagramMedia,
     InstagramOwner,
     InstagramResponse,
-    ParsedRecipe,
 )
 from miam.infra.importer_instagram import (
     InstagramParser,
@@ -58,8 +54,20 @@ class TestCleanEmojisFromText:
     def test_removes_emojis(self) -> None:
         assert _clean_emojis_from_text("hello 🍕 world") == "hello  world"
 
+    def test_removes_flag_emojis(self) -> None:
+        assert _clean_emojis_from_text("hello 🇫🇷 world") == "hello  world"
+
+    def test_removes_skin_tone_emojis(self) -> None:
+        assert _clean_emojis_from_text("hello 👩🏽‍🍳 world") == "hello  world"
+
     def test_plain_text_unchanged(self) -> None:
         assert _clean_emojis_from_text("plain text") == "plain text"
+
+    def test_preserves_accented_characters(self) -> None:
+        assert _clean_emojis_from_text("crème brûlée") == "crème brûlée"
+
+    def test_preserves_common_punctuation(self) -> None:
+        assert _clean_emojis_from_text("100g, 2/3 (environ)") == "100g, 2/3 (environ)"
 
 
 class TestExtractTitle:
@@ -72,12 +80,43 @@ class TestExtractTitle:
     def test_splits_on_exclamation(self) -> None:
         assert _extract_title("Wow! Great recipe") == "Wow"
 
-    def test_falls_back_to_first_word_when_no_lines(self) -> None:
-        # All split results are empty/whitespace → fallback to first word[:4]
-        assert _extract_title("!.\n") == "!."
+    def test_falls_back_to_first_word(self) -> None:
+        # All split results are empty/whitespace → fallback to first word[:50]
+        assert _extract_title("! !! hello") == "hello"
+
+    def test_falls_back_to_default_when_only_punctuation(self) -> None:
+        assert _extract_title("!.\n") == "Instagram Recipe"
 
     def test_falls_back_to_default_when_empty(self) -> None:
         assert _extract_title("") == "Instagram Recipe"
+
+
+class TestInstagramImageCandidateUrl:
+    def test_accepts_https_url(self) -> None:
+        candidate = InstagramImageCandidate(
+            url="https://cdn.instagram.com/img.jpg", width=100, height=100
+        )
+        assert candidate.url == "https://cdn.instagram.com/img.jpg"
+
+    def test_rejects_http_url(self) -> None:
+        with pytest.raises(ValidationError, match="HTTPS"):
+            InstagramImageCandidate(
+                url="http://cdn.instagram.com/img.jpg", width=100, height=100
+            )
+
+    def test_rejects_javascript_url(self) -> None:
+        with pytest.raises(ValidationError, match="HTTPS"):
+            InstagramImageCandidate(url="javascript:alert(1)", width=100, height=100)
+
+    def test_rejects_data_url(self) -> None:
+        with pytest.raises(ValidationError, match="HTTPS"):
+            InstagramImageCandidate(
+                url="data:image/png;base64,abc", width=100, height=100
+            )
+
+    def test_rejects_file_url(self) -> None:
+        with pytest.raises(ValidationError, match="HTTPS"):
+            InstagramImageCandidate(url="file:///etc/passwd", width=100, height=100)
 
 
 class TestInstagramResponseValidation:
@@ -145,19 +184,12 @@ class TestInstagramResponseValidation:
 
 
 class TestInstagramParser:
-    def _parse_with_mocked_download(
-        self, data: InstagramResponse, image_bytes: bytes = b"fake-image"
-    ) -> list[ParsedRecipe]:
-        parser = InstagramParser()
-        with patch.object(parser, "_download_image", return_value=image_bytes):
-            return parser.parse(data)
-
     def test_parses_single_item(self) -> None:
         data = _make_instagram_response(
             _make_instagram_item(caption="Pasta recipe\nBoil water", username="chef")
         )
-
-        result = self._parse_with_mocked_download(data)
+        parser = InstagramParser()
+        result = parser.parse(data)
 
         assert len(result) == 1
         parsed = result[0]
@@ -168,31 +200,32 @@ class TestInstagramParser:
         assert len(parsed.recipe.sources) == 1
         assert parsed.recipe.sources[0].type == SourceType.instagram
         assert parsed.recipe.sources[0].raw_content == "chef"
-        assert parsed.image == b"fake-image"
+        assert parsed.image_url == "https://cdn.instagram.com/image.jpg"
 
     def test_parses_multiple_items(self) -> None:
         data = _make_instagram_response(
             _make_instagram_item(caption="Recipe A"),
             _make_instagram_item(caption="Recipe B"),
         )
-
-        result = self._parse_with_mocked_download(data)
+        parser = InstagramParser()
+        result = parser.parse(data)
 
         assert len(result) == 2
 
-    def test_no_image_returns_none_bytes(self) -> None:
+    def test_no_image_returns_none_url(self) -> None:
         data = _make_instagram_response(_make_instagram_item(image_url=None))
 
         parser = InstagramParser()
         result = parser.parse(data)
 
-        assert result[0].image is None
+        assert result[0].image_url is None
 
     def test_title_truncated_to_50_chars(self) -> None:
         long_title = "A" * 100
         data = _make_instagram_response(_make_instagram_item(caption=long_title))
 
-        result = self._parse_with_mocked_download(data)
+        parser = InstagramParser()
+        result = parser.parse(data)
 
         assert len(result[0].recipe.title) == 50
 
@@ -201,7 +234,8 @@ class TestInstagramParser:
             _make_instagram_item(caption="A vegetarian dish")
         )
 
-        result = self._parse_with_mocked_download(data)
+        parser = InstagramParser()
+        result = parser.parse(data)
 
         assert result[0].recipe.is_veggie is True
 
@@ -219,46 +253,22 @@ class TestInstagramParser:
         data = _make_instagram_response(item)
         parser = InstagramParser()
         result = parser.parse(data)
-        assert result[0].image is None
+        assert result[0].image_url is None
 
     def test_non_vegetarian_default(self) -> None:
         data = _make_instagram_response(_make_instagram_item(caption="A meat dish"))
 
-        result = self._parse_with_mocked_download(data)
+        parser = InstagramParser()
+        result = parser.parse(data)
 
         assert result[0].recipe.is_veggie is False
 
-
-class TestInstagramParserDownloadImage:
-    def test_download_image_success(self) -> None:
-        with patch("miam.infra.importer_instagram.requests.get") as mock_get:
-            mock_get.return_value.content = b"image-data"
-            mock_get.return_value.raise_for_status = lambda: None
-
-            result = InstagramParser._download_image("https://example.com/img.jpg")
-
-        assert result == b"image-data"
-        mock_get.assert_called_once_with(
-            "https://example.com/img.jpg",
-            headers={
-                "User-Agent": "Mozilla/5.0",
-                "Referer": "https://www.instagram.com/",
-            },
-            timeout=30,
+    def test_returns_best_image_url(self) -> None:
+        data = _make_instagram_response(
+            _make_instagram_item(image_url="https://cdn.instagram.com/best.jpg")
         )
 
-    def test_download_image_raises_domain_error_on_connection_error(self) -> None:
-        with patch("miam.infra.importer_instagram.requests.get") as mock_get:
-            mock_get.side_effect = requests.ConnectionError("timeout")
+        parser = InstagramParser()
+        result = parser.parse(data)
 
-            with pytest.raises(ImageDownloadError, match="Failed to download image"):
-                InstagramParser._download_image("https://example.com/img.jpg")
-
-    def test_download_image_raises_domain_error_on_http_error(self) -> None:
-        with patch("miam.infra.importer_instagram.requests.get") as mock_get:
-            mock_get.return_value.raise_for_status.side_effect = requests.HTTPError(
-                "404"
-            )
-
-            with pytest.raises(ImageDownloadError, match="Failed to download image"):
-                InstagramParser._download_image("https://example.com/img.jpg")
+        assert result[0].image_url == "https://cdn.instagram.com/best.jpg"

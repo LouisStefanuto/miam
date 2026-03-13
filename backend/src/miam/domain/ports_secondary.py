@@ -137,7 +137,7 @@ class InstagramParserPort(ABC):
 
     @abstractmethod
     def parse(self, data: InstagramResponse) -> list[ParsedRecipe]:
-        """Parse validated Instagram data into recipes with downloaded images."""
+        """Parse validated Instagram data into recipes with image URLs."""
 
 
 class UserRepositoryPort(ABC):

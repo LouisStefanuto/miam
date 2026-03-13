@@ -76,7 +76,7 @@ class RecipeImportServicePort(ABC):
 
     @abstractmethod
     def parse_instagram(self, data: InstagramResponse) -> list[ParsedRecipe]:
-        """Parse Instagram data and return (RecipeCreate, image_bytes) tuples."""
+        """Parse Instagram data and return parsed recipes with image URLs."""
 
 
 class AuthServicePort(ABC):

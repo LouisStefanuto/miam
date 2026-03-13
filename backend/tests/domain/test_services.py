@@ -554,7 +554,9 @@ class TestRecipeImportService:
         from miam.domain.entities import Category
 
         recipe = RecipeCreate(title="Pasta", category=Category.plat)
-        stub_parser = StubInstagramParser([ParsedRecipe(recipe=recipe, image=b"img")])
+        stub_parser = StubInstagramParser(
+            [ParsedRecipe(recipe=recipe, image_url="https://cdn.instagram.com/img.jpg")]
+        )
         service = RecipeImportService(instagram_parser=stub_parser)
 
         payload = InstagramResponse(items=[])
@@ -562,7 +564,7 @@ class TestRecipeImportService:
 
         assert len(result) == 1
         assert result[0].recipe.title == "Pasta"
-        assert result[0].image == b"img"
+        assert result[0].image_url == "https://cdn.instagram.com/img.jpg"
         assert len(stub_parser.parse_calls) == 1
 
     def test_parse_instagram_passes_data_through(self) -> None:
