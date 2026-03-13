@@ -11,18 +11,26 @@ from miam.domain.entities import (
 from miam.domain.ports_primary import (
     AuthServicePort,
     RecipeExportServicePort,
+    RecipeImportServicePort,
     RecipeServicePort,
 )
 from miam.domain.ports_secondary import (
     GoogleTokenVerifierPort,
     ImageStoragePort,
+    InstagramParserPort,
     JwtTokenPort,
     MarkdownExporterPort,
     RecipeRepositoryPort,
     UserRepositoryPort,
     WordExporterPort,
 )
-from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
+from miam.domain.schemas import (
+    ImageResponse,
+    InstagramResponse,
+    ParsedRecipe,
+    RecipeCreate,
+    RecipeUpdate,
+)
 
 
 class RecipeManagementService(RecipeServicePort):
@@ -116,6 +124,17 @@ class RecipeManagementService(RecipeServicePort):
         if deleted:
             self.image_storage.delete_image(image_id)
         return deleted
+
+
+class RecipeImportService(RecipeImportServicePort):
+    """Service for importing recipes from external sources."""
+
+    def __init__(self, instagram_parser: InstagramParserPort) -> None:
+        self.instagram_parser = instagram_parser
+
+    def parse_instagram(self, data: InstagramResponse) -> list[ParsedRecipe]:
+        """Parse Instagram data using the injected parser adapter."""
+        return self.instagram_parser.parse(data)
 
 
 class AuthService(AuthServicePort):

@@ -9,12 +9,23 @@ from miam.domain.entities import (
 )
 from miam.domain.ports_secondary import (
     ImageStoragePort,
+    InstagramParserPort,
     MarkdownExporterPort,
     RecipeRepositoryPort,
     WordExporterPort,
 )
-from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
-from miam.domain.services import RecipeExportService, RecipeManagementService
+from miam.domain.schemas import (
+    ImageResponse,
+    InstagramResponse,
+    ParsedRecipe,
+    RecipeCreate,
+    RecipeUpdate,
+)
+from miam.domain.services import (
+    RecipeExportService,
+    RecipeImportService,
+    RecipeManagementService,
+)
 
 # ---------------------------------------------------------------------------
 # Stub implementations of secondary ports
@@ -514,3 +525,51 @@ class TestRecipeExportService:
         result = self.service.export_recipes_to_markdown(_TEST_USER)
         assert result == b"zip-content"
         assert self.md_exporter.last_recipes == []
+
+
+# ---------------------------------------------------------------------------
+# Stub for InstagramParserPort
+# ---------------------------------------------------------------------------
+
+
+class StubInstagramParser(InstagramParserPort):
+    """Stub parser that returns pre-configured results."""
+
+    def __init__(self, results: list[ParsedRecipe]) -> None:
+        self.results = results
+        self.parse_calls: list[InstagramResponse] = []
+
+    def parse(self, data: InstagramResponse) -> list[ParsedRecipe]:
+        self.parse_calls.append(data)
+        return self.results
+
+
+# ---------------------------------------------------------------------------
+# Tests for RecipeImportService
+# ---------------------------------------------------------------------------
+
+
+class TestRecipeImportService:
+    def test_parse_instagram_delegates_to_parser(self) -> None:
+        from miam.domain.entities import Category
+
+        recipe = RecipeCreate(title="Pasta", category=Category.plat)
+        stub_parser = StubInstagramParser([ParsedRecipe(recipe=recipe, image=b"img")])
+        service = RecipeImportService(instagram_parser=stub_parser)
+
+        payload = InstagramResponse(items=[])
+        result = service.parse_instagram(payload)
+
+        assert len(result) == 1
+        assert result[0].recipe.title == "Pasta"
+        assert result[0].image == b"img"
+        assert len(stub_parser.parse_calls) == 1
+
+    def test_parse_instagram_passes_data_through(self) -> None:
+        stub_parser = StubInstagramParser([])
+        service = RecipeImportService(instagram_parser=stub_parser)
+
+        payload = InstagramResponse.model_validate({"items": [{"media": {}}]})
+        service.parse_instagram(payload)
+
+        assert stub_parser.parse_calls[0] == payload

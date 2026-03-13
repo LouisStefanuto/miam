@@ -1,8 +1,9 @@
 """I/O models to interact with entities."""
 
+from dataclasses import dataclass
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from miam.domain.entities import Category, Season, SourceType
 
@@ -104,9 +105,59 @@ class BatchRecipeCreate(BaseModel):
     recipes: list[RecipeCreate]
 
 
+@dataclass
+class ParsedRecipe:
+    """A recipe parsed from an external source, with optional image data."""
+
+    recipe: RecipeCreate
+    image: bytes | None = None
+
+
 class ImageResponse(BaseModel):
     media_type: str
     content: bytes
+
+
+# --- Instagram input schemas (only fields we use, extra fields ignored) ---
+
+
+class _InstagramBase(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+
+class InstagramImageCandidate(_InstagramBase):
+    url: str
+    width: int
+    height: int
+
+
+class InstagramImageVersions(_InstagramBase):
+    candidates: list[InstagramImageCandidate] = []
+
+
+class InstagramOwner(_InstagramBase):
+    username: str = "unknown"
+
+
+class InstagramCaption(_InstagramBase):
+    text: str = ""
+
+
+class InstagramMedia(_InstagramBase):
+    owner: InstagramOwner = InstagramOwner()
+    caption: InstagramCaption = InstagramCaption()
+    image_versions2: InstagramImageVersions | None = None
+
+
+class InstagramItem(_InstagramBase):
+    media: InstagramMedia
+
+
+class InstagramResponse(_InstagramBase):
+    items: list[InstagramItem] = []
+
+
+# --- Auth schemas ---
 
 
 class GoogleLoginRequest(BaseModel):

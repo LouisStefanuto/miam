@@ -4,7 +4,13 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 from miam.domain.entities import PaginatedResult, RecipeEntity
-from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
+from miam.domain.schemas import (
+    ImageResponse,
+    InstagramResponse,
+    ParsedRecipe,
+    RecipeCreate,
+    RecipeUpdate,
+)
 
 
 class RecipeServicePort(ABC):
@@ -63,6 +69,14 @@ class RecipeServicePort(ABC):
     @abstractmethod
     def delete_recipe_image(self, image_id: UUID, user_id: UUID) -> bool:
         """Delete an image from storage and database. Returns True if deleted, False if not found/owned."""
+
+
+class RecipeImportServicePort(ABC):
+    """Primary port for importing recipes from external sources."""
+
+    @abstractmethod
+    def parse_instagram(self, data: InstagramResponse) -> list[ParsedRecipe]:
+        """Parse Instagram data and return (RecipeCreate, image_bytes) tuples."""
 
 
 class AuthServicePort(ABC):

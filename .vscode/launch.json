@@ -1,0 +1,16 @@
+{
+    "configurations": [
+        {
+            "args": [
+                "backend.src.miam.api.main:app",
+                "--reload"
+            ],
+            "jinja": true,
+            "module": "uvicorn",
+            "name": "Python Debugger: FastAPI",
+            "request": "launch",
+            "type": "debugpy"
+        }
+    ],
+    "version": "0.2.0"
+}
