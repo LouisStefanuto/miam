@@ -234,29 +234,29 @@ export default function MobileSearchOverlay({
 
           {/* Toggle filters — cards */}
           <Section title="Préférences">
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-4 gap-2">
               <ToggleCard
                 active={filters.tested === 'on'}
                 onClick={() => toggle('tested')}
-                icon={<Check size={18} />}
+                icon={<Check size={20} />}
                 label="Testé"
                 activeColor="bg-primary/12 border-primary/35 text-primary"
               />
               <ToggleCard
                 active={filters.vegetarian === 'on'}
                 onClick={() => toggle('vegetarian')}
-                icon={<Leaf size={18} />}
+                icon={<Leaf size={20} />}
                 label="Végé"
                 activeColor="bg-success/12 border-success/35 text-success"
               />
               <ToggleCard
                 active={filters.rapido === 'on'}
                 onClick={() => toggle('rapido')}
-                icon={<Zap size={18} />}
+                icon={<Zap size={20} />}
                 label="Rapido"
-                subtitle="≤ 20 min"
                 activeColor="bg-primary/12 border-primary/35 text-primary"
               />
+              <div />
             </div>
           </Section>
 
@@ -320,7 +320,7 @@ function IconGrid({ options, value, onChange }: {
             key={opt.value}
             onClick={() => onChange(opt.value)}
             style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`flex flex-col items-center gap-1.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
+            className={`flex flex-col items-center justify-center gap-1 py-3.5 rounded-xl border transition-all duration-150 active:scale-95 ${
               active
                 ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
                 : 'bg-card border-border text-muted-foreground active:bg-secondary'
@@ -410,7 +410,7 @@ function ToggleCard({ active, onClick, icon, label, subtitle, activeColor }: {
       }`}
     >
       {icon}
-      <span className="text-xs font-body font-semibold">{label}</span>
+      <span className="text-[11px] font-body font-semibold">{label}</span>
       {subtitle && <span className="text-[10px] font-body opacity-60 -mt-0.5">{subtitle}</span>}
     </button>
   );
