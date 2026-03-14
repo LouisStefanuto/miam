@@ -1,5 +1,5 @@
 import { KeyboardEvent, useRef, useEffect, useState } from 'react';
-import { ArrowLeft, Search, X, Check, Leaf, Zap, ArrowUpDown, UtensilsCrossed, Sun, Gauge } from 'lucide-react';
+import { ArrowLeft, Search, X, Check, Leaf, Zap, ArrowUpDown, UtensilsCrossed, Sun, Gauge, RotateCcw } from 'lucide-react';
 import { Filters, defaultFilters } from '@/components/FilterBar';
 
 interface MobileSearchOverlayProps {
@@ -152,6 +152,7 @@ export default function MobileSearchOverlay({
           <ArrowLeft size={22} />
         </button>
         <div className="flex-1 flex items-center gap-2 flex-wrap min-h-12 px-3 bg-secondary/50 rounded-xl">
+
           <Search className="text-muted-foreground shrink-0" size={18} />
           {searchTags.map((tag) => (
             <span
@@ -273,15 +274,12 @@ export default function MobileSearchOverlay({
 
       {/* Bottom bar */}
       <div className="border-t border-border px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-3 bg-background">
-        {hasActiveFilters && (
-          <button
-            onClick={resetAll}
-            className="flex items-center gap-1 text-sm text-muted-foreground font-body font-medium active:text-foreground"
-          >
-            <X size={15} />
-            Effacer
-          </button>
-        )}
+        <button
+          onClick={resetAll}
+          className="shrink-0 w-11 h-11 flex items-center justify-center rounded-xl border border-border text-muted-foreground active:bg-secondary"
+        >
+          <RotateCcw size={18} />
+        </button>
         <button
           onClick={() => { setVisible(false); setTimeout(onClose, 300); }}
           className="flex-1 gradient-warm text-primary-foreground font-body font-semibold py-3 rounded-xl text-[15px] active:opacity-90 transition-opacity"
