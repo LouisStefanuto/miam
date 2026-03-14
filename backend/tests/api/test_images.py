@@ -1,10 +1,12 @@
 """Tests for image API routes."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
+import httpx
 from fastapi.testclient import TestClient
 
+from miam.api.routes.images import _is_allowed_image_url
 from miam.domain.schemas import ImageResponse
 
 
@@ -96,3 +98,156 @@ class TestDeleteImage:
         response = client.delete(f"/api/images/{uuid4()}")
 
         assert response.status_code == 404
+
+
+class TestIsAllowedImageUrl:
+    def test_allows_cdninstagram(self) -> None:
+        assert (
+            _is_allowed_image_url("https://scontent.cdninstagram.com/img.jpg") is True
+        )
+
+    def test_allows_fbcdn(self) -> None:
+        assert (
+            _is_allowed_image_url("https://scontent-cdg4-2.xx.fbcdn.net/img.jpg")
+            is True
+        )
+
+    def test_allows_instagram(self) -> None:
+        assert _is_allowed_image_url("https://www.instagram.com/img.jpg") is True
+
+    def test_rejects_http(self) -> None:
+        assert (
+            _is_allowed_image_url("http://scontent.cdninstagram.com/img.jpg") is False
+        )
+
+    def test_rejects_other_host(self) -> None:
+        assert _is_allowed_image_url("https://evil.com/img.jpg") is False
+
+    def test_rejects_no_scheme(self) -> None:
+        assert _is_allowed_image_url("//cdninstagram.com/img.jpg") is False
+
+
+class TestUploadImageFromUrl:
+    @staticmethod
+    def _mock_httpx_response(
+        *,
+        content: bytes = b"fake-image",
+        content_type: str = "image/jpeg",
+        status_code: int = 200,
+    ) -> httpx.Response:
+        return httpx.Response(
+            status_code=status_code,
+            headers={"content-type": content_type},
+            content=content,
+            request=httpx.Request("GET", "https://scontent.cdninstagram.com/img.jpg"),
+        )
+
+    def test_returns_201_on_success(
+        self, client: TestClient, mock_recipe_service: MagicMock
+    ) -> None:
+        image_id = uuid4()
+        recipe_id = uuid4()
+        mock_recipe_service.add_recipe_image.return_value = image_id
+
+        with patch("miam.api.routes.images.httpx.AsyncClient") as mock_httpx:
+            mock_httpx.return_value.__aenter__.return_value.get.return_value = (
+                self._mock_httpx_response()
+            )
+            response = client.post(
+                "/api/images/from-url",
+                json={
+                    "recipe_id": str(recipe_id),
+                    "url": "https://scontent.cdninstagram.com/img.jpg",
+                },
+            )
+
+        assert response.status_code == 201
+        data = response.json()
+        assert data["image_id"] == str(image_id)
+        assert data["title"] == "instagram.jpeg"
+
+    def test_returns_400_for_disallowed_url(
+        self, client: TestClient, mock_recipe_service: MagicMock
+    ) -> None:
+        response = client.post(
+            "/api/images/from-url",
+            json={"recipe_id": str(uuid4()), "url": "https://evil.com/img.jpg"},
+        )
+
+        assert response.status_code == 400
+        assert "Instagram CDN" in response.json()["detail"]
+
+    def test_returns_400_on_download_failure(
+        self, client: TestClient, mock_recipe_service: MagicMock
+    ) -> None:
+        with patch("miam.api.routes.images.httpx.AsyncClient") as mock_httpx:
+            mock_httpx.return_value.__aenter__.return_value.get.side_effect = (
+                httpx.HTTPError("connection failed")
+            )
+            response = client.post(
+                "/api/images/from-url",
+                json={
+                    "recipe_id": str(uuid4()),
+                    "url": "https://scontent.cdninstagram.com/img.jpg",
+                },
+            )
+
+        assert response.status_code == 400
+        assert "Failed to download" in response.json()["detail"]
+
+    def test_returns_400_for_non_image_content_type(
+        self, client: TestClient, mock_recipe_service: MagicMock
+    ) -> None:
+        with patch("miam.api.routes.images.httpx.AsyncClient") as mock_httpx:
+            mock_httpx.return_value.__aenter__.return_value.get.return_value = (
+                self._mock_httpx_response(content_type="text/html")
+            )
+            response = client.post(
+                "/api/images/from-url",
+                json={
+                    "recipe_id": str(uuid4()),
+                    "url": "https://scontent.cdninstagram.com/page",
+                },
+            )
+
+        assert response.status_code == 400
+        assert "did not return an image" in response.json()["detail"]
+
+    def test_returns_413_when_too_large(
+        self, client: TestClient, mock_recipe_service: MagicMock
+    ) -> None:
+        large_content = b"x" * (5 * 1024 * 1024 + 1)
+
+        with patch("miam.api.routes.images.httpx.AsyncClient") as mock_httpx:
+            mock_httpx.return_value.__aenter__.return_value.get.return_value = (
+                self._mock_httpx_response(content=large_content)
+            )
+            response = client.post(
+                "/api/images/from-url",
+                json={
+                    "recipe_id": str(uuid4()),
+                    "url": "https://scontent.cdninstagram.com/big.jpg",
+                },
+            )
+
+        assert response.status_code == 413
+
+    def test_returns_400_on_service_error(
+        self, client: TestClient, mock_recipe_service: MagicMock
+    ) -> None:
+        mock_recipe_service.add_recipe_image.side_effect = ValueError("not your recipe")
+
+        with patch("miam.api.routes.images.httpx.AsyncClient") as mock_httpx:
+            mock_httpx.return_value.__aenter__.return_value.get.return_value = (
+                self._mock_httpx_response()
+            )
+            response = client.post(
+                "/api/images/from-url",
+                json={
+                    "recipe_id": str(uuid4()),
+                    "url": "https://scontent.cdninstagram.com/img.jpg",
+                },
+            )
+
+        assert response.status_code == 400
+        assert "not your recipe" in response.json()["detail"]
