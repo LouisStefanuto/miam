@@ -1,8 +1,9 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, Plus, ShoppingCart } from 'lucide-react';
+import { BookOpen, Plus, ShoppingCart, UserRound } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
+import UserMenu from '@/components/UserMenu';
 
 export default function MobileBottomBar() {
   const { hidden } = useScrollDirection();
@@ -59,6 +60,16 @@ export default function MobileBottomBar() {
           </span>
           <span className="text-[11px] font-body font-medium">Panier</span>
         </button>
+
+        {/* Account */}
+        <UserMenu
+          trigger={
+            <button className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-muted-foreground transition-colors">
+              <UserRound size={22} strokeWidth={2} />
+              <span className="text-[11px] font-body font-medium">Compte</span>
+            </button>
+          }
+        />
       </div>
     </nav>
   );
