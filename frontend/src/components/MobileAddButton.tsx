@@ -19,7 +19,7 @@ export default function MobileAddButton() {
     { icon: <PenLine size={18} />, label: 'Manuel', onClick: () => navigate('/recipes/new') },
     { icon: <Camera size={18} />, label: 'Photos', onClick: () => navigate('/import/ocr') },
     { icon: <FileJson size={18} />, label: 'JSON', onClick: () => navigate('/import/json') },
-    { icon: <Instagram size={18} />, label: 'Instagram', disabled: true },
+    { icon: <Instagram size={18} />, label: 'Instagram', onClick: () => navigate('/import/instagram') },
   ];
 
   return (
