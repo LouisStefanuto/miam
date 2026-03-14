@@ -63,10 +63,6 @@ class RecipeServicePort(ABC):
         """Retrieve image bytes for a given image ID, scoped to the given user."""
 
     @abstractmethod
-    def get_recipe_image_public(self, image_id: UUID) -> ImageResponse | None:
-        """Retrieve image bytes by ID without ownership check (IDs are unguessable UUIDs)."""
-
-    @abstractmethod
     def delete_recipe_image(self, image_id: UUID, user_id: UUID) -> bool:
         """Delete an image from storage and database. Returns True if deleted, False if not found/owned."""
 
