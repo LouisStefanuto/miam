@@ -182,7 +182,7 @@ export default function MobileSearchOverlay({
       <div className="flex-1 overflow-y-auto overscroll-contain">
         <div className="px-4 pt-5 pb-6 space-y-6">
 
-          {/* Quick tags */}
+          {/* Quick tags — outline ghost pills */}
           {topTags.length > 0 && (
             <Section title="Tags populaires">
               <div className="flex flex-wrap gap-2">
@@ -193,8 +193,8 @@ export default function MobileSearchOverlay({
                     style={{ WebkitTapHighlightColor: 'transparent' }}
                     className={`text-[13px] px-3.5 py-2 rounded-full border font-body font-medium capitalize transition-all duration-150 active:scale-95 ${
                       searchTags.includes(tag)
-                        ? 'bg-primary/15 border-primary/40 text-primary shadow-sm'
-                        : 'bg-card border-border text-secondary-foreground active:bg-secondary'
+                        ? 'bg-primary/15 border-primary/40 text-primary'
+                        : 'bg-transparent border-border text-muted-foreground active:border-foreground/30 active:text-foreground'
                     }`}
                   >
                     {tag}
@@ -204,34 +204,34 @@ export default function MobileSearchOverlay({
             </Section>
           )}
 
-          {/* Type */}
+          {/* Type — segmented control */}
           <Section title="Type" icon={<UtensilsCrossed size={14} />}>
-            <PillRow
+            <SegmentedControl
               options={types}
               value={filters.type}
               onChange={(v) => set('type', v)}
             />
           </Section>
 
-          {/* Season */}
+          {/* Season — segmented control */}
           <Section title="Saison" icon={<Sun size={14} />}>
-            <PillRow
+            <SegmentedControl
               options={seasons}
               value={filters.season}
               onChange={(v) => set('season', v)}
             />
           </Section>
 
-          {/* Difficulty */}
+          {/* Difficulty — segmented control */}
           <Section title="Difficulté" icon={<Gauge size={14} />}>
-            <PillRow
+            <SegmentedControl
               options={difficulties}
               value={filters.difficulty}
               onChange={(v) => set('difficulty', v)}
             />
           </Section>
 
-          {/* Toggle filters */}
+          {/* Toggle filters — cards */}
           <Section title="Préférences">
             <div className="grid grid-cols-3 gap-2.5">
               <ToggleCard
@@ -259,9 +259,9 @@ export default function MobileSearchOverlay({
             </div>
           </Section>
 
-          {/* Sort */}
+          {/* Sort — text row with underline */}
           <Section title="Trier par" icon={<ArrowUpDown size={14} />}>
-            <PillRow
+            <SortRow
               options={sorts}
               value={filters.sort}
               onChange={(v) => set('sort', v)}
@@ -307,13 +307,13 @@ function Section({ title, icon, children }: { title: string; icon?: React.ReactN
   );
 }
 
-function PillRow({ options, value, onChange }: {
+function SegmentedControl({ options, value, onChange }: {
   options: { value: string; label: string }[];
   value: string;
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex gap-1 bg-secondary/70 rounded-xl p-1">
       {options.map((opt) => {
         const active = opt.value === value;
         return (
@@ -321,10 +321,38 @@ function PillRow({ options, value, onChange }: {
             key={opt.value}
             onClick={() => onChange(opt.value)}
             style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`text-[13px] px-3.5 py-2 rounded-full border font-body font-medium transition-all duration-150 active:scale-95 ${
+            className={`flex-1 text-[13px] py-2 rounded-lg font-body font-medium transition-all duration-150 ${
               active
-                ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                : 'bg-card border-border text-foreground active:bg-secondary'
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground active:text-foreground'
+            }`}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function SortRow({ options, value, onChange }: {
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex gap-4">
+      {options.map((opt) => {
+        const active = opt.value === value;
+        return (
+          <button
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            className={`text-sm font-body pb-1 transition-all duration-150 ${
+              active
+                ? 'text-foreground font-semibold border-b-2 border-primary'
+                : 'text-muted-foreground active:text-foreground'
             }`}
           >
             {opt.label}
