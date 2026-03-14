@@ -1,36 +1,16 @@
-import { KeyboardEvent, useRef } from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, X, SlidersHorizontal } from 'lucide-react';
 import UserMenu from '@/components/UserMenu';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
 
 interface MobileHeaderProps {
-  searchQuery: string;
-  onSearchQueryChange: (query: string) => void;
   searchTags: string[];
   onSearchTagsChange: (tags: string[]) => void;
+  onSearchTap: () => void;
+  hasActiveFilters?: boolean;
 }
 
-export default function MobileHeader({ searchQuery, onSearchQueryChange, searchTags, onSearchTagsChange }: MobileHeaderProps) {
+export default function MobileHeader({ searchTags, onSearchTagsChange, onSearchTap, hasActiveFilters }: MobileHeaderProps) {
   const { headerOffset } = useScrollDirection();
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const addTag = () => {
-    const tag = searchQuery.trim().toLowerCase();
-    if (tag && !searchTags.includes(tag)) {
-      onSearchTagsChange([...searchTags, tag]);
-    }
-    onSearchQueryChange('');
-  };
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addTag();
-    }
-    if (e.key === 'Backspace' && !searchQuery && searchTags.length > 0) {
-      onSearchTagsChange(searchTags.slice(0, -1));
-    }
-  };
 
   return (
     <header
@@ -40,8 +20,8 @@ export default function MobileHeader({ searchQuery, onSearchQueryChange, searchT
       <img src="/icon.png" alt="Miam" className="w-8 h-8 shrink-0" />
 
       <div
-        className="flex-1 flex items-center gap-1.5 flex-wrap min-h-9 px-2.5 bg-secondary/60 border border-border rounded-lg cursor-text"
-        onClick={() => inputRef.current?.focus()}
+        className="flex-1 flex items-center gap-1.5 flex-wrap min-h-9 px-2.5 bg-secondary/60 border border-border rounded-lg active:bg-secondary/80 transition-colors"
+        onClick={onSearchTap}
       >
         <Search className="text-muted-foreground shrink-0" size={16} />
         {searchTags.map((tag) => (
@@ -61,14 +41,14 @@ export default function MobileHeader({ searchQuery, onSearchQueryChange, searchT
             </button>
           </span>
         ))}
-        <input
-          ref={inputRef}
-          value={searchQuery}
-          onChange={(e) => onSearchQueryChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={searchTags.length === 0 ? 'Rechercher…' : ''}
-          className="flex-1 min-w-[60px] h-8 bg-transparent font-body text-sm outline-none placeholder:text-muted-foreground"
-        />
+        {searchTags.length === 0 && (
+          <span className="flex-1 text-sm font-body text-muted-foreground">Rechercher…</span>
+        )}
+        {hasActiveFilters && (
+          <span className="ml-auto shrink-0 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+            <SlidersHorizontal size={11} className="text-primary-foreground" />
+          </span>
+        )}
       </div>
 
       <UserMenu />

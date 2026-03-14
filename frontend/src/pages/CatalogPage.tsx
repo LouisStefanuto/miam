@@ -7,6 +7,7 @@ const BeaverCatchGame = lazy(() => import('@/components/BeaverCatchGame'));
 import CartSheet from '@/components/CartSheet';
 import UserMenu from '@/components/UserMenu';
 import MobileHeader from '@/components/MobileHeader';
+import MobileSearchOverlay from '@/components/MobileSearchOverlay';
 import { useRecipes } from '@/hooks/use-recipes';
 import { useCatalogFilters } from '@/contexts/CatalogFilterContext';
 import HeroSection from '@/components/HeroSection';
@@ -31,6 +32,7 @@ const CatalogPage = () => {
   const navigate = useNavigate();
   const { data: recipes = [], isLoading } = useRecipes();
   const { searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage } = useCatalogFilters();
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [showBeaverGame, setShowBeaverGame] = useState(false);
   const openBeaverGame = useCallback(() => setShowBeaverGame(true), []);
   useShake(openBeaverGame);
@@ -156,10 +158,24 @@ const CatalogPage = () => {
     <div className="min-h-screen bg-background">
       {/* Mobile header */}
       <MobileHeader
+        searchTags={searchTags}
+        onSearchTagsChange={setSearchTags}
+        onSearchTap={() => setShowMobileSearch(true)}
+        hasActiveFilters={hasActiveFilters}
+      />
+
+      {/* Mobile search overlay */}
+      <MobileSearchOverlay
+        open={showMobileSearch}
+        onClose={() => setShowMobileSearch(false)}
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
         searchTags={searchTags}
         onSearchTagsChange={setSearchTags}
+        filters={filters}
+        onFiltersChange={setFilters}
+        topTags={topTags}
+        resultCount={filtered.length}
       />
 
       {/* Desktop hero + action buttons (hidden on mobile) */}
@@ -238,7 +254,9 @@ const CatalogPage = () => {
             </div>
           )}
 
-          <FilterBar filters={filters} onChange={setFilters} />
+          <div className="hidden md:block">
+            <FilterBar filters={filters} onChange={setFilters} />
+          </div>
         </div>
 
         {/* Results count */}
