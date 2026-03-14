@@ -123,7 +123,7 @@ export default function MobileHeader({
           className="ml-auto shrink-0 w-7 h-7 rounded-full flex items-center justify-center"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
-          <SlidersHorizontal size={14} className={hasActiveFilters ? 'text-primary' : 'text-muted-foreground'} />
+          <SlidersHorizontal size={14} className="text-muted-foreground" />
         </button>
       </div>
     </header>
