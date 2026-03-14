@@ -67,11 +67,6 @@ export default function MobileSearchOverlay({
     }
   }, [open]);
 
-  useEffect(() => {
-    if (open && visible) {
-      requestAnimationFrame(() => inputRef.current?.focus());
-    }
-  }, [open, visible]);
 
   // Lock body scroll when open
   useEffect(() => {

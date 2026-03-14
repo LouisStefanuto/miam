@@ -44,6 +44,7 @@ const CatalogPage = () => {
   const { data: recipes = [], isLoading } = useRecipes();
   const { searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage } = useCatalogFilters();
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [inlineSearch, setInlineSearch] = useState(false);
   const [showBeaverGame, setShowBeaverGame] = useState(false);
   const openBeaverGame = useCallback(() => setShowBeaverGame(true), []);
   useShake(openBeaverGame);
@@ -171,8 +172,12 @@ const CatalogPage = () => {
       <MobileHeader
         searchTags={searchTags}
         onSearchTagsChange={setSearchTags}
-        onSearchTap={() => setShowMobileSearch(true)}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        onFiltersTap={() => setShowMobileSearch(true)}
         hasActiveFilters={hasActiveFilters}
+        inlineSearch={inlineSearch}
+        onInlineSearchChange={setInlineSearch}
       />
 
       {/* Mobile search overlay */}
