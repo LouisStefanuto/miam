@@ -95,7 +95,7 @@ async def upload_image_from_url(
 
     max_size = 5 * 1024 * 1024
     try:
-        async with httpx.AsyncClient(timeout=15.0, follow_redirects=False) as client:
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
             resp = await client.get(body.url)
             resp.raise_for_status()
     except httpx.HTTPError as exc:
