@@ -1,5 +1,5 @@
 import { KeyboardEvent, useRef, useEffect, useState } from 'react';
-import { ArrowLeft, Search, X, Check, Leaf, Zap, ArrowUpDown, UtensilsCrossed, Sun, Gauge, RotateCcw, Grid2X2, Wine, Salad, Beef, CupSoda, Cake, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Search, X, Check, Leaf, Zap, UtensilsCrossed, Sun, Gauge, RotateCcw, Grid2X2, Wine, Salad, Beef, CupSoda, Cake, LucideIcon } from 'lucide-react';
 import { Filters, defaultFilters } from '@/components/FilterBar';
 
 interface MobileSearchOverlayProps {
@@ -38,13 +38,6 @@ const difficulties = [
   { value: 'facile', label: 'Facile' },
   { value: 'moyen', label: 'Moyen' },
   { value: 'difficile', label: 'Difficile' },
-];
-
-const sorts = [
-  { value: 'recent', label: 'Plus récent' },
-  { value: 'rating', label: 'Mieux noté' },
-  { value: 'alpha', label: 'A → Z' },
-  { value: 'time', label: 'Plus rapide' },
 ];
 
 export default function MobileSearchOverlay({
@@ -260,15 +253,6 @@ export default function MobileSearchOverlay({
             </div>
           </Section>
 
-          {/* Sort — text row with underline */}
-          <Section title="Trier par" icon={<ArrowUpDown size={14} />}>
-            <SortRow
-              options={sorts}
-              value={filters.sort}
-              onChange={(v) => set('sort', v)}
-            />
-          </Section>
-
         </div>
       </div>
 
@@ -352,34 +336,6 @@ function SegmentedControl({ options, value, onChange }: {
             className={`flex-1 text-[13px] py-2 rounded-lg font-body font-medium transition-all duration-150 ${
               active
                 ? 'bg-card text-foreground shadow-sm'
-                : 'text-muted-foreground active:text-foreground'
-            }`}
-          >
-            {opt.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function SortRow({ options, value, onChange }: {
-  options: { value: string; label: string }[];
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="flex gap-4">
-      {options.map((opt) => {
-        const active = opt.value === value;
-        return (
-          <button
-            key={opt.value}
-            onClick={() => onChange(opt.value)}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`text-sm font-body pb-1 transition-all duration-150 ${
-              active
-                ? 'text-foreground font-semibold border-b-2 border-primary'
                 : 'text-muted-foreground active:text-foreground'
             }`}
           >

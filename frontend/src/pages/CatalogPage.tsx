@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, PenLine, Camera, Instagram, Download, FileJson, X } from 'lucide-react';
+import { Plus, PenLine, Camera, Instagram, Download, FileJson, X, ArrowUpDown, Check } from 'lucide-react';
 import { useShake } from '@/hooks/use-shake';
 
 const BeaverCatchGame = lazy(() => import('@/components/BeaverCatchGame'));
@@ -27,6 +27,17 @@ import {
 } from '@/components/ui/pagination';
 
 const RECIPES_PER_PAGE = 20;
+
+const sortOptions = [
+  { value: 'recent', label: 'Plus récent' },
+  { value: 'rating', label: 'Mieux noté' },
+  { value: 'alpha', label: 'A → Z' },
+  { value: 'time', label: 'Plus rapide' },
+];
+
+const sortLabels: Record<string, string> = Object.fromEntries(
+  sortOptions.map((o) => [o.value, o.label])
+);
 
 const CatalogPage = () => {
   const navigate = useNavigate();
@@ -259,17 +270,38 @@ const CatalogPage = () => {
           </div>
         </div>
 
-        {/* Results count */}
+        {/* Results count + sort + reset */}
         <div className="flex items-center justify-between md:justify-start gap-2">
           <p className="text-sm text-muted-foreground font-body">
             {filtered.length} recette{filtered.length !== 1 ? 's' : ''} trouvée{filtered.length !== 1 ? 's' : ''}
           </p>
-          {hasActiveFilters && (
-            <button onClick={resetAll} className="md:hidden flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0">
-              <X size={14} />
-              Réinitialiser
-            </button>
-          )}
+          <div className="flex items-center gap-2 md:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="h-8 w-8 flex items-center justify-center rounded-md bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                  <ArrowUpDown size={14} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-popover z-50">
+                {sortOptions.map((opt) => (
+                  <DropdownMenuItem
+                    key={opt.value}
+                    onClick={() => setFilters({ ...filters, sort: opt.value })}
+                    className="flex items-center gap-3 text-xs font-body"
+                  >
+                    <Check size={14} className={filters.sort === opt.value ? 'text-foreground' : 'opacity-0'} />
+                    {opt.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {hasActiveFilters && (
+              <button onClick={resetAll} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0">
+                <X size={14} />
+                Réinitialiser
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Grid */}
