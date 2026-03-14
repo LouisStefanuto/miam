@@ -1,6 +1,5 @@
 import { KeyboardEvent, useRef, useEffect } from 'react';
 import { Search, X, SlidersHorizontal } from 'lucide-react';
-import UserMenu from '@/components/UserMenu';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
 
 interface MobileHeaderProps {
@@ -127,8 +126,6 @@ export default function MobileHeader({
           <SlidersHorizontal size={14} className={hasActiveFilters ? 'text-primary' : 'text-muted-foreground'} />
         </button>
       </div>
-
-      <UserMenu />
     </header>
   );
 }

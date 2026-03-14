@@ -11,7 +11,7 @@ import { useAccentColor, ACCENT_COLORS, type AccentColor } from '@/contexts/Them
 
 const colorKeys = Object.keys(ACCENT_COLORS) as AccentColor[];
 
-export default function UserMenu() {
+export default function UserMenu({ trigger }: { trigger?: React.ReactNode } = {}) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
@@ -46,23 +46,25 @@ export default function UserMenu() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button
-          className="shrink-0 h-7 w-7 md:h-9 md:w-9 rounded-full overflow-hidden ring-1 ring-border hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {user?.picture ? (
-            <img
-              src={user.picture}
-              alt={user.name}
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <span className="flex items-center justify-center w-full h-full bg-muted text-sm font-medium">
-              {user?.name?.charAt(0).toUpperCase() ?? <User size={18} />}
-            </span>
-          )}
-          <span className="sr-only">Paramètres</span>
-        </button>
+        {trigger || (
+          <button
+            className="shrink-0 h-7 w-7 md:h-9 md:w-9 rounded-full overflow-hidden ring-1 ring-border hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {user?.picture ? (
+              <img
+                src={user.picture}
+                alt={user.name}
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <span className="flex items-center justify-center w-full h-full bg-muted text-sm font-medium">
+                {user?.name?.charAt(0).toUpperCase() ?? <User size={18} />}
+              </span>
+            )}
+            <span className="sr-only">Paramètres</span>
+          </button>
+        )}
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-lg flex flex-col">
         <SheetHeader>
