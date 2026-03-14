@@ -20,6 +20,13 @@ _ALLOWED_HOSTS = {
     "instagram.com",
 }
 
+# Suffix patterns for Instagram/Facebook CDN hostnames
+_ALLOWED_SUFFIXES = (
+    ".cdninstagram.com",
+    ".instagram.com",
+    ".fbcdn.net",
+)
+
 
 def _is_allowed_image_url(url: str) -> bool:
     """Validate that a URL is safe to fetch (anti-SSRF)."""
@@ -28,8 +35,8 @@ def _is_allowed_image_url(url: str) -> bool:
         return False
     hostname = parsed.hostname or ""
 
-    # Allow known Instagram CDN patterns (scontent-*.cdninstagram.com)
-    if hostname.endswith(".cdninstagram.com") or hostname.endswith(".instagram.com"):  # noqa: PIE810
+    # Allow known Instagram/Facebook CDN patterns
+    if hostname.endswith(_ALLOWED_SUFFIXES):
         return True
     if hostname in _ALLOWED_HOSTS:
         return True
@@ -101,7 +108,7 @@ async def upload_image_from_url(
 
     max_size = 5 * 1024 * 1024
     try:
-        async with httpx.AsyncClient(timeout=15.0, follow_redirects=False) as client:
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
             resp = await client.get(body.url)
             resp.raise_for_status()
     except httpx.HTTPError as exc:
