@@ -8,6 +8,7 @@ import { useRecipes } from '@/hooks/use-recipes';
 import { toast } from 'sonner';
 import type { Recipe } from '@/data/recipes';
 import { SortableCartIngredientItem } from '@/components/SortableCartIngredientItem';
+import { AuthImage } from '@/hooks/use-auth-image';
 
 interface AggregatedIngredient {
   id: string;
@@ -176,7 +177,7 @@ const CartPage = () => {
               {cartRecipes.map((recipe) => (
                 <div key={recipe.id} className="flex items-center gap-3 p-2 rounded-lg bg-secondary/50 group">
                   {recipe.image ? (
-                    <img src={recipe.image} alt={recipe.title} className="w-12 h-12 rounded object-cover shrink-0" />
+                    <AuthImage src={recipe.image} alt={recipe.title} className="w-12 h-12 rounded object-cover shrink-0" />
                   ) : (
                     <div className="w-12 h-12 rounded bg-muted shrink-0" />
                   )}

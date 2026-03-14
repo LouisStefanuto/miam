@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from miam.domain.services import (
     AuthService,
     RecipeExportService,
+    RecipeImportService,
     RecipeManagementService,
 )
 from miam.infra.db.session import SessionLocal
@@ -18,6 +19,7 @@ from miam.infra.exporter_markdown import MarkdownExporter
 from miam.infra.exporter_word import WordExporter
 from miam.infra.google_auth import GoogleTokenVerifier
 from miam.infra.image_storage import LocalImageStorage
+from miam.infra.importer_instagram import InstagramParser
 from miam.infra.jwt_handler import JwtTokenHandler
 from miam.infra.repositories import RecipeRepository, UserRepository
 
@@ -102,3 +104,7 @@ def get_recipe_export_service(
     word_exporter = WordExporter(image_storage=image_storage)
     markdown_exporter = MarkdownExporter(image_storage=image_storage)
     return RecipeExportService(repo, word_exporter, markdown_exporter)
+
+
+def get_recipe_import_service() -> RecipeImportService:
+    return RecipeImportService(instagram_parser=InstagramParser())

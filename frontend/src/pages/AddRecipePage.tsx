@@ -24,9 +24,9 @@ const modes = [
   {
     icon: Instagram,
     label: 'Importer depuis Instagram',
-    description: 'Bientôt disponible',
-    to: null,
-    disabled: true,
+    description: 'Importer des recettes depuis un export Instagram',
+    to: '/import/instagram',
+    disabled: false,
   },
 ] as const;
 

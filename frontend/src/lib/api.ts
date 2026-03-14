@@ -286,6 +286,46 @@ export async function exportToWord(): Promise<void> {
   downloadBlob(blob, 'recipes.docx');
 }
 
+export interface ParsedInstagramRecipe {
+  recipe: {
+    title: string;
+    description: string;
+    category: string;
+    tags: string[];
+    preparation: string[];
+    ingredients: { name: string; quantity: number | null; unit: string | null; display_order: number }[];
+    sources: { type: string; raw_content: string }[];
+    is_veggie: boolean;
+    [key: string]: unknown;
+  };
+  image_url: string | null;
+}
+
+export async function parseInstagram(instagramJson: unknown): Promise<ParsedInstagramRecipe[]> {
+  const res = await apiFetch(`${API_BASE}/import/instagram/parse`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(instagramJson),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Failed to parse Instagram data: ${res.status} – ${detail}`);
+  }
+  const data: { recipes: ParsedInstagramRecipe[] } = await res.json();
+  return data.recipes;
+}
+
+export async function uploadImageFromUrl(recipeId: string, imageUrl: string): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/images/from-url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recipe_id: recipeId, url: imageUrl }),
+  });
+  if (!res.ok) {
+    console.warn(`Failed to upload image from URL for recipe ${recipeId}: ${res.status}`);
+  }
+}
+
 export async function importRecipesBatch(jsonPayload: { recipes: unknown[] }): Promise<{ ids: string[] }> {
   const res = await apiFetch(`${API_BASE}/recipes/batch`, {
     method: 'POST',

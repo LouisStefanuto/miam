@@ -211,10 +211,9 @@ const CatalogPage = () => {
                   <FileJson size={16} />
                   Importer depuis un JSON
                 </DropdownMenuItem>
-                <DropdownMenuItem disabled className="gap-2 cursor-pointer opacity-50">
+                <DropdownMenuItem onClick={() => navigate('/import/instagram')} className="gap-2 cursor-pointer">
                   <Instagram size={16} />
                   Importer depuis Instagram
-                  <span className="text-xs text-muted-foreground ml-auto">Bientôt</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -18,6 +18,7 @@ import melangeIcon from '@/assets/icons/melange.png';
 import servingsIcon from '@/assets/icons/servings.png';
 import { recipeToMarkdown } from '@/lib/recipe-to-markdown';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthImage } from '@/hooks/use-auth-image';
 
 const DifficultyBars = ({ level }: { level: number }) => (
   <div className="flex gap-0.5 items-end">
@@ -227,6 +228,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   };
 
   const current = editing ? editData : recipe;
+  const imageSrc = useAuthImage(current.image);
 
   return (
     <div>
@@ -250,8 +252,8 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
 
       {/* Header image */}
       <div className={`animate-fade-in relative h-[300px] md:h-[400px] overflow-hidden select-none ${editing ? 'mt-14' : ''}`}>
-        {current.image ? (
-          <img src={current.image} alt={current.title} className="w-full h-full object-cover" />
+        {imageSrc ? (
+          <img src={imageSrc} alt={current.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-muted" />
         )}

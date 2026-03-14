@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from miam.domain.entities import Category, Season, SourceType
 
@@ -104,9 +104,66 @@ class BatchRecipeCreate(BaseModel):
     recipes: list[RecipeCreate]
 
 
+class ParsedRecipe(BaseModel):
+    """A recipe parsed from an external source, with optional image URL."""
+
+    recipe: RecipeCreate
+    image_url: str | None = None
+
+
 class ImageResponse(BaseModel):
     media_type: str
     content: bytes
+
+
+# --- Instagram input schemas (only fields we use, extra fields ignored) ---
+
+
+class _InstagramBase(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+
+class InstagramImageCandidate(_InstagramBase):
+    url: str
+    width: int
+    height: int
+
+    @field_validator("url")
+    @classmethod
+    def validate_https_url(cls, v: str) -> str:
+        """Only allow HTTPS URLs to prevent javascript:, file://, data: etc."""
+        if not v.startswith("https://"):
+            raise ValueError("Image URL must use HTTPS scheme")
+        return v
+
+
+class InstagramImageVersions(_InstagramBase):
+    candidates: list[InstagramImageCandidate] = []
+
+
+class InstagramOwner(_InstagramBase):
+    username: str = "unknown"
+
+
+class InstagramCaption(_InstagramBase):
+    text: str = ""
+
+
+class InstagramMedia(_InstagramBase):
+    owner: InstagramOwner = InstagramOwner()
+    caption: InstagramCaption = InstagramCaption()
+    image_versions2: InstagramImageVersions | None = None
+
+
+class InstagramItem(_InstagramBase):
+    media: InstagramMedia
+
+
+class InstagramResponse(_InstagramBase):
+    items: list[InstagramItem] = []
+
+
+# --- Auth schemas ---
 
 
 class GoogleLoginRequest(BaseModel):

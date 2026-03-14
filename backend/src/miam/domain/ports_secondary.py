@@ -11,7 +11,13 @@ from miam.domain.entities import (
     RecipeEntity,
     UserEntity,
 )
-from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
+from miam.domain.schemas import (
+    ImageResponse,
+    InstagramResponse,
+    ParsedRecipe,
+    RecipeCreate,
+    RecipeUpdate,
+)
 
 
 class RecipeRepositoryPort(ABC):
@@ -124,6 +130,14 @@ class MarkdownExporterPort(ABC):
     @abstractmethod
     def to_zip_bytes(self, recipes: list[RecipeEntity]) -> bytes:
         """Serialize recipes to a ZIP archive containing the Markdown file and images."""
+
+
+class InstagramParserPort(ABC):
+    """Secondary port for parsing Instagram export data into recipe schemas."""
+
+    @abstractmethod
+    def parse(self, data: InstagramResponse) -> list[ParsedRecipe]:
+        """Parse validated Instagram data into recipes with image URLs."""
 
 
 class UserRepositoryPort(ABC):

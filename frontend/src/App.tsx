@@ -20,6 +20,7 @@ const RecipeDetailPage = lazy(() => import("./pages/RecipeDetailPage"));
 const CreateRecipePage = lazy(() => import("./pages/CreateRecipePage"));
 const ImportOCRPage = lazy(() => import("./pages/ImportOCRPage"));
 const ImportJSONPage = lazy(() => import("./pages/ImportJSONPage"));
+const ImportInstagramPage = lazy(() => import("./pages/ImportInstagramPage"));
 const AddRecipePage = lazy(() => import("./pages/AddRecipePage"));
 const CartPage = lazy(() => import("./pages/CartPage"));
 const ExportPage = lazy(() => import("./pages/ExportPage"));
@@ -61,6 +62,7 @@ const App = () => (
             <Route path="/recipes/:id" element={<ProtectedRoute><RecipeDetailPage /></ProtectedRoute>} />
             <Route path="/import/ocr" element={<ProtectedRoute><ImportOCRPage /></ProtectedRoute>} />
             <Route path="/import/json" element={<ProtectedRoute><ImportJSONPage /></ProtectedRoute>} />
+            <Route path="/import/instagram" element={<ProtectedRoute><ImportInstagramPage /></ProtectedRoute>} />
             <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
             <Route path="/export" element={<ProtectedRoute><ExportPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />

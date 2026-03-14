@@ -4,6 +4,7 @@ import { Recipe } from '@/data/recipes';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuthImage } from '@/hooks/use-auth-image';
 
 
 const difficultyLabels: Record<string, { label: string; bars: number }> = {
@@ -47,6 +48,7 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
   const diff = difficultyLabels[recipe.difficulty];
   const cart = useCart();
   const inCart = cart.has(recipe.id);
+  const imageSrc = useAuthImage(recipe.image);
 
   if (isMobile) {
     return (
@@ -56,9 +58,9 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
       >
         {/* Full image background */}
         <div className="relative aspect-[16/9] overflow-hidden">
-          {recipe.image ? (
+          {imageSrc ? (
             <img
-              src={recipe.image}
+              src={imageSrc}
               alt={recipe.title}
               className={`w-full h-full object-cover ${!recipe.tested ? 'opacity-60 saturate-[0.3]' : ''}`}
               loading="lazy"
@@ -123,9 +125,9 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
     >
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
-        {recipe.image ? (
+        {imageSrc ? (
           <img
-            src={recipe.image}
+            src={imageSrc}
             alt={recipe.title}
             className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${!recipe.tested ? 'opacity-60 saturate-[0.3]' : ''}`}
             loading="lazy"

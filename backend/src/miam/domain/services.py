@@ -11,18 +11,26 @@ from miam.domain.entities import (
 from miam.domain.ports_primary import (
     AuthServicePort,
     RecipeExportServicePort,
+    RecipeImportServicePort,
     RecipeServicePort,
 )
 from miam.domain.ports_secondary import (
     GoogleTokenVerifierPort,
     ImageStoragePort,
+    InstagramParserPort,
     JwtTokenPort,
     MarkdownExporterPort,
     RecipeRepositoryPort,
     UserRepositoryPort,
     WordExporterPort,
 )
-from miam.domain.schemas import ImageResponse, RecipeCreate, RecipeUpdate
+from miam.domain.schemas import (
+    ImageResponse,
+    InstagramResponse,
+    ParsedRecipe,
+    RecipeCreate,
+    RecipeUpdate,
+)
 
 
 class RecipeManagementService(RecipeServicePort):
@@ -106,16 +114,23 @@ class RecipeManagementService(RecipeServicePort):
             return None
         return self.image_storage.get_recipe_image(image_id)
 
-    def get_recipe_image_public(self, image_id: UUID) -> ImageResponse | None:
-        """Retrieve image bytes by ID without ownership check (IDs are unguessable UUIDs)."""
-        return self.image_storage.get_recipe_image(image_id)
-
     def delete_recipe_image(self, image_id: UUID, user_id: UUID) -> bool:
         """Delete an image from storage and database."""
         deleted = self.repository.delete_image(image_id, user_id)
         if deleted:
             self.image_storage.delete_image(image_id)
         return deleted
+
+
+class RecipeImportService(RecipeImportServicePort):
+    """Service for importing recipes from external sources."""
+
+    def __init__(self, instagram_parser: InstagramParserPort) -> None:
+        self.instagram_parser = instagram_parser
+
+    def parse_instagram(self, data: InstagramResponse) -> list[ParsedRecipe]:
+        """Parse Instagram data using the injected parser adapter."""
+        return self.instagram_parser.parse(data)
 
 
 class AuthService(AuthServicePort):

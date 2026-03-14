@@ -1,13 +1,36 @@
 """API routes for managing images."""
 
+import logging
 from typing import Annotated
+from urllib.parse import urlparse
 from uuid import UUID
 
+import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
 from pydantic import BaseModel
 
 from miam.api.deps import get_current_user_id, get_recipe_management_service
 from miam.domain.services import RecipeManagementService
+
+logger = logging.getLogger(__name__)
+
+# Instagram/Facebook CDN hostname suffixes allowed for image download (SSRF protection).
+# .fbcdn.net is Meta's shared CDN used by Instagram for image delivery.
+_ALLOWED_SUFFIXES = (
+    ".cdninstagram.com",
+    ".instagram.com",
+    ".fbcdn.net",
+)
+
+
+def _is_allowed_image_url(url: str) -> bool:
+    """Validate that a URL is safe to fetch (anti-SSRF)."""
+    parsed = urlparse(url)
+    if parsed.scheme != "https":
+        return False
+    hostname = parsed.hostname or ""
+    return hostname.endswith(_ALLOWED_SUFFIXES)
+
 
 router = APIRouter(prefix="/images", tags=["images"])
 
@@ -52,6 +75,59 @@ async def upload_image(
     )
 
 
+class ImageFromUrlRequest(BaseModel):
+    recipe_id: UUID
+    url: str
+
+
+@router.post("/from-url", status_code=201)
+async def upload_image_from_url(
+    body: ImageFromUrlRequest,
+    service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+) -> ImageUploadResponse:
+    """Download an image from a URL and attach it to a recipe."""
+    if not _is_allowed_image_url(body.url):
+        raise HTTPException(
+            status_code=400,
+            detail="Only Instagram CDN URLs (*.cdninstagram.com) are allowed",
+        )
+
+    max_size = 5 * 1024 * 1024
+    try:
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+            resp = await client.get(body.url)
+            resp.raise_for_status()
+    except httpx.HTTPError as exc:
+        logger.warning("Failed to download image from %s: %s", body.url, exc)
+        raise HTTPException(
+            status_code=400, detail="Failed to download image from the provided URL"
+        ) from exc
+
+    content_type = resp.headers.get("content-type", "")
+    if not content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="URL did not return an image")
+
+    content = resp.content
+    if len(content) > max_size:
+        raise HTTPException(status_code=413, detail="Image too large (max 5 MB)")
+
+    ext = content_type.split("/")[-1].split(";")[0].strip()
+    filename = f"instagram.{ext}" if ext else "instagram.jpg"
+
+    try:
+        image_id = service.add_recipe_image(
+            recipe_id=body.recipe_id,
+            user_id=user_id,
+            content=content,
+            filename=filename,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from None
+
+    return ImageUploadResponse(title=filename, recipe=body.recipe_id, image_id=image_id)
+
+
 @router.delete("/{image_id}", status_code=204)
 async def delete_image(
     image_id: UUID,
@@ -67,8 +143,9 @@ async def delete_image(
 async def get_image(
     image_id: UUID,
     service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
 ) -> Response:
-    image_response = service.get_recipe_image_public(image_id)
+    image_response = service.get_recipe_image(image_id, user_id)
     if not image_response:
         raise HTTPException(status_code=404, detail="Image not found")
 
