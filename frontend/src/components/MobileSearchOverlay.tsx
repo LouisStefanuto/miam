@@ -1,5 +1,5 @@
 import { KeyboardEvent, useRef, useEffect, useState } from 'react';
-import { ArrowLeft, Search, X, Check, Leaf, Zap, ArrowUpDown, UtensilsCrossed, Sun, Gauge, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Search, X, Check, Leaf, Zap, ArrowUpDown, UtensilsCrossed, Sun, Gauge, RotateCcw, Grid2X2, Wine, Salad, Beef, CupSoda, Cake, LucideIcon } from 'lucide-react';
 import { Filters, defaultFilters } from '@/components/FilterBar';
 
 interface MobileSearchOverlayProps {
@@ -15,14 +15,14 @@ interface MobileSearchOverlayProps {
   resultCount: number;
 }
 
-const types = [
-  { value: 'tous', label: 'Tous' },
-  { value: 'apéro', label: 'Apéro' },
-  { value: 'entrée', label: 'Entrée' },
-  { value: 'plat', label: 'Plat' },
-  { value: 'pâtes', label: 'Pâtes' },
-  { value: 'dessert', label: 'Dessert' },
-  { value: 'boisson', label: 'Boisson' },
+const types: { value: string; label: string; icon: LucideIcon }[] = [
+  { value: 'tous', label: 'Tous', icon: Grid2X2 },
+  { value: 'apéro', label: 'Apéro', icon: Wine },
+  { value: 'entrée', label: 'Entrée', icon: Salad },
+  { value: 'plat', label: 'Plat', icon: Beef },
+  { value: 'pâtes', label: 'Pâtes', icon: UtensilsCrossed },
+  { value: 'dessert', label: 'Dessert', icon: Cake },
+  { value: 'boisson', label: 'Boisson', icon: CupSoda },
 ];
 
 const seasons = [
@@ -205,9 +205,9 @@ export default function MobileSearchOverlay({
             </Section>
           )}
 
-          {/* Type — two-row segmented */}
+          {/* Type — icon grid */}
           <Section title="Type" icon={<UtensilsCrossed size={14} />}>
-            <TwoRowSegmented
+            <IconGrid
               options={types}
               value={filters.type}
               onChange={(v) => set('type', v)}
@@ -305,41 +305,32 @@ function Section({ title, icon, children }: { title: string; icon?: React.ReactN
   );
 }
 
-function TwoRowSegmented({ options, value, onChange }: {
-  options: { value: string; label: string }[];
+function IconGrid({ options, value, onChange }: {
+  options: { value: string; label: string; icon: LucideIcon }[];
   value: string;
   onChange: (v: string) => void;
 }) {
-  const mid = Math.ceil(options.length / 2);
-  const row1 = options.slice(0, mid);
-  const row2 = options.slice(mid);
-
-  const Row = ({ items }: { items: typeof options }) => (
-    <div className="flex gap-1">
-      {items.map((opt) => {
+  return (
+    <div className="grid grid-cols-4 gap-2">
+      {options.map((opt) => {
         const active = opt.value === value;
+        const Icon = opt.icon;
         return (
           <button
             key={opt.value}
             onClick={() => onChange(opt.value)}
             style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`flex-1 text-[13px] py-2 rounded-lg font-body font-medium transition-all duration-150 ${
+            className={`flex flex-col items-center gap-1.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
               active
-                ? 'bg-card text-foreground shadow-sm'
-                : 'text-muted-foreground active:text-foreground'
+                ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
+                : 'bg-card border-border text-muted-foreground active:bg-secondary'
             }`}
           >
-            {opt.label}
+            <Icon size={20} className={active ? 'text-primary' : ''} />
+            <span className="text-[11px] font-body font-medium">{opt.label}</span>
           </button>
         );
       })}
-    </div>
-  );
-
-  return (
-    <div className="bg-secondary/70 rounded-xl p-1 space-y-1">
-      <Row items={row1} />
-      <Row items={row2} />
     </div>
   );
 }
