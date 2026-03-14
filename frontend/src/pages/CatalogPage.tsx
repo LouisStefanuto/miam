@@ -275,12 +275,20 @@ const CatalogPage = () => {
           </div>
         </div>
 
-        {/* Results count + sort + reset */}
+        {/* Results count + reset + sort */}
         <div className="flex items-center justify-between md:justify-start gap-2">
-          <p className="text-sm text-muted-foreground font-body">
-            {filtered.length} recette{filtered.length !== 1 ? 's' : ''} trouvée{filtered.length !== 1 ? 's' : ''}
-          </p>
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-muted-foreground font-body">
+              {filtered.length} recette{filtered.length !== 1 ? 's' : ''} trouvée{filtered.length !== 1 ? 's' : ''}
+            </p>
+            {hasActiveFilters && (
+              <button onClick={resetAll} className="md:hidden flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0">
+                <X size={14} />
+                Réinitialiser
+              </button>
+            )}
+          </div>
+          <div className="md:hidden">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="h-8 w-8 flex items-center justify-center rounded-md bg-secondary text-muted-foreground hover:text-foreground transition-colors">
@@ -300,12 +308,6 @@ const CatalogPage = () => {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            {hasActiveFilters && (
-              <button onClick={resetAll} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0">
-                <X size={14} />
-                Réinitialiser
-              </button>
-            )}
           </div>
         </div>
 
