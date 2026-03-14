@@ -207,6 +207,7 @@ export default function MobileSearchOverlay({
             <SegmentedControl
               options={seasons}
               value={filters.season}
+              defaultValue="toutes"
               onChange={(v) => set('season', v)}
             />
           </Section>
@@ -216,6 +217,7 @@ export default function MobileSearchOverlay({
             <SegmentedControl
               options={difficulties}
               value={filters.difficulty}
+              defaultValue="toutes"
               onChange={(v) => set('difficulty', v)}
             />
           </Section>
@@ -314,24 +316,28 @@ function IconGrid({ options, value, onChange }: {
   );
 }
 
-function SegmentedControl({ options, value, onChange }: {
+function SegmentedControl({ options, value, defaultValue, onChange }: {
   options: { value: string; label: string }[];
   value: string;
+  defaultValue: string;
   onChange: (v: string) => void;
 }) {
   return (
     <div className="flex gap-1 bg-secondary/70 rounded-xl p-1">
       {options.map((opt) => {
         const active = opt.value === value;
+        const isNonDefault = active && value !== defaultValue;
         return (
           <button
             key={opt.value}
             onClick={() => onChange(opt.value)}
             style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`flex-1 text-[13px] py-2 rounded-lg font-body font-medium transition-all duration-150 ${
-              active
-                ? 'bg-card text-foreground shadow-sm'
-                : 'text-muted-foreground active:text-foreground'
+            className={`flex-1 text-[13px] py-2 rounded-lg font-body font-medium ${
+              isNonDefault
+                ? 'bg-card text-foreground shadow-sm ring-1 ring-primary/35'
+                : active
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground active:text-foreground'
             }`}
           >
             {opt.label}
