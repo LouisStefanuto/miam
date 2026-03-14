@@ -58,7 +58,7 @@ class TestGetImage:
     def test_returns_image_bytes(
         self, client: TestClient, mock_recipe_service: MagicMock
     ) -> None:
-        mock_recipe_service.get_recipe_image_public.return_value = ImageResponse(
+        mock_recipe_service.get_recipe_image.return_value = ImageResponse(
             media_type="image/png", content=b"\x89PNG-data"
         )
 
@@ -71,7 +71,7 @@ class TestGetImage:
     def test_returns_404_when_not_found(
         self, client: TestClient, mock_recipe_service: MagicMock
     ) -> None:
-        mock_recipe_service.get_recipe_image_public.return_value = None
+        mock_recipe_service.get_recipe_image.return_value = None
 
         response = client.get(f"/api/images/{uuid4()}")
 

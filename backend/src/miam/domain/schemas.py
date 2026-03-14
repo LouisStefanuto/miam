@@ -1,6 +1,5 @@
 """I/O models to interact with entities."""
 
-from dataclasses import dataclass
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -105,8 +104,7 @@ class BatchRecipeCreate(BaseModel):
     recipes: list[RecipeCreate]
 
 
-@dataclass
-class ParsedRecipe:
+class ParsedRecipe(BaseModel):
     """A recipe parsed from an external source, with optional image URL."""
 
     recipe: RecipeCreate

@@ -74,21 +74,30 @@ class TestExtractTitle:
     def test_splits_on_newline(self) -> None:
         assert _extract_title("First line\nSecond line") == "First line"
 
-    def test_splits_on_period(self) -> None:
+    def test_splits_on_period_followed_by_space(self) -> None:
         assert _extract_title("First sentence. Second.") == "First sentence"
 
-    def test_splits_on_exclamation(self) -> None:
+    def test_does_not_split_on_decimal(self) -> None:
+        assert _extract_title("Use 2.5 cups of flour") == "Use 2.5 cups of flour"
+
+    def test_splits_on_exclamation_followed_by_space(self) -> None:
         assert _extract_title("Wow! Great recipe") == "Wow"
 
-    def test_falls_back_to_first_word(self) -> None:
-        # All split results are empty/whitespace → fallback to first word[:50]
-        assert _extract_title("! !! hello") == "hello"
+    def test_does_not_split_on_trailing_exclamation(self) -> None:
+        assert _extract_title("Wow!") == "Wow!"
 
-    def test_falls_back_to_default_when_only_punctuation(self) -> None:
-        assert _extract_title("!.\n") == "Instagram Recipe"
+    def test_falls_back_to_first_word(self) -> None:
+        # No sentence-ending punctuation+space → fallback to first word[:50]
+        assert _extract_title("hello") == "hello"
 
     def test_falls_back_to_default_when_empty(self) -> None:
         assert _extract_title("") == "Instagram Recipe"
+
+    def test_splits_on_exclamation_space_with_multiple(self) -> None:
+        assert _extract_title("! !! hello") == "!"
+
+    def test_punctuation_with_newline(self) -> None:
+        assert _extract_title("!.\n") == "!"
 
 
 class TestInstagramImageCandidateUrl:

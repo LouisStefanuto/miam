@@ -17,6 +17,7 @@ export default function RecipeImportInstagram({ onBack, onImportDone }: RecipeIm
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [pasteMode, setPasteMode] = useState(false);
   const [pasteValue, setPasteValue] = useState('');
+  const [brokenImages, setBrokenImages] = useState<Set<number>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
 
   const parseJsonData = async (data: unknown) => {
@@ -264,16 +265,12 @@ export default function RecipeImportInstagram({ onBack, onImportDone }: RecipeIm
                   >
                     {/* Thumbnail */}
                     <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                      {item.image_url ? (
+                      {item.image_url && !brokenImages.has(index) ? (
                         <img
                           src={item.image_url}
                           alt=""
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                            (e.target as HTMLImageElement).parentElement!.innerHTML =
-                              '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>';
-                          }}
+                          onError={() => setBrokenImages((prev) => new Set(prev).add(index))}
                         />
                       ) : (
                         <ImageIcon size={20} className="text-muted-foreground" />

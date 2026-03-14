@@ -24,8 +24,12 @@ def _clean_emojis_from_text(text: str) -> str:
 
 
 def _extract_title(caption_text: str) -> str:
-    """Extract a short title from the caption text."""
-    lines = [line for line in re.split(r"[!\.\n]", caption_text) if line.strip()]
+    """Extract a short title from the caption text.
+
+    Splits on newlines or sentence-ending punctuation followed by whitespace
+    (e.g. ". " or "! ") so that numbers like "2.5" are not broken.
+    """
+    lines = [line for line in re.split(r"\n|[!.]\s", caption_text) if line.strip()]
     if lines:
         return lines[0].strip()[:50]
     words = caption_text.split()

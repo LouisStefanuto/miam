@@ -14,13 +14,8 @@ from miam.domain.services import RecipeManagementService
 
 logger = logging.getLogger(__name__)
 
-# Instagram CDN domains allowed for image download (SSRF protection)
-_ALLOWED_HOSTS = {
-    "scontent.cdninstagram.com",
-    "instagram.com",
-}
-
-# Suffix patterns for Instagram/Facebook CDN hostnames
+# Instagram/Facebook CDN hostname suffixes allowed for image download (SSRF protection).
+# .fbcdn.net is Meta's shared CDN used by Instagram for image delivery.
 _ALLOWED_SUFFIXES = (
     ".cdninstagram.com",
     ".instagram.com",
@@ -34,15 +29,7 @@ def _is_allowed_image_url(url: str) -> bool:
     if parsed.scheme != "https":
         return False
     hostname = parsed.hostname or ""
-
-    # Allow known Instagram/Facebook CDN patterns
-    if hostname.endswith(_ALLOWED_SUFFIXES):
-        return True
-    if hostname in _ALLOWED_HOSTS:
-        return True
-
-    # Block everything else — we only download Instagram images
-    return False
+    return hostname.endswith(_ALLOWED_SUFFIXES)
 
 
 router = APIRouter(prefix="/images", tags=["images"])
@@ -108,21 +95,22 @@ async def upload_image_from_url(
 
     max_size = 5 * 1024 * 1024
     try:
-        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=False) as client:
             resp = await client.get(body.url)
             resp.raise_for_status()
     except httpx.HTTPError as exc:
+        logger.warning("Failed to download image from %s: %s", body.url, exc)
         raise HTTPException(
-            status_code=400, detail=f"Failed to download image: {exc}"
+            status_code=400, detail="Failed to download image from the provided URL"
         ) from exc
-
-    content = resp.content
-    if len(content) > max_size:
-        raise HTTPException(status_code=413, detail="Image too large (max 5 MB)")
 
     content_type = resp.headers.get("content-type", "")
     if not content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="URL did not return an image")
+
+    content = resp.content
+    if len(content) > max_size:
+        raise HTTPException(status_code=413, detail="Image too large (max 5 MB)")
 
     ext = content_type.split("/")[-1].split(";")[0].strip()
     filename = f"instagram.{ext}" if ext else "instagram.jpg"
