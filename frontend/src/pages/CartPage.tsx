@@ -157,8 +157,7 @@ const CartPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 flex items-center gap-3 px-4 h-14 bg-background border-b border-border md:hidden">
-        <ShoppingCart size={20} className="text-primary" />
+      <header className="sticky top-0 z-20 flex items-center justify-center px-4 h-14 bg-background border-b border-border md:hidden">
         <h1 className="font-display text-lg font-bold text-foreground">Panier ({count})</h1>
       </header>
 

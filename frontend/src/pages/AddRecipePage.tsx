@@ -35,7 +35,10 @@ const AddRecipePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 flex items-center gap-3 px-4 h-14 bg-background border-b border-border">
+      <header className="sticky top-0 z-20 flex items-center gap-3 px-4 h-14 bg-background border-b border-border md:hidden">
+        <h1 className="font-display text-lg font-bold text-foreground w-full text-center">Ajouter une recette</h1>
+      </header>
+      <header className="sticky top-0 z-20 hidden md:flex items-center gap-3 px-4 h-14 bg-background border-b border-border">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft size={20} />
           <span className="sr-only">Retour</span>
