@@ -205,9 +205,9 @@ export default function MobileSearchOverlay({
             </Section>
           )}
 
-          {/* Type — segmented control */}
+          {/* Type — two-row segmented */}
           <Section title="Type" icon={<UtensilsCrossed size={14} />}>
-            <SegmentedControl
+            <TwoRowSegmented
               options={types}
               value={filters.type}
               onChange={(v) => set('type', v)}
@@ -301,6 +301,45 @@ function Section({ title, icon, children }: { title: string; icon?: React.ReactN
         <p className="text-xs font-body font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>
       </div>
       {children}
+    </div>
+  );
+}
+
+function TwoRowSegmented({ options, value, onChange }: {
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const mid = Math.ceil(options.length / 2);
+  const row1 = options.slice(0, mid);
+  const row2 = options.slice(mid);
+
+  const Row = ({ items }: { items: typeof options }) => (
+    <div className="flex gap-1">
+      {items.map((opt) => {
+        const active = opt.value === value;
+        return (
+          <button
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            className={`flex-1 text-[13px] py-2 rounded-lg font-body font-medium transition-all duration-150 ${
+              active
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground active:text-foreground'
+            }`}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <div className="bg-secondary/70 rounded-xl p-1 space-y-1">
+      <Row items={row1} />
+      <Row items={row2} />
     </div>
   );
 }
