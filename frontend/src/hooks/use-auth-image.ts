@@ -1,52 +1,39 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { API_BASE } from '@/lib/config';
+
+function fetchAuthImage(imageUrl: string): Promise<string> {
+  const token = localStorage.getItem('miam-auth-token');
+  return fetch(imageUrl, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error(`Image fetch failed: ${res.status}`);
+      return res.blob();
+    })
+    .then((blob) => URL.createObjectURL(blob));
+}
 
 /**
  * Fetches an image from the secure /images endpoint with auth headers
  * and returns a blob URL that can be used in <img src>.
+ * Results are cached via React Query — same URL won't be re-fetched on remount.
  */
 export function useAuthImage(imageUrl: string | undefined): string | undefined {
-  const [blobUrl, setBlobUrl] = useState<string | undefined>(undefined);
+  const isApiImage = imageUrl?.startsWith(`${API_BASE}/images/`);
 
-  useEffect(() => {
-    if (!imageUrl) {
-      setBlobUrl(undefined);
-      return;
-    }
+  const { data } = useQuery({
+    queryKey: ['auth-image', imageUrl],
+    queryFn: () => fetchAuthImage(imageUrl!),
+    enabled: !!imageUrl && isApiImage,
+    staleTime: Infinity,
+    gcTime: 30 * 60 * 1000,
+  });
 
-    // Only intercept API image URLs — pass through data URLs and external URLs
-    if (!imageUrl.startsWith(`${API_BASE}/images/`)) {
-      setBlobUrl(imageUrl);
-      return;
-    }
+  // Non-API URLs (data URLs, external URLs) pass through directly
+  if (imageUrl && !isApiImage) return imageUrl;
 
-    let revoked = false;
-    let currentUrl: string | undefined;
-
-    const token = localStorage.getItem('miam-auth-token');
-    fetch(imageUrl, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Image fetch failed: ${res.status}`);
-        return res.blob();
-      })
-      .then((blob) => {
-        if (revoked) return;
-        currentUrl = URL.createObjectURL(blob);
-        setBlobUrl(currentUrl);
-      })
-      .catch(() => {
-        if (!revoked) setBlobUrl(undefined);
-      });
-
-    return () => {
-      revoked = true;
-      if (currentUrl) URL.revokeObjectURL(currentUrl);
-    };
-  }, [imageUrl]);
-
-  return blobUrl;
+  return data;
 }
 
 /**
