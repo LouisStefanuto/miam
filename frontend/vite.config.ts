@@ -29,6 +29,10 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["icon.png"],
       workbox: {
+        // Disable SPA navigation fallback so Cloudflare Access can intercept
+        // expired sessions and redirect to its login page.
+        // Nginx already handles SPA routing via try_files.
+        navigateFallback: null,
         // Don't cache-bust already-hashed assets (Vite adds hashes to filenames)
         dontCacheBustURLsMatching: /\.[a-f0-9]{8}\./,
         // Only precache these file types (avoid caching everything)

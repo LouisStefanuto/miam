@@ -1,5 +1,5 @@
 import { KeyboardEvent, useRef, useEffect, useState } from 'react';
-import { ArrowLeft, Search, X, Check, Leaf, Zap, UtensilsCrossed, Sun, Gauge, RotateCcw, Grid2X2, Wine, Salad, Beef, CupSoda, Cake, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Search, X, Check, Leaf, Zap, UtensilsCrossed, Sun, Gauge, RotateCcw, Grid2X2, Wine, Salad, Beef, CupSoda, Cake, Flower, Snowflake, Grape, LucideIcon } from 'lucide-react';
 import { Filters, defaultFilters } from '@/components/FilterBar';
 
 interface MobileSearchOverlayProps {
@@ -25,12 +25,12 @@ const types: { value: string; label: string; icon: LucideIcon }[] = [
   { value: 'boisson', label: 'Boisson', icon: CupSoda },
 ];
 
-const seasons = [
-  { value: 'toutes', label: 'Toutes' },
-  { value: 'printemps', label: 'Printemps' },
-  { value: 'été', label: 'Été' },
-  { value: 'automne', label: 'Automne' },
-  { value: 'hiver', label: 'Hiver' },
+const seasons: { value: string; label: string; icon: LucideIcon }[] = [
+  { value: 'toutes', label: 'Toutes', icon: Grid2X2 },
+  { value: 'printemps', label: 'Printemps', icon: Flower },
+  { value: 'été', label: 'Été', icon: Sun },
+  { value: 'automne', label: 'Automne', icon: Grape },
+  { value: 'hiver', label: 'Hiver', icon: Snowflake },
 ];
 
 const difficulties = [
@@ -203,7 +203,7 @@ export default function MobileSearchOverlay({
           </Section>
 
           {/* Season — segmented control */}
-          <Section title="Saison" icon={<Sun size={14} />}>
+          <Section title="Saison" icon={<Sun size={14} />} subtitle={filters.season !== 'toutes' ? seasons.find(s => s.value === filters.season)?.label : undefined}>
             <SegmentedControl
               options={seasons}
               value={filters.season}
@@ -274,12 +274,13 @@ export default function MobileSearchOverlay({
 
 /* ── Subcomponents ── */
 
-function Section({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
+function Section({ title, icon, subtitle, children }: { title: string; icon?: React.ReactNode; subtitle?: string; children: React.ReactNode }) {
   return (
     <div>
       <div className="flex items-center gap-1.5 mb-2.5">
         {icon && <span className="text-muted-foreground">{icon}</span>}
         <p className="text-xs font-body font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>
+        {subtitle && <span className="text-xs font-body font-medium text-primary">— {subtitle}</span>}
       </div>
       {children}
     </div>
@@ -317,7 +318,7 @@ function IconGrid({ options, value, onChange }: {
 }
 
 function SegmentedControl({ options, value, defaultValue, onChange }: {
-  options: { value: string; label: string }[];
+  options: { value: string; label: string; icon?: LucideIcon }[];
   value: string;
   defaultValue: string;
   onChange: (v: string) => void;
@@ -327,20 +328,21 @@ function SegmentedControl({ options, value, defaultValue, onChange }: {
       {options.map((opt) => {
         const active = opt.value === value;
         const isNonDefault = active && value !== defaultValue;
+        const Icon = opt.icon;
         return (
           <button
             key={opt.value}
             onClick={() => onChange(opt.value)}
             style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`flex-1 text-[13px] py-2 rounded-lg font-body font-medium ${
+            className={`flex-1 flex items-center justify-center gap-1.5 text-[13px] py-2 rounded-lg font-body font-medium ${
               isNonDefault
-                ? 'bg-card text-foreground shadow-sm ring-1 ring-primary/35'
+                ? 'bg-card text-primary shadow-sm ring-1 ring-primary/35'
                 : active
                   ? 'bg-card text-foreground shadow-sm'
                   : 'text-muted-foreground active:text-foreground'
             }`}
           >
-            {opt.label}
+            {Icon ? <Icon size={18} /> : opt.label}
           </button>
         );
       })}
