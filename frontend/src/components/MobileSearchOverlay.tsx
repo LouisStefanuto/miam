@@ -334,7 +334,7 @@ function SegmentedControl({ options, value, defaultValue, onChange }: {
             style={{ WebkitTapHighlightColor: 'transparent' }}
             className={`flex-1 text-[13px] py-2 rounded-lg font-body font-medium ${
               isNonDefault
-                ? 'bg-card text-foreground shadow-sm ring-1 ring-primary/35'
+                ? 'bg-card text-primary shadow-sm ring-1 ring-primary/35'
                 : active
                   ? 'bg-card text-foreground shadow-sm'
                   : 'text-muted-foreground active:text-foreground'
