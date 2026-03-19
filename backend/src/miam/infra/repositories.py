@@ -1,9 +1,10 @@
 """Handles all database-specific logic using SQLAlchemy."""
 
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import ColumnElement, func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from miam.domain.entities import (
@@ -12,17 +13,32 @@ from miam.domain.entities import (
     IngredientEntity,
     PaginatedResult,
     RecipeEntity,
+    RecipeShareEntity,
+    ShareRole,
+    ShareStatus,
     SourceEntity,
     UserEntity,
 )
-from miam.domain.ports_secondary import RecipeRepositoryPort, UserRepositoryPort
+from miam.domain.ports_secondary import (
+    RecipeRepositoryPort,
+    RecipeShareRepositoryPort,
+    UserRepositoryPort,
+)
 from miam.domain.schemas import (
     IngredientCreate,
     RecipeCreate,
     RecipeUpdate,
     SourceCreate,
 )
-from miam.infra.db.base import Image, Ingredient, Recipe, RecipeIngredient, Source, User
+from miam.infra.db.base import (
+    Image,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    RecipeShare,
+    Source,
+    User,
+)
 
 
 class RecipeRepository(RecipeRepositoryPort):
@@ -32,7 +48,31 @@ class RecipeRepository(RecipeRepositoryPort):
         """Initialize with a database session."""
         self.session = session
 
-    def _to_entity(self, recipe: Recipe) -> RecipeEntity:
+    def _visible_recipe_filter(self, user_id: UUID) -> ColumnElement[bool]:
+        """SQL filter: owned OR has an accepted share."""
+        return or_(
+            Recipe.owner_id == user_id,
+            Recipe.id.in_(
+                select(RecipeShare.recipe_id).where(
+                    RecipeShare.shared_with_user_id == user_id,
+                    RecipeShare.status == ShareStatus.accepted,
+                )
+            ),
+        )
+
+    def _resolve_user_role(self, recipe: Recipe, user_id: UUID) -> str:
+        """Determine user's role for a recipe: owner, editor, or reader."""
+        if recipe.owner_id == user_id:
+            return "owner"
+        for share in getattr(recipe, "shares", []):
+            if (
+                share.shared_with_user_id == user_id
+                and share.status == ShareStatus.accepted
+            ):
+                return str(share.role.value)
+        return "reader"
+
+    def _to_entity(self, recipe: Recipe, user_role: str | None = None) -> RecipeEntity:
         """Convert a SQLAlchemy Recipe ORM model to a domain RecipeEntity."""
         return RecipeEntity(
             id=recipe.id,
@@ -76,6 +116,12 @@ class RecipeRepository(RecipeRepositoryPort):
                 for src in recipe.sources
             ],
             created_at=recipe.created_at,
+            user_role=user_role,
+            owner_name=(
+                recipe.owner.display_name
+                if hasattr(recipe, "owner") and recipe.owner
+                else None
+            ),
         )
 
     def add_recipe(self, data: RecipeCreate, owner_id: UUID) -> RecipeEntity:
@@ -207,7 +253,7 @@ class RecipeRepository(RecipeRepositoryPort):
         return existing
 
     def _load_recipe(self, recipe_id: UUID, user_id: UUID) -> Recipe | None:
-        """Load a recipe ORM object with all relationships, scoped to user."""
+        """Load a recipe ORM object with all relationships, visible to user."""
         stmt = (
             select(Recipe)
             .options(
@@ -215,7 +261,7 @@ class RecipeRepository(RecipeRepositoryPort):
                 joinedload(Recipe.images),
                 joinedload(Recipe.sources),
             )
-            .where(Recipe.id == recipe_id, Recipe.owner_id == user_id)
+            .where(Recipe.id == recipe_id, self._visible_recipe_filter(user_id))
         )
         return self.session.execute(stmt).unique().scalars().first()
 
@@ -277,21 +323,23 @@ class RecipeRepository(RecipeRepositoryPort):
         return self._to_entity(recipe)
 
     def get_recipe_by_id(self, recipe_id: UUID, user_id: UUID) -> RecipeEntity | None:
-        """Retrieve a recipe with all relationships loaded, scoped to user."""
+        """Retrieve a recipe with all relationships loaded, visible to user."""
         stmt = (
             select(Recipe)
             .options(
                 joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
                 joinedload(Recipe.images),
                 joinedload(Recipe.sources),
+                joinedload(Recipe.owner),
             )
-            .where(Recipe.id == recipe_id, Recipe.owner_id == user_id)
+            .where(Recipe.id == recipe_id, self._visible_recipe_filter(user_id))
         )
 
         recipe = self.session.execute(stmt).scalars().first()
         if recipe is None:
             return None
-        return self._to_entity(recipe)
+        role = self._resolve_user_role(recipe, user_id)
+        return self._to_entity(recipe, user_role=role)
 
     def _apply_filters(
         self,
@@ -315,6 +363,22 @@ class RecipeRepository(RecipeRepositoryPort):
             stmt = stmt.where(Recipe.season == season)
         return stmt
 
+    def _ownership_filter(
+        self, user_id: UUID, ownership: str | None
+    ) -> ColumnElement[bool]:
+        """Return a SQL filter based on ownership parameter."""
+        if ownership == "owned":
+            return Recipe.owner_id == user_id
+        if ownership == "shared":
+            return Recipe.id.in_(
+                select(RecipeShare.recipe_id).where(
+                    RecipeShare.shared_with_user_id == user_id,
+                    RecipeShare.status == ShareStatus.accepted,
+                )
+            )
+        # "all" or None: show both owned and shared
+        return self._visible_recipe_filter(user_id)
+
     def search_recipes(
         self,
         user_id: UUID,
@@ -325,10 +389,13 @@ class RecipeRepository(RecipeRepositoryPort):
         season: str | None = None,
         limit: int | None = None,
         offset: int = 0,
+        ownership: str | None = None,
     ) -> PaginatedResult:
-        """Search recipes with dynamic filtering and pagination, scoped to user."""
+        """Search recipes with dynamic filtering and pagination, visible to user."""
+        visibility = self._ownership_filter(user_id, ownership)
+
         # Count total matching recipes
-        count_stmt = select(func.count(Recipe.id)).where(Recipe.owner_id == user_id)
+        count_stmt = select(func.count(Recipe.id)).where(visibility)
         count_stmt = self._apply_filters(
             count_stmt, recipe_id, title, category, is_veggie, season
         )
@@ -341,8 +408,9 @@ class RecipeRepository(RecipeRepositoryPort):
                 joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
                 joinedload(Recipe.images),
                 joinedload(Recipe.sources),
+                joinedload(Recipe.owner),
             )
-            .where(Recipe.owner_id == user_id)
+            .where(visibility)
         )
         stmt = self._apply_filters(stmt, recipe_id, title, category, is_veggie, season)
         stmt = stmt.order_by(Recipe.created_at.desc())
@@ -353,7 +421,10 @@ class RecipeRepository(RecipeRepositoryPort):
 
         recipes = self.session.execute(stmt).unique().scalars().all()
         return PaginatedResult(
-            items=[self._to_entity(r) for r in recipes],
+            items=[
+                self._to_entity(r, user_role=self._resolve_user_role(r, user_id))
+                for r in recipes
+            ],
             total=total,
         )
 
@@ -364,16 +435,19 @@ class RecipeRepository(RecipeRepositoryPort):
         caption: str | None = None,
         display_order: int | None = 0,
     ) -> ImageEntity:
-        """Create and persist an Image linked to a recipe owned by user_id."""
+        """Create and persist an Image linked to a recipe visible to user_id."""
         recipe = (
             self.session.execute(
-                select(Recipe).where(Recipe.id == recipe_id, Recipe.owner_id == user_id)
+                select(Recipe).where(
+                    Recipe.id == recipe_id,
+                    self._visible_recipe_filter(user_id),
+                )
             )
             .scalars()
             .first()
         )
         if recipe is None:
-            msg = f"Recipe {recipe_id} not found or not owned by user"
+            msg = f"Recipe {recipe_id} not found or not accessible by user"
             raise ValueError(msg)
         image = Image(
             recipe_id=recipe_id,
@@ -391,11 +465,11 @@ class RecipeRepository(RecipeRepositoryPort):
         )
 
     def delete_image(self, image_id: UUID, user_id: UUID) -> bool:
-        """Delete an Image record by ID, only if its recipe is owned by user_id."""
+        """Delete an Image record by ID, only if its recipe is visible to user_id."""
         stmt = (
             select(Image)
             .join(Recipe, Image.recipe_id == Recipe.id)
-            .where(Image.id == image_id, Recipe.owner_id == user_id)
+            .where(Image.id == image_id, self._visible_recipe_filter(user_id))
         )
         image = self.session.execute(stmt).scalars().first()
         if image is None:
@@ -405,11 +479,11 @@ class RecipeRepository(RecipeRepositoryPort):
         return True
 
     def image_belongs_to_user(self, image_id: UUID, user_id: UUID) -> bool:
-        """Check if an image belongs to a recipe owned by the given user."""
+        """Check if an image belongs to a recipe visible to the given user."""
         stmt = (
             select(Image)
             .join(Recipe, Image.recipe_id == Recipe.id)
-            .where(Image.id == image_id, Recipe.owner_id == user_id)
+            .where(Image.id == image_id, self._visible_recipe_filter(user_id))
         )
         return self.session.execute(stmt).scalars().first() is not None
 
@@ -485,3 +559,170 @@ class UserRepository(UserRepositoryPort):
         if user is None:
             return None
         return self._to_entity(user)
+
+
+class RecipeShareRepository(RecipeShareRepositoryPort):
+    """Concrete implementation of RecipeShareRepositoryPort using SQLAlchemy."""
+
+    def __init__(self, session: Session):
+        self.session = session
+
+    def _to_entity(self, share: RecipeShare) -> RecipeShareEntity:
+        return RecipeShareEntity(
+            id=share.id,
+            recipe_id=share.recipe_id,
+            shared_by_user_id=share.shared_by_user_id,
+            shared_with_user_id=share.shared_with_user_id,
+            role=share.role,
+            status=share.status,
+            recipe_title=share.recipe.title if share.recipe else None,
+            shared_by_name=share.shared_by.display_name if share.shared_by else None,
+            shared_with_email=share.shared_with.email if share.shared_with else None,
+            shared_with_name=(
+                share.shared_with.display_name if share.shared_with else None
+            ),
+            created_at=share.created_at,
+            updated_at=share.updated_at,
+        )
+
+    def _load_share(self, share_id: UUID) -> RecipeShare | None:
+        stmt = (
+            select(RecipeShare)
+            .options(
+                joinedload(RecipeShare.recipe),
+                joinedload(RecipeShare.shared_by),
+                joinedload(RecipeShare.shared_with),
+            )
+            .where(RecipeShare.id == share_id)
+        )
+        return self.session.execute(stmt).unique().scalars().first()
+
+    def create_share(
+        self,
+        recipe_id: UUID,
+        shared_by_user_id: UUID,
+        shared_with_user_id: UUID,
+        role: ShareRole,
+    ) -> RecipeShareEntity:
+        share = RecipeShare(
+            recipe_id=recipe_id,
+            shared_by_user_id=shared_by_user_id,
+            shared_with_user_id=shared_with_user_id,
+            role=role,
+        )
+        self.session.add(share)
+        self.session.commit()
+        self.session.refresh(share)
+        loaded = self._load_share(share.id)
+        return self._to_entity(loaded)  # type: ignore[arg-type]
+
+    def get_share_by_id(self, share_id: UUID) -> RecipeShareEntity | None:
+        share = self._load_share(share_id)
+        if share is None:
+            return None
+        return self._to_entity(share)
+
+    def get_pending_shares_for_user(self, user_id: UUID) -> list[RecipeShareEntity]:
+        stmt = (
+            select(RecipeShare)
+            .options(
+                joinedload(RecipeShare.recipe),
+                joinedload(RecipeShare.shared_by),
+                joinedload(RecipeShare.shared_with),
+            )
+            .where(
+                RecipeShare.shared_with_user_id == user_id,
+                RecipeShare.status == ShareStatus.pending,
+            )
+            .order_by(RecipeShare.created_at.desc())
+        )
+        shares = self.session.execute(stmt).unique().scalars().all()
+        return [self._to_entity(s) for s in shares]
+
+    def get_pending_shares_count(self, user_id: UUID) -> int:
+        stmt = select(func.count(RecipeShare.id)).where(
+            RecipeShare.shared_with_user_id == user_id,
+            RecipeShare.status == ShareStatus.pending,
+        )
+        return self.session.execute(stmt).scalar_one()
+
+    def get_shares_for_recipe(self, recipe_id: UUID) -> list[RecipeShareEntity]:
+        stmt = (
+            select(RecipeShare)
+            .options(
+                joinedload(RecipeShare.recipe),
+                joinedload(RecipeShare.shared_by),
+                joinedload(RecipeShare.shared_with),
+            )
+            .where(RecipeShare.recipe_id == recipe_id)
+            .order_by(RecipeShare.created_at.desc())
+        )
+        shares = self.session.execute(stmt).unique().scalars().all()
+        return [self._to_entity(s) for s in shares]
+
+    def get_share_for_recipe_and_user(
+        self, recipe_id: UUID, user_id: UUID
+    ) -> RecipeShareEntity | None:
+        stmt = (
+            select(RecipeShare)
+            .options(
+                joinedload(RecipeShare.recipe),
+                joinedload(RecipeShare.shared_by),
+                joinedload(RecipeShare.shared_with),
+            )
+            .where(
+                RecipeShare.recipe_id == recipe_id,
+                RecipeShare.shared_with_user_id == user_id,
+            )
+        )
+        share = self.session.execute(stmt).unique().scalars().first()
+        if share is None:
+            return None
+        return self._to_entity(share)
+
+    def update_share_status(
+        self, share_id: UUID, status: ShareStatus
+    ) -> RecipeShareEntity | None:
+        share = self.session.get(RecipeShare, share_id)
+        if share is None:
+            return None
+        share.status = status
+        share.updated_at = datetime.now(UTC)
+        self.session.commit()
+        self.session.refresh(share)
+        loaded = self._load_share(share.id)
+        return self._to_entity(loaded)  # type: ignore[arg-type]
+
+    def delete_share(self, share_id: UUID) -> bool:
+        share = self.session.get(RecipeShare, share_id)
+        if share is None:
+            return False
+        self.session.delete(share)
+        self.session.commit()
+        return True
+
+    def get_user_role_for_recipe(self, recipe_id: UUID, user_id: UUID) -> str | None:
+        """Return 'owner', 'editor', 'reader', or None."""
+        recipe = (
+            self.session.execute(select(Recipe).where(Recipe.id == recipe_id))
+            .scalars()
+            .first()
+        )
+        if recipe is None:
+            return None
+        if recipe.owner_id == user_id:
+            return "owner"
+        share = (
+            self.session.execute(
+                select(RecipeShare).where(
+                    RecipeShare.recipe_id == recipe_id,
+                    RecipeShare.shared_with_user_id == user_id,
+                    RecipeShare.status == ShareStatus.accepted,
+                )
+            )
+            .scalars()
+            .first()
+        )
+        if share is not None:
+            return share.role.value
+        return None

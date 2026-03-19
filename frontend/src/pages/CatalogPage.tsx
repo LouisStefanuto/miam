@@ -1,10 +1,11 @@
 import { useMemo, useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, PenLine, Camera, Instagram, Download, FileJson, X, ArrowUpDown, Check } from 'lucide-react';
+import { Plus, PenLine, Camera, Instagram, Download, FileJson, X, ArrowUpDown, Check, Inbox } from 'lucide-react';
 import { useShake } from '@/hooks/use-shake';
 
 const BeaverCatchGame = lazy(() => import('@/components/BeaverCatchGame'));
 import CartSheet from '@/components/CartSheet';
+import PendingSharesSheet, { PendingSharesBadge } from '@/components/PendingSharesSheet';
 import UserMenu from '@/components/UserMenu';
 import MobileHeader from '@/components/MobileHeader';
 import MobileSearchOverlay from '@/components/MobileSearchOverlay';
@@ -79,8 +80,9 @@ const CatalogPage = () => {
       const matchTested = filters.tested === 'off' || r.tested;
       const matchVegetarian = filters.vegetarian === 'off' || r.diets.includes('végétarien');
       const matchRapido = filters.rapido === 'off' || (r.prepTime + r.cookTime) <= 20;
+      const matchOwnership = filters.ownership === 'all' || (filters.ownership === 'shared' && r.userRole && r.userRole !== 'owner');
 
-      return matchSearch && matchType && matchSeason && matchDifficulty && matchTested && matchVegetarian && matchRapido;
+      return matchSearch && matchType && matchSeason && matchDifficulty && matchTested && matchVegetarian && matchRapido && matchOwnership;
     });
 
     switch (filters.sort) {
@@ -122,7 +124,8 @@ const CatalogPage = () => {
     filters.difficulty !== defaultFilters.difficulty ||
     filters.tested !== defaultFilters.tested ||
     filters.vegetarian !== defaultFilters.vegetarian ||
-    filters.rapido !== defaultFilters.rapido;
+    filters.rapido !== defaultFilters.rapido ||
+    filters.ownership !== defaultFilters.ownership;
 
   const resetAll = () => {
     setSearchQuery('');
@@ -203,6 +206,14 @@ const CatalogPage = () => {
             <Download size={18} />
             Exporter
           </Button>
+          <PendingSharesSheet
+            trigger={
+              <Button variant="outline" className="relative font-body font-semibold shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3">
+                <Inbox size={18} />
+                <PendingSharesBadge />
+              </Button>
+            }
+          />
           <CartSheet hotkey="p" />
         </div>
       </div>

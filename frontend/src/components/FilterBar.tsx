@@ -1,6 +1,6 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArrowUpDown, Leaf, Check, Zap, UtensilsCrossed, Sun, Gauge } from 'lucide-react';
+import { ArrowUpDown, Leaf, Check, Zap, UtensilsCrossed, Sun, Gauge, Users } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export interface Filters {
@@ -11,6 +11,7 @@ export interface Filters {
   tested: string;
   vegetarian: string;
   rapido: string;
+  ownership: string;
 }
 
 export const defaultFilters: Filters = {
@@ -21,6 +22,7 @@ export const defaultFilters: Filters = {
   tested: 'off',
   vegetarian: 'off',
   rapido: 'off',
+  ownership: 'all',
 };
 
 interface FilterBarProps {
@@ -79,6 +81,16 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
           label="Rapido"
           activeClass="bg-primary/10 border-primary/30 text-primary"
           tooltip="Préparation + cuisson ≤ 20 min"
+        />
+
+        {/* Toggle: Shared with me */}
+        <ToggleChip
+          active={filters.ownership === 'shared'}
+          onClick={() => set('ownership', filters.ownership === 'shared' ? 'all' : 'shared')}
+          icon={<Users size={13} />}
+          label="Partagees"
+          activeClass="bg-primary/10 border-primary/30 text-primary"
+          tooltip="Recettes partagees avec moi"
         />
 
         {/* Sort */}

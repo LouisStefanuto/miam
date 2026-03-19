@@ -160,6 +160,12 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
               Végé
             </Badge>
           )}
+          {recipe.userRole && recipe.userRole !== 'owner' && (
+            <Badge variant="secondary" className="bg-card/95 text-muted-foreground font-body text-xs flex items-center gap-0.5">
+              <Users size={10} />
+              {recipe.userRole === 'editor' ? 'Editeur' : 'Lecteur'}
+            </Badge>
+          )}
         </div>
       </div>
 

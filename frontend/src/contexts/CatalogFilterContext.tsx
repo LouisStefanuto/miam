@@ -20,6 +20,7 @@ const defaultFilters: Filters = {
   tested: 'off',
   vegetarian: 'off',
   rapido: 'off',
+  ownership: 'all',
 };
 
 const CatalogFilterContext = createContext<CatalogFilterState | null>(null);
