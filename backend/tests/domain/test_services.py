@@ -74,6 +74,7 @@ class StubRecipeRepository(RecipeRepositoryPort):
         season: str | None = None,
         limit: int | None = None,
         offset: int = 0,
+        ownership: str | None = None,
     ) -> PaginatedResult:
         items = [r for r in self.recipes.values() if r.owner_id == user_id]
         if title:

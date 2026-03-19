@@ -117,6 +117,7 @@ class TestSearchRecipes:
             season=None,
             limit=None,
             offset=0,
+            ownership=None,
         )
 
     def test_passes_pagination(

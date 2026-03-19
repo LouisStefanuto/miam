@@ -25,6 +25,8 @@ from miam.domain.entities import (
     AuthProvider,
     Category,
     Season,
+    ShareRole,
+    ShareStatus,
     SourceType,
 )
 
@@ -198,3 +200,45 @@ class Source(Base):
     )
 
     recipe = relationship("Recipe", back_populates="sources")
+
+
+class RecipeShare(Base):
+    """Stores recipe sharing relationships between users."""
+
+    __tablename__ = "recipe_shares"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    recipe_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False
+    )
+    shared_by_user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    shared_with_user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    role: Mapped[ShareRole] = mapped_column(
+        Enum(ShareRole, name="sharerole"), nullable=False
+    )
+    status: Mapped[ShareStatus] = mapped_column(
+        Enum(ShareStatus, name="sharestatus"),
+        nullable=False,
+        default=ShareStatus.pending,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
+    recipe = relationship("Recipe", backref="shares")
+    shared_by = relationship("User", foreign_keys=[shared_by_user_id])
+    shared_with = relationship("User", foreign_keys=[shared_with_user_id])
+
+    __table_args__ = (UniqueConstraint("recipe_id", "shared_with_user_id"),)

@@ -1,8 +1,9 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, Plus, ShoppingCart, UserRound } from 'lucide-react';
+import { BookOpen, Inbox, Plus, ShoppingCart, UserRound } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
+import { PendingSharesBadge } from '@/components/PendingSharesSheet';
 
 export default function MobileBottomBar() {
   const { hidden } = useScrollDirection();
@@ -16,6 +17,8 @@ export default function MobileBottomBar() {
   const isRecipes = location.pathname === '/';
   const isAdd = location.pathname === '/add' || location.pathname === '/recipes/new' || location.pathname.startsWith('/import');
   const isCart = location.pathname === '/cart';
+  const isShares = location.pathname === '/shares';
+  const isAccount = location.pathname === '/settings';
 
   return (
     <nav className={`fixed bottom-0 inset-x-0 z-30 md:hidden bg-background border-t border-border transition-transform duration-300 ${hidden ? 'translate-y-full' : 'translate-y-0'}`}>
@@ -60,14 +63,28 @@ export default function MobileBottomBar() {
           <span className="text-[11px] font-body font-medium">Panier</span>
         </button>
 
+        {/* Shares */}
+        <button
+          onClick={() => navigate('/shares')}
+          className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
+            isShares ? 'text-primary' : 'text-muted-foreground'
+          }`}
+        >
+          <span className="relative">
+            <Inbox size={22} strokeWidth={isShares ? 2.5 : 2} />
+            <PendingSharesBadge />
+          </span>
+          <span className="text-[11px] font-body font-medium">Partages</span>
+        </button>
+
         {/* Account */}
         <button
           onClick={() => navigate('/settings')}
           className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
-            location.pathname === '/settings' ? 'text-primary' : 'text-muted-foreground'
+            isAccount ? 'text-primary' : 'text-muted-foreground'
           }`}
         >
-          <UserRound size={22} strokeWidth={location.pathname === '/settings' ? 2.5 : 2} />
+          <UserRound size={22} strokeWidth={isAccount ? 2.5 : 2} />
           <span className="text-[11px] font-body font-medium">Compte</span>
         </button>
       </div>
