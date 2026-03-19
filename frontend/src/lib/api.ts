@@ -15,6 +15,15 @@ async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
     ...init,
     headers: { ...init?.headers, ...authHeaders() },
   });
+
+  // Cloudflare Access session expired — fetch followed the redirect and
+  // returned the CF login page (HTML) instead of the expected JSON.
+  // Reload so the browser goes through the CF Access login flow.
+  if (res.redirected) {
+    window.location.reload();
+    throw new Error('Session expired (Cloudflare Access)');
+  }
+
   if (res.status === 401) {
     localStorage.removeItem('miam-auth-token');
     localStorage.removeItem('miam-auth-user');
