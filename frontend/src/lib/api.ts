@@ -13,13 +13,15 @@ function authHeaders(): Record<string, string> {
 async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
   const res = await fetch(url, {
     ...init,
+    redirect: 'manual',
     headers: { ...init?.headers, ...authHeaders() },
   });
 
-  // Cloudflare Access session expired — fetch followed the redirect and
-  // returned the CF login page (HTML) instead of the expected JSON.
-  // Reload so the browser goes through the CF Access login flow.
-  if (res.redirected) {
+  // Cloudflare Access session expired — the server returned a 302 to the
+  // CF login page. With redirect: 'manual' this becomes an opaque redirect
+  // (type "opaqueredirect", status 0) instead of a CORS error.
+  // Reload so the browser navigates through the CF Access login flow.
+  if (res.type === 'opaqueredirect' || res.status === 0) {
     window.location.reload();
     throw new Error('Session expired (Cloudflare Access)');
   }

@@ -119,6 +119,12 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
       // Append new ingredients at the end
       const added = rawIngredients.filter((i) => !prevIds.has(i.id));
 
+      // Bail out if nothing changed to avoid infinite re-render loop
+      if (added.length === 0 && kept.length === prev.length &&
+          kept.every((k, i) => k.name === prev[i].name && k.details === prev[i].details)) {
+        return prev;
+      }
+
       return [...kept, ...added];
     });
 
