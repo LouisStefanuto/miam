@@ -1,20 +1,16 @@
 import { Recipe, RecipeType, Season, Difficulty } from '@/data/recipes';
 import { API_BASE } from '@/lib/config';
 
-function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem('miam-auth-token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 /**
- * Wrapper around fetch that auto-injects auth headers and handles 401
+ * Wrapper around fetch that sends credentials (HttpOnly cookie) and handles 401
  * by clearing the session and redirecting to the login page.
  */
 async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
   const res = await fetch(url, {
     ...init,
     redirect: 'manual',
-    headers: { ...init?.headers, ...authHeaders() },
+    credentials: 'same-origin',
+    headers: { ...init?.headers },
   });
 
   // Cloudflare Access session expired — the server returned a 302 to the
@@ -27,7 +23,6 @@ async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
   }
 
   if (res.status === 401) {
-    localStorage.removeItem('miam-auth-token');
     localStorage.removeItem('miam-auth-user');
     window.location.href = '/login';
     throw new Error('Session expired');

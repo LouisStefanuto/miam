@@ -3,9 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { API_BASE } from '@/lib/config';
 
 function fetchAuthImage(imageUrl: string): Promise<string> {
-  const token = localStorage.getItem('miam-auth-token');
   return fetch(imageUrl, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    credentials: 'same-origin',
   })
     .then((res) => {
       if (!res.ok) throw new Error(`Image fetch failed: ${res.status}`);

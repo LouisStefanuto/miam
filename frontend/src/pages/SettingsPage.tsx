@@ -114,7 +114,7 @@ export default function SettingsPage() {
           <Button
             variant="outline"
             className="w-full justify-start gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 dark:bg-muted dark:text-red-500 dark:hover:text-red-400 dark:hover:bg-red-900/40"
-            onClick={logout}
+            onClick={() => void logout()}
           >
             <LogOut size={16} />
             Se déconnecter

@@ -17,8 +17,8 @@ interface User {
 }
 
 interface AuthContextValue {
-  /** JWT access token, null when not authenticated */
-  token: string | null;
+  /** Whether the user is authenticated (has a valid session cookie) */
+  isAuthenticated: boolean;
   /** Decoded user info from Google credential */
   user: User | null;
   /** True while checking for a stored session */
@@ -26,15 +26,14 @@ interface AuthContextValue {
   /** Exchange a Google credential for a backend JWT */
   loginWithGoogle: (credential: string) => Promise<void>;
   /** Clear session */
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const TOKEN_KEY = 'miam-auth-token';
 const USER_KEY = 'miam-auth-user';
 
-/** Decode the payload of a Google ID token (JWT) to extract user info. */
+/** Decode the payload of a Google ID token (JWT) to extract display info. */
 function parseGoogleCredential(credential: string): User {
   try {
     const payload = JSON.parse(atob(credential.split('.')[1]));
@@ -50,24 +49,39 @@ function parseGoogleCredential(credential: string): User {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
-  const [token, setToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore session from localStorage on mount
+  // Restore user display info from localStorage and verify the cookie is still valid.
   useEffect(() => {
-    const storedToken = localStorage.getItem(TOKEN_KEY);
     const storedUser = localStorage.getItem(USER_KEY);
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+    if (!storedUser) {
+      setIsLoading(false);
+      return;
     }
-    setIsLoading(false);
+    setUser(JSON.parse(storedUser));
+    // Verify the HttpOnly cookie is still valid
+    fetch(`${API_BASE}/auth/me`, { credentials: 'same-origin' })
+      .then((res) => {
+        if (res.ok) {
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem(USER_KEY);
+          setUser(null);
+        }
+      })
+      .catch(() => {
+        // Network error — assume valid to avoid logging out offline users
+        setIsAuthenticated(true);
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
   const loginWithGoogle = useCallback(async (credential: string) => {
     const res = await fetch(`${API_BASE}/auth/google`, {
       method: 'POST',
+      credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id_token: credential }),
     });
@@ -75,26 +89,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const detail = await res.text();
       throw new Error(`Login failed: ${detail}`);
     }
-    const { access_token } = await res.json();
+    // The JWT is now set as an HttpOnly cookie by the backend.
+    // We only store non-sensitive display info in localStorage.
     const userInfo = parseGoogleCredential(credential);
-
-    localStorage.setItem(TOKEN_KEY, access_token);
     localStorage.setItem(USER_KEY, JSON.stringify(userInfo));
-    setToken(access_token);
+    setIsAuthenticated(true);
     setUser(userInfo);
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY);
+  const logout = useCallback(async () => {
+    // Ask the backend to clear the HttpOnly cookie
+    try {
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        credentials: 'same-origin',
+      });
+    } catch {
+      // Best-effort; the cookie will expire on its own
+    }
     localStorage.removeItem(USER_KEY);
-    setToken(null);
+    setIsAuthenticated(false);
     setUser(null);
     queryClient.clear();
   }, [queryClient]);
 
   const value = useMemo(
-    () => ({ token, user, isLoading, loginWithGoogle, logout }),
-    [token, user, isLoading, loginWithGoogle, logout],
+    () => ({ isAuthenticated, user, isLoading, loginWithGoogle, logout }),
+    [isAuthenticated, user, isLoading, loginWithGoogle, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

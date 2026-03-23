@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Cookie, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.orm import Session
@@ -35,7 +35,7 @@ class AuthSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
-_security = HTTPBearer()
+_security = HTTPBearer(auto_error=False)
 
 
 def get_db() -> Generator[Session]:
@@ -59,13 +59,21 @@ def _get_jwt_handler(settings: AuthSettings) -> JwtTokenHandler:
 
 
 def get_current_user_id(
-    credentials: HTTPAuthorizationCredentials = Depends(_security),  # noqa: B008
+    credentials: HTTPAuthorizationCredentials | None = Depends(_security),  # noqa: B008
+    miam_auth_token: str | None = Cookie(default=None),  # noqa: B008
     settings: AuthSettings = Depends(get_auth_settings),  # noqa: B008
 ) -> UUID:
-    """Extract and validate the JWT from the Authorization header."""
+    """Extract and validate the JWT from the HttpOnly cookie or Authorization header."""
+    token = miam_auth_token or (credentials.credentials if credentials else None)
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     handler = _get_jwt_handler(settings)
     try:
-        return handler.decode_access_token(credentials.credentials)
+        return handler.decode_access_token(token)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
