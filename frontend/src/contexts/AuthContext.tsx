@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { API_BASE } from '@/lib/config';
+import { handleCfRedirect } from '@/lib/api';
 
 interface User {
   name: string;
@@ -62,8 +63,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(JSON.parse(storedUser));
     // Verify the HttpOnly cookie is still valid
-    fetch(`${API_BASE}/auth/me`, { credentials: 'same-origin' })
+    fetch(`${API_BASE}/auth/me`, { credentials: 'same-origin', redirect: 'manual' })
       .then((res) => {
+        if (handleCfRedirect(res)) return; // CF session expired — navigating to login
         if (res.ok) {
           setIsAuthenticated(true);
         } else {
