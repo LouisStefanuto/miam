@@ -7,9 +7,13 @@ from unittest.mock import create_autospec
 import pytest
 from fastapi.testclient import TestClient
 
-from miam.api.deps import get_auth_service
+from miam.api.deps import AuthSettings, get_auth_service, get_auth_settings
 from miam.api.main import app
 from miam.domain.services import AuthService
+
+_FAKE_AUTH_SETTINGS = AuthSettings(
+    jwt_secret_key="test-secret", google_client_id="test-client-id"
+)
 
 
 @pytest.fixture
@@ -20,6 +24,7 @@ def mock_auth_service() -> Any:
 @pytest.fixture
 def auth_client(mock_auth_service: Any) -> Generator[TestClient]:
     app.dependency_overrides[get_auth_service] = lambda: mock_auth_service
+    app.dependency_overrides[get_auth_settings] = lambda: _FAKE_AUTH_SETTINGS
     yield TestClient(app)
     app.dependency_overrides.clear()
 
@@ -61,20 +66,23 @@ class TestProtectedRoutes:
     """Verify that protected routes reject unauthenticated requests."""
 
     def test_create_recipe_requires_auth(self) -> None:
-        client = TestClient(app)
-        # Clear any overrides to test real auth
         app.dependency_overrides.clear()
+        app.dependency_overrides[get_auth_settings] = lambda: _FAKE_AUTH_SETTINGS
+        client = TestClient(app)
         response = client.post(
             "/api/recipes", json={"title": "Test", "category": "plat"}
         )
         # Should get 403 (no bearer token) or 401
         assert response.status_code in (401, 403)
+        app.dependency_overrides.clear()
 
     def test_batch_create_requires_auth(self) -> None:
-        client = TestClient(app)
         app.dependency_overrides.clear()
+        app.dependency_overrides[get_auth_settings] = lambda: _FAKE_AUTH_SETTINGS
+        client = TestClient(app)
         response = client.post(
             "/api/recipes/batch",
             json={"recipes": [{"title": "Test", "category": "plat"}]},
         )
         assert response.status_code in (401, 403)
+        app.dependency_overrides.clear()
