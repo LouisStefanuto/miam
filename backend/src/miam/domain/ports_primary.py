@@ -3,7 +3,12 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from miam.domain.entities import PaginatedResult, RecipeEntity
+from miam.domain.entities import (
+    PaginatedResult,
+    RecipeEntity,
+    RecipeShareEntity,
+    ShareRole,
+)
 from miam.domain.schemas import (
     ImageResponse,
     InstagramResponse,
@@ -39,8 +44,9 @@ class RecipeServicePort(ABC):
         season: str | None = None,
         limit: int | None = None,
         offset: int = 0,
+        ownership: str | None = None,
     ) -> PaginatedResult:
-        """Search for recipes using dynamic filters, scoped to the given user."""
+        """Search for recipes using dynamic filters, visible to the given user."""
 
     @abstractmethod
     def update_recipe(
@@ -65,6 +71,50 @@ class RecipeServicePort(ABC):
     @abstractmethod
     def delete_recipe_image(self, image_id: UUID, user_id: UUID) -> bool:
         """Delete an image from storage and database. Returns True if deleted, False if not found/owned."""
+
+
+class RecipeShareServicePort(ABC):
+    """Primary port for recipe sharing operations."""
+
+    @abstractmethod
+    def share_recipe(
+        self, recipe_id: UUID, email: str, role: ShareRole, user_id: UUID
+    ) -> RecipeShareEntity:
+        """Share a recipe with another user by email. Only the owner can share."""
+
+    @abstractmethod
+    def get_pending_shares(self, user_id: UUID) -> list[RecipeShareEntity]:
+        """List pending share invitations for the current user."""
+
+    @abstractmethod
+    def get_pending_shares_count(self, user_id: UUID) -> int:
+        """Count pending share invitations for the current user."""
+
+    @abstractmethod
+    def accept_share(self, share_id: UUID, user_id: UUID) -> RecipeShareEntity:
+        """Accept a share invitation."""
+
+    @abstractmethod
+    def accept_all_shares(self, user_id: UUID) -> list[RecipeShareEntity]:
+        """Accept all pending share invitations for the current user."""
+
+    @abstractmethod
+    def reject_share(self, share_id: UUID, user_id: UUID) -> RecipeShareEntity:
+        """Reject a share invitation."""
+
+    @abstractmethod
+    def remove_share(self, share_id: UUID, user_id: UUID) -> bool:
+        """Remove a share (owner revokes or shared user leaves)."""
+
+    @abstractmethod
+    def leave_recipe(self, recipe_id: UUID, user_id: UUID) -> bool:
+        """Remove yourself from a shared recipe."""
+
+    @abstractmethod
+    def get_recipe_shares(
+        self, recipe_id: UUID, user_id: UUID
+    ) -> list[RecipeShareEntity]:
+        """List all collaborators for a recipe. Only the owner can view this."""
 
 
 class RecipeImportServicePort(ABC):

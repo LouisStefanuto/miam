@@ -1,10 +1,13 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRecipe, useRecipes, useUpdateRecipe, useDeleteRecipe } from '@/hooks/use-recipes';
 import RecipeDetail from '@/components/RecipeDetail';
+import ShareDialog from '@/components/ShareDialog';
 import { toast } from '@/hooks/use-toast';
 import { useCart } from '@/contexts/CartContext';
 import { Recipe } from '@/data/recipes';
+import { leaveRecipe } from '@/lib/api';
 
 const RecipeDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +17,7 @@ const RecipeDetailPage = () => {
   const updateMutation = useUpdateRecipe();
   const deleteMutation = useDeleteRecipe();
   const { remove: removeFromCart } = useCart();
+  const queryClient = useQueryClient();
   const [customTags, setCustomTags] = useState<string[]>([]);
 
   useEffect(() => {
@@ -62,6 +66,19 @@ const RecipeDetailPage = () => {
     });
   };
 
+  const handleRemoveFromCollection = async () => {
+    if (!id || !recipe) return;
+    try {
+      await leaveRecipe(id);
+      removeFromCart(id);
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      toast({ title: 'Recette retirée', description: recipe.title });
+      navigate('/');
+    } catch {
+      toast({ title: 'Erreur', description: 'Impossible de retirer la recette.', variant: 'destructive' });
+    }
+  };
+
   const handleAddTag = (tag: string) => {
     if (!customTags.includes(tag)) {
       setCustomTags((prev) => [...prev, tag]);
@@ -100,17 +117,21 @@ const RecipeDetailPage = () => {
     );
   }
 
+  const isOwner = !recipe.userRole || recipe.userRole === 'owner';
+
   return (
     <RecipeDetail
       recipe={recipe}
       onBack={() => navigate('/')}
-      onRatingChange={handleRatingChange}
-      onSave={handleSave}
-      onTestedToggle={handleTestedToggle}
+      onRatingChange={recipe.userRole !== 'reader' ? handleRatingChange : undefined}
+      onSave={recipe.userRole !== 'reader' ? handleSave : undefined}
+      onTestedToggle={recipe.userRole !== 'reader' ? handleTestedToggle : undefined}
       allTags={allTags}
       onAddTag={handleAddTag}
       onDeleteTag={handleDeleteTag}
-      onDelete={handleDelete}
+      onDelete={isOwner ? handleDelete : undefined}
+      onRemoveFromCollection={!isOwner ? handleRemoveFromCollection : undefined}
+      shareButton={isOwner && id ? <ShareDialog recipeId={id} /> : undefined}
     />
   );
 };

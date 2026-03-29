@@ -562,7 +562,7 @@ class TestAddImage:
     ) -> None:
         created = repository.add_recipe(make_recipe_create(), owner_id=default_owner_id)
         other_user = uuid4()
-        with pytest.raises(ValueError, match="not found or not owned"):
+        with pytest.raises(ValueError, match="not found or not accessible"):
             repository.add_image(created.id, other_user, caption="Nope")
 
 

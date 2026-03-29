@@ -7,12 +7,16 @@ from miam.domain.entities import (
     ImageEntity,
     PaginatedResult,
     RecipeEntity,
+    RecipeShareEntity,
+    ShareRole,
+    ShareStatus,
 )
 from miam.domain.ports_primary import (
     AuthServicePort,
     RecipeExportServicePort,
     RecipeImportServicePort,
     RecipeServicePort,
+    RecipeShareServicePort,
 )
 from miam.domain.ports_secondary import (
     GoogleTokenVerifierPort,
@@ -21,6 +25,7 @@ from miam.domain.ports_secondary import (
     JwtTokenPort,
     MarkdownExporterPort,
     RecipeRepositoryPort,
+    RecipeShareRepositoryPort,
     UserRepositoryPort,
     WordExporterPort,
 )
@@ -40,9 +45,23 @@ class RecipeManagementService(RecipeServicePort):
         self,
         repository: RecipeRepositoryPort,
         image_storage: ImageStoragePort,
+        share_repo: RecipeShareRepositoryPort | None = None,
     ):
         self.repository = repository
         self.image_storage = image_storage
+        self.share_repo = share_repo
+
+    def _get_role(self, recipe_id: UUID, user_id: UUID) -> str | None:
+        """Get the user's role for a recipe (owner/editor/reader/None)."""
+        if self.share_repo is None:
+            return None
+        return self.share_repo.get_user_role_for_recipe(recipe_id, user_id)
+
+    def _require_edit_access(self, recipe_id: UUID, user_id: UUID) -> None:
+        """Raise ValueError if user cannot edit the recipe."""
+        role = self._get_role(recipe_id, user_id)
+        if role not in ("owner", "editor"):
+            raise ValueError("You don't have permission to edit this recipe")
 
     def create_recipe(self, data: RecipeCreate, owner_id: UUID) -> RecipeEntity:
         """Create a new recipe with ingredients, images, and sources."""
@@ -68,8 +87,9 @@ class RecipeManagementService(RecipeServicePort):
         season: str | None = None,
         limit: int | None = None,
         offset: int = 0,
+        ownership: str | None = None,
     ) -> PaginatedResult:
-        """Search/filter recipes via the repository abstraction, scoped to user."""
+        """Search/filter recipes via the repository abstraction, visible to user."""
         return self.repository.search_recipes(
             user_id=user_id,
             recipe_id=recipe_id,
@@ -79,17 +99,22 @@ class RecipeManagementService(RecipeServicePort):
             season=season,
             limit=limit,
             offset=offset,
+            ownership=ownership,
         )
 
     def update_recipe(
         self, recipe_id: UUID, data: RecipeUpdate, user_id: UUID
     ) -> RecipeEntity | None:
+        if self.share_repo is not None:
+            self._require_edit_access(recipe_id, user_id)
         return self.repository.update_recipe(recipe_id, data, user_id)
 
     def delete_recipe(self, recipe_id: UUID, user_id: UUID) -> bool:
         recipe = self.repository.get_recipe_by_id(recipe_id, user_id)
         if recipe is None:
             return False
+        if recipe.owner_id != user_id:
+            raise ValueError("Only the owner can delete a recipe")
         for image in recipe.images:
             self.image_storage.delete_image(image.id)
         return self.repository.delete_recipe(recipe_id, user_id)
@@ -97,7 +122,9 @@ class RecipeManagementService(RecipeServicePort):
     def add_recipe_image(
         self, recipe_id: UUID, user_id: UUID, content: bytes, filename: str
     ) -> UUID:
-        """Add an image to a recipe owned by user_id and return its image ID."""
+        """Add an image to a recipe. Requires owner or editor role."""
+        if self.share_repo is not None:
+            self._require_edit_access(recipe_id, user_id)
         img: ImageEntity = self.repository.add_image(
             recipe_id=recipe_id,
             user_id=user_id,
@@ -120,6 +147,98 @@ class RecipeManagementService(RecipeServicePort):
         if deleted:
             self.image_storage.delete_image(image_id)
         return deleted
+
+
+class RecipeShareService(RecipeShareServicePort):
+    """Service for sharing recipes between users."""
+
+    def __init__(
+        self,
+        share_repo: RecipeShareRepositoryPort,
+        user_repo: UserRepositoryPort,
+        recipe_repo: RecipeRepositoryPort,
+    ):
+        self.share_repo = share_repo
+        self.user_repo = user_repo
+        self.recipe_repo = recipe_repo
+
+    def share_recipe(
+        self, recipe_id: UUID, email: str, role: ShareRole, user_id: UUID
+    ) -> RecipeShareEntity:
+        """Share a recipe with another user. Only the owner can share."""
+        recipe = self.recipe_repo.get_recipe_by_id(recipe_id, user_id)
+        if recipe is None:
+            raise ValueError("Recipe not found")
+        if recipe.owner_id != user_id:
+            raise ValueError("Only the owner can share a recipe")
+
+        target = self.user_repo.get_user_by_email(email)
+        if target is None:
+            raise ValueError("No account found for this email")
+        if target.id == user_id:
+            raise ValueError("Cannot share a recipe with yourself")
+
+        existing = self.share_repo.get_share_for_recipe_and_user(recipe_id, target.id)
+        if existing is not None:
+            raise ValueError("Recipe is already shared with this user")
+
+        return self.share_repo.create_share(recipe_id, user_id, target.id, role)
+
+    def get_pending_shares(self, user_id: UUID) -> list[RecipeShareEntity]:
+        return self.share_repo.get_pending_shares_for_user(user_id)
+
+    def get_pending_shares_count(self, user_id: UUID) -> int:
+        return self.share_repo.get_pending_shares_count(user_id)
+
+    def accept_share(self, share_id: UUID, user_id: UUID) -> RecipeShareEntity:
+        share = self.share_repo.get_share_by_id(share_id)
+        if share is None or share.shared_with_user_id != user_id:
+            raise ValueError("Share not found")
+        if share.status != ShareStatus.pending:
+            raise ValueError("Share is not pending")
+        result = self.share_repo.update_share_status(share_id, ShareStatus.accepted)
+        if result is None:
+            raise ValueError("Failed to update share")
+        return result
+
+    def accept_all_shares(self, user_id: UUID) -> list[RecipeShareEntity]:
+        return self.share_repo.accept_all_pending_shares(user_id)
+
+    def reject_share(self, share_id: UUID, user_id: UUID) -> RecipeShareEntity:
+        share = self.share_repo.get_share_by_id(share_id)
+        if share is None or share.shared_with_user_id != user_id:
+            raise ValueError("Share not found")
+        if share.status != ShareStatus.pending:
+            raise ValueError("Share is not pending")
+        result = self.share_repo.update_share_status(share_id, ShareStatus.rejected)
+        if result is None:
+            raise ValueError("Failed to update share")
+        return result
+
+    def remove_share(self, share_id: UUID, user_id: UUID) -> bool:
+        share = self.share_repo.get_share_by_id(share_id)
+        if share is None:
+            return False
+        # Owner can revoke any share; shared user can remove their own
+        if share.shared_by_user_id != user_id and share.shared_with_user_id != user_id:
+            raise ValueError("Not authorized to remove this share")
+        return self.share_repo.delete_share(share_id)
+
+    def leave_recipe(self, recipe_id: UUID, user_id: UUID) -> bool:
+        """Remove yourself from a shared recipe by recipe ID."""
+        share = self.share_repo.get_share_for_recipe_and_user(recipe_id, user_id)
+        if share is None:
+            return False
+        return self.share_repo.delete_share(share.id)
+
+    def get_recipe_shares(
+        self, recipe_id: UUID, user_id: UUID
+    ) -> list[RecipeShareEntity]:
+        """Only the owner can view all collaborators."""
+        role = self.share_repo.get_user_role_for_recipe(recipe_id, user_id)
+        if role != "owner":
+            raise ValueError("Only the owner can view collaborators")
+        return self.share_repo.get_shares_for_recipe(recipe_id)
 
 
 class RecipeImportService(RecipeImportServicePort):

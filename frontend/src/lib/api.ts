@@ -1,4 +1,4 @@
-import { Recipe, RecipeType, Season, Difficulty } from '@/data/recipes';
+import { Recipe, RecipeType, Season, Difficulty, UserRole, RecipeShare, PendingShare, Collaborator } from '@/data/recipes';
 import { API_BASE } from '@/lib/config';
 
 /**
@@ -120,6 +120,8 @@ interface BackendRecipe {
   ingredients: BackendIngredient[];
   images: BackendImage[];
   sources: { type: string; raw_content: string }[];
+  user_role?: string;
+  owner_name?: string;
 }
 
 // --- Conversion functions ---
@@ -167,6 +169,8 @@ function backendToFrontend(b: BackendRecipe): Recipe {
     tested: b.tested,
     createdAt: '',
     updatedAt: '',
+    userRole: (b.user_role as UserRole) ?? undefined,
+    ownerName: b.owner_name ?? undefined,
   };
 }
 
@@ -415,4 +419,66 @@ async function uploadImage(recipeId: string, dataUrl: string): Promise<void> {
     body: formData,
   });
   if (!res.ok) throw new Error(`Failed to upload image: ${res.status}`);
+}
+
+// --- Sharing API functions ---
+
+export async function shareRecipe(recipeId: string, email: string, role: string): Promise<RecipeShare> {
+  const res = await apiFetch(`${API_BASE}/shares`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recipe_id: recipeId, email, role }),
+  });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({ detail: 'Failed to share recipe' }));
+    throw new Error(detail.detail || `Failed to share recipe: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function fetchPendingShares(): Promise<PendingShare[]> {
+  const res = await apiFetch(`${API_BASE}/shares/pending`);
+  if (!res.ok) throw new Error(`Failed to fetch pending shares: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchPendingSharesCount(): Promise<number> {
+  const res = await apiFetch(`${API_BASE}/shares/pending/count`);
+  if (!res.ok) throw new Error(`Failed to fetch pending shares count: ${res.status}`);
+  const data = await res.json();
+  return data.count;
+}
+
+export async function acceptAllShares(): Promise<RecipeShare[]> {
+  const res = await apiFetch(`${API_BASE}/shares/accept-all`, { method: 'POST' });
+  if (!res.ok) throw new Error(`Failed to accept all shares: ${res.status}`);
+  return res.json();
+}
+
+export async function acceptShare(shareId: string): Promise<RecipeShare> {
+  const res = await apiFetch(`${API_BASE}/shares/${shareId}/accept`, { method: 'POST' });
+  if (!res.ok) throw new Error(`Failed to accept share: ${res.status}`);
+  return res.json();
+}
+
+export async function rejectShare(shareId: string): Promise<RecipeShare> {
+  const res = await apiFetch(`${API_BASE}/shares/${shareId}/reject`, { method: 'POST' });
+  if (!res.ok) throw new Error(`Failed to reject share: ${res.status}`);
+  return res.json();
+}
+
+export async function removeShare(shareId: string): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/shares/${shareId}`, { method: 'DELETE' });
+  if (!res.ok && res.status !== 404) throw new Error(`Failed to remove share: ${res.status}`);
+}
+
+export async function leaveRecipe(recipeId: string): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/shares/recipe/${recipeId}`, { method: 'DELETE' });
+  if (!res.ok && res.status !== 404) throw new Error(`Failed to leave recipe: ${res.status}`);
+}
+
+export async function fetchRecipeShares(recipeId: string): Promise<Collaborator[]> {
+  const res = await apiFetch(`${API_BASE}/recipes/${recipeId}/shares`);
+  if (!res.ok) throw new Error(`Failed to fetch recipe shares: ${res.status}`);
+  return res.json();
 }

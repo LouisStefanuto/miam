@@ -36,6 +36,21 @@ class SourceType(Enum):
     photo = "photo"
 
 
+class ShareRole(Enum):
+    """Roles for shared recipe access."""
+
+    editor = "editor"
+    reader = "reader"
+
+
+class ShareStatus(Enum):
+    """Status of a recipe share invitation."""
+
+    pending = "pending"
+    accepted = "accepted"
+    rejected = "rejected"
+
+
 class AuthProvider(Enum):
     """Supported SSO authentication providers."""
 
@@ -107,6 +122,26 @@ class RecipeEntity:
     images: list[ImageEntity] = field(default_factory=list)
     sources: list[SourceEntity] = field(default_factory=list)
     created_at: datetime | None = None
+    user_role: str | None = None
+    owner_name: str | None = None
+
+
+@dataclass
+class RecipeShareEntity:
+    """Represents a share relationship between a recipe and a user."""
+
+    id: UUID
+    recipe_id: UUID
+    shared_by_user_id: UUID
+    shared_with_user_id: UUID
+    role: ShareRole
+    status: ShareStatus
+    recipe_title: str | None = None
+    shared_by_name: str | None = None
+    shared_with_email: str | None = None
+    shared_with_name: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 @dataclass
