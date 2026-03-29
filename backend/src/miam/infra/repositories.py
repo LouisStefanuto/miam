@@ -693,6 +693,29 @@ class RecipeShareRepository(RecipeShareRepositoryPort):
         loaded = self._load_share(share.id)
         return self._to_entity(loaded)  # type: ignore[arg-type]
 
+    def accept_all_pending_shares(self, user_id: UUID) -> list[RecipeShareEntity]:
+        stmt = (
+            select(RecipeShare)
+            .options(
+                joinedload(RecipeShare.recipe),
+                joinedload(RecipeShare.shared_by),
+                joinedload(RecipeShare.shared_with),
+            )
+            .where(
+                RecipeShare.shared_with_user_id == user_id,
+                RecipeShare.status == ShareStatus.pending,
+            )
+        )
+        shares = self.session.execute(stmt).unique().scalars().all()
+        now = datetime.now(UTC)
+        for share in shares:
+            share.status = ShareStatus.accepted
+            share.updated_at = now
+        self.session.commit()
+        for share in shares:
+            self.session.refresh(share)
+        return [self._to_entity(s) for s in shares]
+
     def delete_share(self, share_id: UUID) -> bool:
         share = self.session.get(RecipeShare, share_id)
         if share is None:

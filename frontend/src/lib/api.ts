@@ -449,6 +449,12 @@ export async function fetchPendingSharesCount(): Promise<number> {
   return data.count;
 }
 
+export async function acceptAllShares(): Promise<RecipeShare[]> {
+  const res = await apiFetch(`${API_BASE}/shares/accept-all`, { method: 'POST' });
+  if (!res.ok) throw new Error(`Failed to accept all shares: ${res.status}`);
+  return res.json();
+}
+
 export async function acceptShare(shareId: string): Promise<RecipeShare> {
   const res = await apiFetch(`${API_BASE}/shares/${shareId}/accept`, { method: 'POST' });
   if (!res.ok) throw new Error(`Failed to accept share: ${res.status}`);

@@ -95,6 +95,10 @@ class RecipeShareServicePort(ABC):
         """Accept a share invitation."""
 
     @abstractmethod
+    def accept_all_shares(self, user_id: UUID) -> list[RecipeShareEntity]:
+        """Accept all pending share invitations for the current user."""
+
+    @abstractmethod
     def reject_share(self, share_id: UUID, user_id: UUID) -> RecipeShareEntity:
         """Reject a share invitation."""
 
