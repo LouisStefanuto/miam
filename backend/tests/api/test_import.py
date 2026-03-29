@@ -7,12 +7,20 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
-from miam.api.deps import get_current_user_id, get_recipe_import_service
+from miam.api.deps import (
+    AuthSettings,
+    get_auth_settings,
+    get_current_user_id,
+    get_recipe_import_service,
+)
 from miam.api.main import app
 from miam.domain.entities import Category, SourceType
 from miam.domain.schemas import ParsedRecipe, RecipeCreate, SourceCreate
 from miam.domain.services import RecipeImportService
 
+_FAKE_AUTH_SETTINGS = AuthSettings(
+    jwt_secret_key="test-secret", google_client_id="test-client-id"
+)
 TEST_USER_ID = uuid4()
 
 
@@ -89,6 +97,7 @@ class TestParseInstagram:
         """Endpoint requires authentication."""
         mock_service = create_autospec(RecipeImportService, instance=True)
         app.dependency_overrides[get_recipe_import_service] = lambda: mock_service
+        app.dependency_overrides[get_auth_settings] = lambda: _FAKE_AUTH_SETTINGS
         try:
             client = TestClient(app)
             response = client.post(

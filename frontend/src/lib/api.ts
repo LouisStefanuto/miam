@@ -2,6 +2,21 @@ import { Recipe, RecipeType, Season, Difficulty } from '@/data/recipes';
 import { API_BASE } from '@/lib/config';
 
 /**
+ * Detect a Cloudflare Access session expiry (opaque redirect) and navigate
+ * to the CF login flow. Returns true if a redirect was triggered.
+ * A sessionStorage guard prevents infinite reload loops.
+ */
+export function handleCfRedirect(res: Response): boolean {
+  if (res.type !== 'opaqueredirect' && res.status !== 0) return false;
+  const now = Date.now();
+  const lastReload = Number(sessionStorage.getItem('cf-reload-ts') || '0');
+  if (now - lastReload < 5000) return false;
+  sessionStorage.setItem('cf-reload-ts', String(now));
+  window.location.href = window.location.href;
+  return true;
+}
+
+/**
  * Wrapper around fetch that sends credentials (HttpOnly cookie) and handles 401
  * by clearing the session and redirecting to the login page.
  */
@@ -13,12 +28,7 @@ async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
     headers: { ...init?.headers },
   });
 
-  // Cloudflare Access session expired — the server returned a 302 to the
-  // CF login page. With redirect: 'manual' this becomes an opaque redirect
-  // (type "opaqueredirect", status 0) instead of a CORS error.
-  // Reload so the browser navigates through the CF Access login flow.
-  if (res.type === 'opaqueredirect' || res.status === 0) {
-    window.location.reload();
+  if (handleCfRedirect(res)) {
     throw new Error('Session expired (Cloudflare Access)');
   }
 

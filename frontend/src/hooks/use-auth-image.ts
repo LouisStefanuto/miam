@@ -1,12 +1,15 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { API_BASE } from '@/lib/config';
+import { handleCfRedirect } from '@/lib/api';
 
 function fetchAuthImage(imageUrl: string): Promise<string> {
   return fetch(imageUrl, {
     credentials: 'same-origin',
+    redirect: 'manual',
   })
     .then((res) => {
+      if (handleCfRedirect(res)) throw new Error('Session expired (Cloudflare Access)');
       if (!res.ok) throw new Error(`Image fetch failed: ${res.status}`);
       return res.blob();
     })
