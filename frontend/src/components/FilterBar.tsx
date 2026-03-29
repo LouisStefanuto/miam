@@ -88,9 +88,9 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
           active={filters.ownership === 'shared'}
           onClick={() => set('ownership', filters.ownership === 'shared' ? 'all' : 'shared')}
           icon={<Users size={13} />}
-          label="Partagees"
+          label="Partagées"
           activeClass="bg-primary/10 border-primary/30 text-primary"
-          tooltip="Recettes partagees avec moi"
+          tooltip="Recettes partagées avec moi"
         />
 
         {/* Sort */}
