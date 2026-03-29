@@ -18,7 +18,7 @@ export default function PendingSharesSheet({ trigger }: PendingSharesSheetProps)
   const handleAccept = (shareId: string, title?: string) => {
     acceptMutation.mutate(shareId, {
       onSuccess: () => {
-        toast({ title: 'Recette acceptee', description: title });
+        toast({ title: 'Recette acceptée', description: title });
         refetch();
       },
     });
@@ -53,7 +53,7 @@ export default function PendingSharesSheet({ trigger }: PendingSharesSheetProps)
                 acceptAllMutation.mutate(undefined, {
                   onSuccess: (data) => {
                     toast({
-                      title: `${data.length} recette${data.length > 1 ? 's' : ''} acceptee${data.length > 1 ? 's' : ''}`,
+                      title: `${data.length} recette${data.length > 1 ? 's' : ''} acceptée${data.length > 1 ? 's' : ''}`,
                     });
                     refetch();
                   },

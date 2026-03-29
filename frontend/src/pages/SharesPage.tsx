@@ -13,7 +13,7 @@ const SharesPage = () => {
   const handleAccept = (shareId: string, title?: string) => {
     acceptMutation.mutate(shareId, {
       onSuccess: () => {
-        toast({ title: 'Recette acceptee', description: title });
+        toast({ title: 'Recette acceptée', description: title });
         refetch();
       },
     });
@@ -46,7 +46,7 @@ const SharesPage = () => {
               acceptAllMutation.mutate(undefined, {
                 onSuccess: (data) => {
                   toast({
-                    title: `${data.length} recette${data.length > 1 ? 's' : ''} acceptee${data.length > 1 ? 's' : ''}`,
+                    title: `${data.length} recette${data.length > 1 ? 's' : ''} acceptée${data.length > 1 ? 's' : ''}`,
                   });
                   refetch();
                 },
