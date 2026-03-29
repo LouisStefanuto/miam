@@ -1,7 +1,7 @@
-import { Inbox, Check, X } from 'lucide-react';
+import { Inbox, Check, CheckCheck, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { usePendingShares, usePendingSharesCount, useAcceptShare, useRejectShare } from '@/hooks/use-shares';
+import { usePendingShares, usePendingSharesCount, useAcceptShare, useAcceptAllShares, useRejectShare } from '@/hooks/use-shares';
 import { useToast } from '@/hooks/use-toast';
 
 interface PendingSharesSheetProps {
@@ -11,6 +11,7 @@ interface PendingSharesSheetProps {
 export default function PendingSharesSheet({ trigger }: PendingSharesSheetProps) {
   const { data: pending = [], refetch } = usePendingShares();
   const acceptMutation = useAcceptShare();
+  const acceptAllMutation = useAcceptAllShares();
   const rejectMutation = useRejectShare();
   const { toast } = useToast();
 
@@ -43,6 +44,26 @@ export default function PendingSharesSheet({ trigger }: PendingSharesSheetProps)
         </SheetHeader>
 
         <div className="mt-4 space-y-3">
+          {pending.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full font-body"
+              onClick={() =>
+                acceptAllMutation.mutate(undefined, {
+                  onSuccess: (data) => {
+                    toast({
+                      title: `${data.length} recette${data.length > 1 ? 's' : ''} acceptee${data.length > 1 ? 's' : ''}`,
+                    });
+                    refetch();
+                  },
+                })
+              }
+              disabled={acceptAllMutation.isPending}
+            >
+              <CheckCheck size={14} className="mr-1" /> Tout accepter
+            </Button>
+          )}
           {pending.length === 0 ? (
             <p className="text-sm font-body text-muted-foreground text-center py-8">
               Aucune invitation en attente

@@ -95,6 +95,29 @@ def get_pending_shares_count(
     return PendingShareCountResponse(count=count)
 
 
+@router.post("/accept-all")
+def accept_all_shares(
+    service: Annotated[RecipeShareService, Depends(get_recipe_share_service)],
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+) -> list[ShareResponse]:
+    """Accept all pending share invitations."""
+    shares = service.accept_all_shares(user_id)
+    return [
+        ShareResponse(
+            id=s.id,
+            recipe_id=s.recipe_id,
+            shared_by_user_id=s.shared_by_user_id,
+            shared_with_user_id=s.shared_with_user_id,
+            shared_with_email=s.shared_with_email,
+            shared_with_name=s.shared_with_name,
+            role=s.role.value,
+            status=s.status.value,
+            created_at=s.created_at,
+        )
+        for s in shares
+    ]
+
+
 @router.post("/{share_id}/accept")
 def accept_share(
     share_id: Annotated[UUID, Path()],

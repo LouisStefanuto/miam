@@ -201,6 +201,9 @@ class RecipeShareService(RecipeShareServicePort):
             raise ValueError("Failed to update share")
         return result
 
+    def accept_all_shares(self, user_id: UUID) -> list[RecipeShareEntity]:
+        return self.share_repo.accept_all_pending_shares(user_id)
+
     def reject_share(self, share_id: UUID, user_id: UUID) -> RecipeShareEntity:
         share = self.share_repo.get_share_by_id(share_id)
         if share is None or share.shared_with_user_id != user_id:

@@ -4,6 +4,7 @@ import {
   fetchPendingSharesCount,
   shareRecipe,
   acceptShare,
+  acceptAllShares,
   rejectShare,
   removeShare,
   fetchRecipeShares,
@@ -40,6 +41,17 @@ export function useAcceptShare() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (shareId: string) => acceptShare(shareId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shares', 'pending'] });
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+    },
+  });
+}
+
+export function useAcceptAllShares() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => acceptAllShares(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shares', 'pending'] });
       queryClient.invalidateQueries({ queryKey: ['recipes'] });

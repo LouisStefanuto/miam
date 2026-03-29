@@ -130,6 +130,10 @@ class RecipeShareRepositoryPort(ABC):
         """Update the status of a share invitation."""
 
     @abstractmethod
+    def accept_all_pending_shares(self, user_id: UUID) -> list[RecipeShareEntity]:
+        """Accept all pending shares for a user in a single transaction."""
+
+    @abstractmethod
     def delete_share(self, share_id: UUID) -> bool:
         """Delete a share record. Returns True if deleted."""
 
