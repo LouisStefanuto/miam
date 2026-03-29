@@ -412,6 +412,16 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
               </span>
             )}
           </h1>
+          {editing ? (
+            <Input
+              value={editData.description}
+              onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+              placeholder="Description (optionnel)"
+              className="font-body text-sm md:text-base bg-transparent border-b border-primary-foreground/50 text-primary-foreground/80 placeholder:text-primary-foreground/40 h-auto p-0 rounded-none focus-visible:ring-0 mt-1 drop-shadow-md"
+            />
+          ) : current.description ? (
+            <p className="text-primary-foreground/80 font-body text-sm md:text-base mt-1 drop-shadow-md">{current.description}</p>
+          ) : null}
         </div>
       </div>
 

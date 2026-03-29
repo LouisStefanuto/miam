@@ -16,6 +16,7 @@ export interface Step {
 export interface Recipe {
   id: string;
   title: string;
+  description: string;
   image?: string;
   type: RecipeType;
   season: Season;
