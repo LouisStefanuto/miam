@@ -347,16 +347,17 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
               <span className={`${chipBase} ${chipPrimary} capitalize`}>{current.type}</span>
             )}
             {editing ? (
-              <Select value={editData.season} onValueChange={(v) => setEditData({ ...editData, season: v as Season })}>
+              <Select value={editData.season ?? '_none'} onValueChange={(v) => setEditData({ ...editData, season: v === '_none' ? null : v as Season })}>
                 <SelectTrigger className={`${chipBase} ${chipSecondary} w-auto border-0 capitalize gap-1`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="_none" className="font-body text-xs">Aucune saison</SelectItem>
                   {seasons.map((s) => <SelectItem key={s} value={s} className="capitalize font-body text-xs">{s}</SelectItem>)}
                 </SelectContent>
               </Select>
             ) : (
-              (() => { const SeasonIcon = seasonIcons[current.season]; return SeasonIcon ? <span className={`${chipBase} ${chipSecondary} capitalize gap-1`}><SeasonIcon size={14} className="text-gray-600 dark:text-gray-300" />{current.season}</span> : null; })()
+              (() => { if (!current.season) return null; const SeasonIcon = seasonIcons[current.season]; return SeasonIcon ? <span className={`${chipBase} ${chipSecondary} capitalize gap-1`}><SeasonIcon size={14} className="text-gray-600 dark:text-gray-300" />{current.season}</span> : null; })()
             )}
             {current.diets.includes('végétarien') && (
               <span className={`${chipBase} ${chipSecondary} gap-1`}>
@@ -416,7 +417,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
             <Input
               value={editData.description}
               onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-              placeholder="Description (optionnel)"
+              placeholder="Description"
               className="font-body text-sm md:text-base bg-transparent border-b border-primary-foreground/50 text-primary-foreground/80 placeholder:text-primary-foreground/40 h-auto p-0 rounded-none focus-visible:ring-0 mt-1 drop-shadow-md"
             />
           ) : current.description ? (

@@ -19,7 +19,7 @@ export interface Recipe {
   description: string;
   image?: string;
   type: RecipeType;
-  season: Season;
+  season: Season | null;
   tags: string[];
   rating: number;
   difficulty: Difficulty;

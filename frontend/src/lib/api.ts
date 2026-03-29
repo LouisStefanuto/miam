@@ -148,7 +148,7 @@ function backendToFrontend(b: BackendRecipe): Recipe {
     description: b.description ?? '',
     image: b.images.length > 0 ? getImageUrl(b.images[0].id) : undefined,
     type: categoryToFrontend[b.category] ?? 'plat',
-    season: b.season ? (seasonToFrontend[b.season] ?? 'été') : 'été',
+    season: b.season ? (seasonToFrontend[b.season] ?? null) : null,
     tags: b.tags,
     rating: b.rate ?? 0,
     difficulty: b.difficulty ? (difficultyToFrontend[b.difficulty] ?? 'moyen') : 'moyen',
