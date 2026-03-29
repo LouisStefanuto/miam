@@ -651,7 +651,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                       <button onClick={() => removeStep(i)} className="text-destructive hover:text-destructive/80 mt-2"><Trash2 size={14} /></button>
                     </div>
                   ) : (
-                    <p className="font-body text-foreground pt-1 leading-relaxed">{step.text}</p>
+                    <p className="font-body text-foreground pt-1 leading-relaxed whitespace-pre-line">{step.text}</p>
                   )}
                 </li>
               ))}
