@@ -92,7 +92,7 @@ export default function ShareDialog({ recipeId }: ShareDialogProps) {
           {/* Collaborators list */}
           {collaborators.length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-sm font-body font-medium text-muted-foreground">Collaborateurs</h4>
+              <h4 className="text-sm font-body font-medium text-muted-foreground">Copains de fourchette</h4>
               {collaborators.map((c) => (
                 <div key={c.id} className="flex items-center justify-between py-1.5 px-2 rounded-md bg-secondary/50">
                   <div className="flex-1 min-w-0">

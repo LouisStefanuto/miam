@@ -1,4 +1,4 @@
-import { Clock, Star, Users, ShoppingCart } from 'lucide-react';
+import { Clock, Star, Users, ShoppingCart, Check } from 'lucide-react';
 import beaverIcon from '/icon.png';
 import { Recipe } from '@/data/recipes';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,9 @@ const difficultyLabels: Record<string, { label: string; bars: number }> = {
 interface RecipeCardProps {
   recipe: Recipe;
   onClick: () => void;
+  selectionMode?: boolean;
+  selected?: boolean;
+  onSelect?: (id: string) => void;
 }
 
 const DifficultyBars = ({ level }: { level: number }) => (
@@ -42,7 +45,7 @@ const StarRating = ({ rating, size = 14 }: { rating: number; size?: number }) =>
   </div>
 );
 
-export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
+export default function RecipeCard({ recipe, onClick, selectionMode, selected, onSelect }: RecipeCardProps) {
   const isMobile = useIsMobile();
   const totalTime = recipe.prepTime + recipe.cookTime;
   const diff = difficultyLabels[recipe.difficulty];
@@ -50,11 +53,26 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
   const inCart = cart.has(recipe.id);
   const imageSrc = useAuthImage(recipe.image);
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (selectionMode && onSelect) {
+      e.preventDefault();
+      onSelect(recipe.id);
+      return;
+    }
+    if (e.metaKey || e.ctrlKey) { e.preventDefault(); cart.toggle(recipe.id); } else { onClick(); }
+  };
+
+  const selectionCheck = (
+    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center shadow-sm transition-colors ${selected ? 'bg-primary border-primary text-primary-foreground' : 'border-card/95 bg-card/95 text-transparent'}`}>
+      <Check size={16} />
+    </div>
+  );
+
   if (isMobile) {
     return (
       <button
-        onClick={(e) => { if (e.metaKey || e.ctrlKey) { e.preventDefault(); cart.toggle(recipe.id); } else { onClick(); } }}
-        className="group text-left w-full relative rounded-lg overflow-hidden shadow-card"
+        onClick={handleClick}
+        className={`group text-left w-full relative rounded-lg overflow-hidden shadow-card ${selectionMode && selected ? 'ring-2 ring-primary' : ''}`}
       >
         {/* Full image background */}
         <div className="relative aspect-[16/9] overflow-hidden">
@@ -73,18 +91,20 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-foreground/50 to-transparent" />
 
-          {/* Cart button top right */}
+          {/* Top right: selection check or cart button */}
           <div className="absolute top-2 right-2">
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={(e) => { e.stopPropagation(); cart.toggle(recipe.id); }}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); cart.toggle(recipe.id); } }}
-              className={`w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm transition-colors ${inCart ? 'text-primary fill-primary' : 'text-gray-600 dark:text-gray-300'}`}
-              title={inCart ? 'Retirer du panier' : 'Ajouter au panier'}
-            >
-              <ShoppingCart size={16} className={inCart ? 'fill-primary' : ''} />
-            </div>
+            {selectionMode ? selectionCheck : (
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={(e) => { e.stopPropagation(); cart.toggle(recipe.id); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); cart.toggle(recipe.id); } }}
+                className={`w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm transition-colors ${inCart ? 'text-primary fill-primary' : 'text-gray-600 dark:text-gray-300'}`}
+                title={inCart ? 'Retirer du panier' : 'Ajouter au panier'}
+              >
+                <ShoppingCart size={16} className={inCart ? 'fill-primary' : ''} />
+              </div>
+            )}
           </div>
 
           {/* Overlaid content at bottom */}
@@ -120,8 +140,8 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
 
   return (
     <button
-      onClick={(e) => { if (e.metaKey || e.ctrlKey) { e.preventDefault(); cart.toggle(recipe.id); } else { onClick(); } }}
-      className="group text-left w-full h-full flex flex-col bg-card rounded-lg overflow-hidden shadow-card hover:shadow-card-hover transition-[box-shadow,transform] duration-300 hover:-translate-y-1"
+      onClick={handleClick}
+      className={`group text-left w-full h-full flex flex-col bg-card rounded-lg overflow-hidden shadow-card hover:shadow-card-hover transition-[box-shadow,transform] duration-300 hover:-translate-y-1 ${selectionMode && selected ? 'ring-2 ring-primary' : ''}`}
     >
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
@@ -137,18 +157,20 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
             <img src={beaverIcon} alt="Pas d'image" className="w-10 h-10 opacity-50 grayscale" />
           </div>
         )}
-        {/* Cart button top right */}
+        {/* Top right: selection check or cart button */}
         <div className="absolute top-2 right-2 flex gap-1.5">
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={(e) => { e.stopPropagation(); cart.toggle(recipe.id); }}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); cart.toggle(recipe.id); } }}
-            className={`w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm transition-colors ${inCart ? 'text-primary fill-primary' : 'text-gray-600 dark:text-gray-300 hover:text-primary'}`}
-            title={inCart ? 'Retirer du panier' : 'Ajouter au panier'}
-          >
-            <ShoppingCart size={16} className={inCart ? 'fill-primary' : ''} />
-          </div>
+          {selectionMode ? selectionCheck : (
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); cart.toggle(recipe.id); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); cart.toggle(recipe.id); } }}
+              className={`w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm transition-colors ${inCart ? 'text-primary fill-primary' : 'text-gray-600 dark:text-gray-300 hover:text-primary'}`}
+              title={inCart ? 'Retirer du panier' : 'Ajouter au panier'}
+            >
+              <ShoppingCart size={16} className={inCart ? 'fill-primary' : ''} />
+            </div>
+          )}
         </div>
         {/* Type badge */}
         <div className="absolute top-2 left-2 flex gap-1.5">

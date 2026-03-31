@@ -5,10 +5,12 @@ import { usePendingShares, usePendingSharesCount, useAcceptShare, useAcceptAllSh
 import { useToast } from '@/hooks/use-toast';
 
 interface PendingSharesSheetProps {
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export default function PendingSharesSheet({ trigger }: PendingSharesSheetProps) {
+export default function PendingSharesSheet({ trigger, open, onOpenChange }: PendingSharesSheetProps) {
   const { data: pending = [], refetch } = usePendingShares();
   const acceptMutation = useAcceptShare();
   const acceptAllMutation = useAcceptAllShares();
@@ -34,12 +36,12 @@ export default function PendingSharesSheet({ trigger }: PendingSharesSheetProps)
   };
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>{trigger}</SheetTrigger>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      {trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
       <SheetContent side="right" className="w-[340px] sm:w-[400px]">
         <SheetHeader>
           <SheetTitle className="font-display flex items-center gap-2">
-            <Inbox size={20} /> Invitations
+            <Inbox size={20} /> Boîte de réception
           </SheetTitle>
         </SheetHeader>
 
@@ -66,7 +68,7 @@ export default function PendingSharesSheet({ trigger }: PendingSharesSheetProps)
           )}
           {pending.length === 0 ? (
             <p className="text-sm font-body text-muted-foreground text-center py-8">
-              Aucune invitation en attente
+              Aucune recette dans la boîte de réception
             </p>
           ) : (
             pending.map((share) => (
