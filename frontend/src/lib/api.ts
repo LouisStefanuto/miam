@@ -360,6 +360,19 @@ export async function importRecipesBatch(jsonPayload: { recipes: unknown[] }): P
   return res.json();
 }
 
+/** Fetch an authenticated image URL and return it as a data URL (for duplication). */
+export async function fetchImageAsDataUrl(imageUrl: string): Promise<string> {
+  const res = await apiFetch(imageUrl);
+  if (!res.ok) throw new Error(`Failed to fetch image: ${res.status}`);
+  const blob = await res.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 /** Load a data URL into an HTMLImageElement. */

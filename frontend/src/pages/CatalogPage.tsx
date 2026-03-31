@@ -141,14 +141,14 @@ const CatalogPage = () => {
     return result;
   }, [recipes, searchQuery, searchTags, filters]);
 
-  const ownedRecipeIds = useMemo(() =>
-    filtered.filter(r => !r.userRole || r.userRole === 'owner').map(r => r.id),
+  const shareableRecipeIds = useMemo(() =>
+    filtered.filter(r => !r.userRole || r.userRole === 'owner' || r.userRole === 'editor').map(r => r.id),
     [filtered]
   );
 
   const selectAll = useCallback(() => {
-    setSelectedRecipes(new Set(ownedRecipeIds));
-  }, [ownedRecipeIds]);
+    setSelectedRecipes(new Set(shareableRecipeIds));
+  }, [shareableRecipeIds]);
 
   const topTags = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -193,9 +193,12 @@ const CatalogPage = () => {
     setCurrentPage(1);
   }, [searchQuery, searchTags, filters, setCurrentPage]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / RECIPES_PER_PAGE));
+  const displayedRecipes = selectionMode
+    ? filtered.filter(r => !r.userRole || r.userRole === 'owner' || r.userRole === 'editor')
+    : filtered;
+  const totalPages = Math.max(1, Math.ceil(displayedRecipes.length / RECIPES_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
-  const paginatedRecipes = filtered.slice(
+  const paginatedRecipes = displayedRecipes.slice(
     (safePage - 1) * RECIPES_PER_PAGE,
     safePage * RECIPES_PER_PAGE,
   );

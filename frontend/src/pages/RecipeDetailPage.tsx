@@ -1,24 +1,27 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRecipe, useRecipes, useUpdateRecipe, useDeleteRecipe } from '@/hooks/use-recipes';
+import { useRecipe, useRecipes, useUpdateRecipe, useDeleteRecipe, useCreateRecipe } from '@/hooks/use-recipes';
 import RecipeDetail from '@/components/RecipeDetail';
 import ShareDialog from '@/components/ShareDialog';
 import { toast } from '@/hooks/use-toast';
 import { useCart } from '@/contexts/CartContext';
 import { Recipe } from '@/data/recipes';
-import { leaveRecipe } from '@/lib/api';
+import { leaveRecipe, fetchImageAsDataUrl } from '@/lib/api';
 
 const RecipeDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: recipe, isLoading, isError } = useRecipe(id!);
   const { data: recipes = [] } = useRecipes();
   const updateMutation = useUpdateRecipe();
   const deleteMutation = useDeleteRecipe();
+  const createMutation = useCreateRecipe();
   const { remove: removeFromCart } = useCart();
   const queryClient = useQueryClient();
   const [customTags, setCustomTags] = useState<string[]>([]);
+  const initialEditing = !!(location.state as { edit?: boolean })?.edit;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -79,6 +82,50 @@ const RecipeDetailPage = () => {
     }
   };
 
+  const handleDuplicateAndRemove = async () => {
+    if (!id || !recipe) return;
+    try {
+      // Fetch image as data URL if present
+      let imageDataUrl: string | undefined;
+      if (recipe.image) {
+        try {
+          imageDataUrl = await fetchImageAsDataUrl(recipe.image);
+        } catch {
+          // Continue without image if fetch fails
+        }
+      }
+
+      const duplicated: Recipe = {
+        ...recipe,
+        id: '',
+        description: `Recette de ${recipe.ownerName ?? 'inconnu'}`,
+        image: imageDataUrl,
+        userRole: undefined,
+        ownerName: undefined,
+      };
+
+      createMutation.mutate(duplicated, {
+        onSuccess: async (result) => {
+          // Remove shared recipe from collection
+          try {
+            await leaveRecipe(id);
+            removeFromCart(id);
+          } catch {
+            // Not critical — the duplicate was created
+          }
+          queryClient.invalidateQueries({ queryKey: ['recipes'] });
+          toast({ title: 'Recette dupliquée !', description: duplicated.title });
+          navigate(`/recipes/${result.id}`, { state: { edit: true }, replace: true });
+        },
+        onError: () => {
+          toast({ title: 'Erreur', description: 'Impossible de dupliquer la recette.', variant: 'destructive' });
+        },
+      });
+    } catch {
+      toast({ title: 'Erreur', description: 'Impossible de dupliquer la recette.', variant: 'destructive' });
+    }
+  };
+
   const handleAddTag = (tag: string) => {
     if (!customTags.includes(tag)) {
       setCustomTags((prev) => [...prev, tag]);
@@ -131,7 +178,9 @@ const RecipeDetailPage = () => {
       onDeleteTag={handleDeleteTag}
       onDelete={isOwner ? handleDelete : undefined}
       onRemoveFromCollection={!isOwner ? handleRemoveFromCollection : undefined}
+      onDuplicateAndRemove={!isOwner ? handleDuplicateAndRemove : undefined}
       shareButton={isOwner && id ? <ShareDialog recipeId={id} /> : undefined}
+      initialEditing={initialEditing}
     />
   );
 };

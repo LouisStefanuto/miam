@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ArrowLeft, Star, Pencil, Save, X, Plus, Trash2, Minus, Camera, Check, ImagePlus, ImageMinus, Copy, ClipboardCheck, Sun, Snowflake, Flower, LeafyGreen, Vegan, LogOut, Users } from 'lucide-react';
+import { ArrowLeft, Star, Pencil, Save, X, Plus, Trash2, Minus, Camera, Check, ImagePlus, ImageMinus, Copy, ClipboardCheck, Sun, Snowflake, Flower, LeafyGreen, Vegan, LogOut, Users, CopyPlus } from 'lucide-react';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 import { SortableIngredientItem } from './SortableIngredientItem';
 import { Badge } from '@/components/ui/badge';
@@ -71,10 +71,12 @@ interface RecipeDetailProps {
   onDeleteTag?: (tag: string) => void;
   onDelete?: () => void;
   onRemoveFromCollection?: () => void;
+  onDuplicateAndRemove?: () => void;
   shareButton?: React.ReactNode;
+  initialEditing?: boolean;
 }
 
-export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, onTestedToggle, allTags, onAddTag, onDeleteTag, onDelete, onRemoveFromCollection, shareButton }: RecipeDetailProps) {
+export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, onTestedToggle, allTags, onAddTag, onDeleteTag, onDelete, onRemoveFromCollection, onDuplicateAndRemove, shareButton, initialEditing }: RecipeDetailProps) {
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState<Recipe>(recipe);
   const [displayServings, setDisplayServings] = useState(recipe.servings);
@@ -92,6 +94,13 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (initialEditing && !editing) {
+      startEdit();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialEditing]);
 
   useEffect(() => {
     if (editing) return;
@@ -294,6 +303,30 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                       <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
                       <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body" onClick={() => onDelete?.()}>
                         Supprimer
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              {/* Non-owner: duplicate and remove from collection */}
+              {(recipe.userRole === 'reader' || recipe.userRole === 'editor') && onDuplicateAndRemove && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-muted-foreground hover:bg-card transition-colors">
+                      <CopyPlus size={16} />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="font-display">Dupliquer et retirer ?</AlertDialogTitle>
+                      <AlertDialogDescription className="font-body">
+                        Une copie de « {recipe.title} » sera créée dans votre bibliothèque et la recette partagée sera retirée. Vous pourrez modifier votre copie librement.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
+                      <AlertDialogAction className="font-body" onClick={onDuplicateAndRemove}>
+                        Dupliquer et retirer
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
