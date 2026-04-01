@@ -5,7 +5,7 @@ import { useShake } from '@/hooks/use-shake';
 
 const BeaverCatchGame = lazy(() => import('@/components/BeaverCatchGame'));
 import CartSheet from '@/components/CartSheet';
-import PendingSharesSheet, { PendingSharesBadge } from '@/components/PendingSharesSheet';
+import PendingSharesSheet, { PendingSharesBadge, PendingSharesInlineBadge } from '@/components/PendingSharesSheet';
 import BatchShareDialog from '@/components/BatchShareDialog';
 import UserMenu from '@/components/UserMenu';
 import MobileHeader from '@/components/MobileHeader';
@@ -276,6 +276,7 @@ const CatalogPage = () => {
                 <DropdownMenuItem onClick={() => setPendingSharesOpen(true)} className="gap-2 cursor-pointer">
                   <Inbox size={16} />
                   Boîte de réception
+                  <PendingSharesInlineBadge />
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

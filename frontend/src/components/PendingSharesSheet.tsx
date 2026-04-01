@@ -113,7 +113,19 @@ export function PendingSharesBadge() {
   if (count === 0) return null;
 
   return (
-    <span className="absolute -top-1.5 -right-2.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
+    <span className="absolute -top-1.5 -right-2.5 w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] flex items-center justify-center font-bold">
+      {count}
+    </span>
+  );
+}
+
+export function PendingSharesInlineBadge() {
+  const { data: count = 0 } = usePendingSharesCount();
+
+  if (count === 0) return null;
+
+  return (
+    <span className="ml-auto w-5 h-5 rounded-full bg-orange-500 text-white text-[11px] flex items-center justify-center font-bold">
       {count}
     </span>
   );

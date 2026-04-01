@@ -24,21 +24,32 @@ export default function BatchShareDialog({ recipeIds, open, onOpenChange }: Batc
     if (!email.trim() || recipeIds.length === 0) return;
     setSharing(true);
     let success = 0;
-    let failed = 0;
+    let alreadyShared = 0;
+    const errors: string[] = [];
     for (const recipeId of recipeIds) {
       try {
         await shareMutation.mutateAsync({ recipeId, email: email.trim(), role });
         success++;
-      } catch {
-        failed++;
+      } catch (err) {
+        const msg = (err as Error).message ?? '';
+        if (msg.includes('already shared')) {
+          alreadyShared++;
+        } else {
+          errors.push(msg);
+        }
       }
     }
     setSharing(false);
-    if (failed === 0) {
-      toast({ title: 'Recettes partagées', description: `${success} recette${success > 1 ? 's' : ''} partagée${success > 1 ? 's' : ''} avec ${email}` });
-    } else {
-      toast({ title: 'Partage partiel', description: `${success} partagée${success > 1 ? 's' : ''}, ${failed} en erreur`, variant: 'destructive' });
-    }
+    const parts: string[] = [];
+    if (success > 0) parts.push(`${success} recette${success > 1 ? 's' : ''} partagée${success > 1 ? 's' : ''}`);
+    if (alreadyShared > 0) parts.push(`${alreadyShared} déjà partagée${alreadyShared > 1 ? 's' : ''} avec cet utilisateur`);
+    if (errors.length > 0) parts.push(`${errors.length} en erreur : ${errors[0]}`);
+    const hasIssues = alreadyShared > 0 || errors.length > 0;
+    toast({
+      title: success > 0 && !hasIssues ? 'Recettes partagées' : 'Partage partiel',
+      description: parts.join(', '),
+      variant: hasIssues ? 'destructive' : undefined,
+    });
     setEmail('');
     onOpenChange(false);
   };
