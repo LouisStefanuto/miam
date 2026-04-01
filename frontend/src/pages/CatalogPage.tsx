@@ -74,7 +74,7 @@ const CatalogPage = () => {
         );
 
       const matchType = filters.type === 'tous' || r.type === filters.type;
-      const matchSeason = filters.season === 'toutes' || r.season === filters.season;
+      const matchSeason = filters.season === 'toutes' || r.season === null || r.season === filters.season;
       const matchDifficulty = filters.difficulty === 'toutes' || r.difficulty === filters.difficulty;
       const matchTested = filters.tested === 'off' || r.tested;
       const matchVegetarian = filters.vegetarian === 'off' || r.diets.includes('végétarien');

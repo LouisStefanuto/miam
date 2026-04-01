@@ -71,7 +71,7 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
             </div>
           )}
           {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-foreground/50 to-transparent" />
 
           {/* Cart button top right */}
           <div className="absolute top-2 right-2">

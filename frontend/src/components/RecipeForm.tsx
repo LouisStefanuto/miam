@@ -53,7 +53,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     title: initialRecipe?.title ?? '',
     image: initialRecipe?.image,
     type: initialRecipe?.type ?? 'plat',
-    season: initialRecipe?.season ?? 'été',
+    season: initialRecipe?.season ?? null,
     difficulty: initialRecipe?.difficulty ?? 'moyen',
     servings: initialRecipe?.servings ?? 4,
     prepTime: initialRecipe?.prepTime ?? 30,
@@ -268,11 +268,12 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                 {types.map((t) => <SelectItem key={t} value={t} className="capitalize font-body text-xs">{t}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={data.season} onValueChange={(v) => set('season', v as Season)}>
+            <Select value={data.season ?? '_none'} onValueChange={(v) => set('season', v === '_none' ? null : v as Season)}>
               <SelectTrigger className="w-auto h-7 text-xs capitalize font-body bg-card text-card-foreground border-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="_none" className="font-body text-xs">Aucune saison</SelectItem>
                 {seasons.map((s) => <SelectItem key={s} value={s} className="capitalize font-body text-xs">{s}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -291,6 +292,12 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             placeholder="Titre de la recette"
             autoFocus={!initialRecipe}
             className="font-display text-3xl md:text-4xl font-bold bg-transparent border-b border-primary-foreground/50 text-primary-foreground h-auto p-0 rounded-none focus-visible:ring-0 placeholder:text-primary-foreground/40"
+          />
+          <Input
+            value={data.description}
+            onChange={(e) => set('description', e.target.value)}
+            placeholder="Description"
+            className="font-body text-sm md:text-base bg-transparent border-b border-primary-foreground/50 text-primary-foreground/80 placeholder:text-primary-foreground/40 h-auto p-0 rounded-none focus-visible:ring-0 mt-1 drop-shadow-md"
           />
         </div>
       </div>

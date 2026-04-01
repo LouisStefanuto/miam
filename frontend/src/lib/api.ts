@@ -145,9 +145,10 @@ function backendToFrontend(b: BackendRecipe): Recipe {
   return {
     id: b.id,
     title: b.title,
+    description: b.description ?? '',
     image: b.images.length > 0 ? getImageUrl(b.images[0].id) : undefined,
     type: categoryToFrontend[b.category] ?? 'plat',
-    season: b.season ? (seasonToFrontend[b.season] ?? 'été') : 'été',
+    season: b.season ? (seasonToFrontend[b.season] ?? null) : null,
     tags: b.tags,
     rating: b.rate ?? 0,
     difficulty: b.difficulty ? (difficultyToFrontend[b.difficulty] ?? 'moyen') : 'moyen',
@@ -173,7 +174,7 @@ function backendToFrontend(b: BackendRecipe): Recipe {
 function frontendToBackendCreate(r: Recipe) {
   return {
     title: r.title,
-    description: '',
+    description: r.description ?? '',
     prep_time_minutes: r.prepTime || null,
     cook_time_minutes: r.cookTime || null,
     rest_time_minutes: r.restTime || null,
