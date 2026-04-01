@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, Inbox, Plus, ShoppingCart, UserRound } from 'lucide-react';
+import { BookOpen, Share2, Plus, ShoppingCart, UserRound } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
@@ -17,7 +17,7 @@ export default function MobileBottomBar() {
   const isRecipes = location.pathname === '/';
   const isAdd = location.pathname === '/add' || location.pathname === '/recipes/new' || location.pathname.startsWith('/import');
   const isCart = location.pathname === '/cart';
-  const isShares = location.pathname === '/shares';
+  const isShares = location.pathname === '/shares' || location.pathname.startsWith('/shares/');
   const isAccount = location.pathname === '/settings';
 
   return (
@@ -71,7 +71,7 @@ export default function MobileBottomBar() {
           }`}
         >
           <span className="relative">
-            <Inbox size={22} strokeWidth={isShares ? 2.5 : 2} />
+            <Share2 size={22} strokeWidth={isShares ? 2.5 : 2} />
             <PendingSharesBadge />
           </span>
           <span className="text-[11px] font-body font-medium">Partages</span>

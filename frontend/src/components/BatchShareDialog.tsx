@@ -32,7 +32,7 @@ export default function BatchShareDialog({ recipeIds, open, onOpenChange }: Batc
         success++;
       } catch (err) {
         const msg = (err as Error).message ?? '';
-        if (msg.includes('already shared')) {
+        if (msg.includes('déjà partagée')) {
           alreadyShared++;
         } else {
           errors.push(msg);

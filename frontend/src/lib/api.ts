@@ -437,6 +437,14 @@ async function uploadImage(recipeId: string, dataUrl: string): Promise<void> {
 
 // --- Sharing API functions ---
 
+const shareErrorMessages: Record<string, string> = {
+  'Cannot share a recipe with yourself': 'Vous ne pouvez pas partager une recette avec vous-même',
+  'Recipe is already shared with this user': 'Cette recette est déjà partagée avec cet utilisateur',
+  'No account found for this email': 'Aucun compte trouvé pour cet email',
+  'Only the owner can share a recipe': 'Seul le propriétaire peut partager une recette',
+  'Recipe not found': 'Recette introuvable',
+};
+
 export async function shareRecipe(recipeId: string, email: string, role: string): Promise<RecipeShare> {
   const res = await apiFetch(`${API_BASE}/shares`, {
     method: 'POST',
@@ -445,7 +453,8 @@ export async function shareRecipe(recipeId: string, email: string, role: string)
   });
   if (!res.ok) {
     const detail = await res.json().catch(() => ({ detail: 'Failed to share recipe' }));
-    throw new Error(detail.detail || `Failed to share recipe: ${res.status}`);
+    const msg = detail.detail || `Failed to share recipe: ${res.status}`;
+    throw new Error(shareErrorMessages[msg] ?? msg);
   }
   return res.json();
 }

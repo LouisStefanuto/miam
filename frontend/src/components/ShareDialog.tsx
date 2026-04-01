@@ -31,11 +31,7 @@ export default function ShareDialog({ recipeId }: ShareDialogProps) {
           refetch();
         },
         onError: (err) => {
-          const msg = (err as Error).message ?? '';
-          const description = msg.includes('already shared')
-            ? 'Cette recette est déjà partagée avec cet utilisateur'
-            : msg || 'Impossible de partager la recette';
-          toast({ title: 'Erreur', description, variant: 'destructive' });
+          toast({ title: 'Erreur', description: (err as Error).message || 'Impossible de partager la recette', variant: 'destructive' });
         },
       }
     );
