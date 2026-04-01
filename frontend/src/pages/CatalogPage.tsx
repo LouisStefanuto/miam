@@ -1,10 +1,12 @@
 import { useMemo, useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, PenLine, Camera, Instagram, Download, FileJson, X, ArrowUpDown, Check } from 'lucide-react';
+import { Plus, PenLine, Camera, Instagram, Download, FileDown, FileText, FileJson, X, ArrowUpDown, Check, Share2, Inbox } from 'lucide-react';
 import { useShake } from '@/hooks/use-shake';
 
 const BeaverCatchGame = lazy(() => import('@/components/BeaverCatchGame'));
 import CartSheet from '@/components/CartSheet';
+import PendingSharesSheet, { PendingSharesBadge, PendingSharesInlineBadge } from '@/components/PendingSharesSheet';
+import BatchShareDialog from '@/components/BatchShareDialog';
 import UserMenu from '@/components/UserMenu';
 import MobileHeader from '@/components/MobileHeader';
 import MobileSearchOverlay from '@/components/MobileSearchOverlay';
@@ -15,7 +17,10 @@ import SearchBar from '@/components/SearchBar';
 import FilterBar, { defaultFilters } from '@/components/FilterBar';
 import RecipeCard from '@/components/RecipeCard';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import PointerTooltip from '@/components/PointerTooltip';
 import { Button } from '@/components/ui/button';
+import { exportToMarkdown, exportToWord } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 import {
   Pagination,
   PaginationContent,
@@ -46,6 +51,40 @@ const CatalogPage = () => {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [inlineSearch, setInlineSearch] = useState(false);
   const [showBeaverGame, setShowBeaverGame] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedRecipes, setSelectedRecipes] = useState<Set<string>>(new Set());
+  const [showBatchShare, setShowBatchShare] = useState(false);
+  const [pendingSharesOpen, setPendingSharesOpen] = useState(false);
+  const [exporting, setExporting] = useState<'markdown' | 'word' | null>(null);
+  const { toast } = useToast();
+
+  const handleExport = useCallback(async (format: 'markdown' | 'word') => {
+    setExporting(format);
+    try {
+      if (format === 'markdown') await exportToMarkdown();
+      else await exportToWord();
+      toast({ title: 'Export réussi !', description: `Recettes exportées en ${format === 'markdown' ? 'Markdown' : 'Word'}.` });
+    } catch {
+      toast({ title: 'Erreur', description: "Impossible d'exporter les recettes.", variant: 'destructive' });
+    } finally {
+      setExporting(null);
+    }
+  }, [toast]);
+  const [shareDropdownOpen, setShareDropdownOpen] = useState(false);
+
+  const toggleSelection = useCallback((id: string) => {
+    setSelectedRecipes(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const exitSelectionMode = useCallback(() => {
+    setSelectionMode(false);
+    setSelectedRecipes(new Set());
+  }, []);
   const openBeaverGame = useCallback(() => setShowBeaverGame(true), []);
   useShake(openBeaverGame);
 
@@ -79,8 +118,9 @@ const CatalogPage = () => {
       const matchTested = filters.tested === 'off' || r.tested;
       const matchVegetarian = filters.vegetarian === 'off' || r.diets.includes('végétarien');
       const matchRapido = filters.rapido === 'off' || (r.prepTime + r.cookTime) <= 20;
+      const matchOwnership = filters.ownership === 'all' || (filters.ownership === 'shared' && r.userRole && r.userRole !== 'owner');
 
-      return matchSearch && matchType && matchSeason && matchDifficulty && matchTested && matchVegetarian && matchRapido;
+      return matchSearch && matchType && matchSeason && matchDifficulty && matchTested && matchVegetarian && matchRapido && matchOwnership;
     });
 
     switch (filters.sort) {
@@ -100,6 +140,15 @@ const CatalogPage = () => {
 
     return result;
   }, [recipes, searchQuery, searchTags, filters]);
+
+  const shareableRecipeIds = useMemo(() =>
+    filtered.filter(r => !r.userRole || r.userRole === 'owner' || r.userRole === 'editor').map(r => r.id),
+    [filtered]
+  );
+
+  const selectAll = useCallback(() => {
+    setSelectedRecipes(new Set(shareableRecipeIds));
+  }, [shareableRecipeIds]);
 
   const topTags = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -122,7 +171,8 @@ const CatalogPage = () => {
     filters.difficulty !== defaultFilters.difficulty ||
     filters.tested !== defaultFilters.tested ||
     filters.vegetarian !== defaultFilters.vegetarian ||
-    filters.rapido !== defaultFilters.rapido;
+    filters.rapido !== defaultFilters.rapido ||
+    filters.ownership !== defaultFilters.ownership;
 
   const resetAll = () => {
     setSearchQuery('');
@@ -143,9 +193,12 @@ const CatalogPage = () => {
     setCurrentPage(1);
   }, [searchQuery, searchTags, filters, setCurrentPage]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / RECIPES_PER_PAGE));
+  const displayedRecipes = selectionMode
+    ? filtered.filter(r => !r.userRole || r.userRole === 'owner' || r.userRole === 'editor')
+    : filtered;
+  const totalPages = Math.max(1, Math.ceil(displayedRecipes.length / RECIPES_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
-  const paginatedRecipes = filtered.slice(
+  const paginatedRecipes = displayedRecipes.slice(
     (safePage - 1) * RECIPES_PER_PAGE,
     safePage * RECIPES_PER_PAGE,
   );
@@ -198,12 +251,66 @@ const CatalogPage = () => {
       <div className="relative hidden md:block">
         <HeroSection />
         <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-          <UserMenu />
-          <Button onClick={() => navigate('/export')} variant="outline" className="font-body font-semibold gap-2 shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0">
-            <Download size={18} />
-            Exporter
-          </Button>
-          <CartSheet hotkey="p" />
+          {/* Cart */}
+          <PointerTooltip label="Mon panier d'ingrédients">
+            <div><CartSheet hotkey="p" /></div>
+          </PointerTooltip>
+
+          {/* Share dropdown */}
+          <PointerTooltip label="Partage de recettes">
+            <DropdownMenu open={shareDropdownOpen} onOpenChange={setShareDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="relative font-body font-semibold shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3"
+                >
+                  <Share2 size={18} />
+                  <PendingSharesBadge />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="font-body">
+                <DropdownMenuItem onClick={() => { setSelectionMode(true); setSelectedRecipes(new Set()); }} className="gap-2 cursor-pointer">
+                  <Share2 size={16} />
+                  Partager des recettes
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPendingSharesOpen(true)} className="gap-2 cursor-pointer">
+                  <Inbox size={16} />
+                  Boîte de réception
+                  <PendingSharesInlineBadge />
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </PointerTooltip>
+          <PendingSharesSheet
+            open={pendingSharesOpen}
+            onOpenChange={setPendingSharesOpen}
+          />
+
+          {/* Export dropdown */}
+          <PointerTooltip label="Exporter mes recettes">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="font-body font-semibold shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3">
+                  <Download size={18} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="font-body">
+                <DropdownMenuItem onClick={() => handleExport('word')} disabled={exporting !== null} className="gap-2 cursor-pointer">
+                  <FileDown size={16} />
+                  Exporter en Word
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('markdown')} disabled={exporting !== null} className="gap-2 cursor-pointer">
+                  <FileText size={16} />
+                  Exporter en Markdown
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </PointerTooltip>
+
+          {/* Account */}
+          <PointerTooltip label="Mon compte">
+            <UserMenu />
+          </PointerTooltip>
         </div>
       </div>
 
@@ -311,6 +418,28 @@ const CatalogPage = () => {
           </div>
         </div>
 
+        {/* Selection mode bar */}
+        {selectionMode && (
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
+            <Button variant="outline" size="sm" className="font-body" onClick={selectAll}>
+              Tout sélectionner
+            </Button>
+            <Button
+              size="sm"
+              className="font-body"
+              disabled={selectedRecipes.size === 0}
+              onClick={() => setShowBatchShare(true)}
+            >
+              <Share2 size={14} className="mr-1" />
+              Partager {selectedRecipes.size > 0 ? `${selectedRecipes.size} recette${selectedRecipes.size > 1 ? 's' : ''}` : ''}
+            </Button>
+            <Button variant="ghost" size="sm" className="font-body ml-auto" onClick={exitSelectionMode}>
+              <X size={14} className="mr-1" />
+              Annuler
+            </Button>
+          </div>
+        )}
+
         {/* Grid */}
         {isLoading ? (
           <div className="text-center py-20">
@@ -319,7 +448,14 @@ const CatalogPage = () => {
         ) : paginatedRecipes.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {paginatedRecipes.map((recipe) => (
-              <RecipeCard key={recipe.id} recipe={recipe} onClick={() => navigate(`/recipes/${recipe.id}`)} />
+              <RecipeCard
+                key={recipe.id}
+                recipe={recipe}
+                onClick={() => navigate(`/recipes/${recipe.id}`)}
+                selectionMode={selectionMode}
+                selected={selectedRecipes.has(recipe.id)}
+                onSelect={toggleSelection}
+              />
             ))}
           </div>
         ) : (
@@ -366,6 +502,15 @@ const CatalogPage = () => {
           </Pagination>
         )}
       </main>
+
+      <BatchShareDialog
+        recipeIds={Array.from(selectedRecipes)}
+        open={showBatchShare}
+        onOpenChange={(open) => {
+          setShowBatchShare(open);
+          if (!open) exitSelectionMode();
+        }}
+      />
 
       {showBeaverGame && (
         <Suspense>

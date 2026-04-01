@@ -1,10 +1,11 @@
 """I/O models to interact with entities."""
 
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from miam.domain.entities import Category, Season, SourceType
+from miam.domain.entities import Category, Season, ShareRole, SourceType
 
 
 class IngredientCreate(BaseModel):
@@ -164,6 +165,14 @@ class InstagramResponse(_InstagramBase):
 
 
 # --- Auth schemas ---
+
+
+class ShareRecipeRequest(BaseModel):
+    """Request body for sharing a recipe with another user."""
+
+    recipe_id: UUID
+    email: str
+    role: ShareRole
 
 
 class GoogleLoginRequest(BaseModel):

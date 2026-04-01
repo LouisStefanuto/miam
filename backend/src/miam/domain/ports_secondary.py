@@ -9,6 +9,9 @@ from miam.domain.entities import (
     ImageEntity,
     PaginatedResult,
     RecipeEntity,
+    RecipeShareEntity,
+    ShareRole,
+    ShareStatus,
     UserEntity,
 )
 from miam.domain.schemas import (
@@ -52,8 +55,9 @@ class RecipeRepositoryPort(ABC):
         season: str | None = None,
         limit: int | None = None,
         offset: int = 0,
+        ownership: str | None = None,
     ) -> PaginatedResult:
-        """Query recipes with dynamic filtering and pagination, scoped to the given user."""
+        """Query recipes with dynamic filtering and pagination, visible to the given user."""
 
     @abstractmethod
     def update_recipe(
@@ -82,6 +86,60 @@ class RecipeRepositoryPort(ABC):
     @abstractmethod
     def image_belongs_to_user(self, image_id: UUID, user_id: UUID) -> bool:
         """Check if an image belongs to a recipe owned by the given user."""
+
+
+class RecipeShareRepositoryPort(ABC):
+    """Secondary port for recipe share persistence."""
+
+    @abstractmethod
+    def create_share(
+        self,
+        recipe_id: UUID,
+        shared_by_user_id: UUID,
+        shared_with_user_id: UUID,
+        role: ShareRole,
+    ) -> RecipeShareEntity:
+        """Create a new share invitation."""
+
+    @abstractmethod
+    def get_share_by_id(self, share_id: UUID) -> RecipeShareEntity | None:
+        """Retrieve a share by its ID."""
+
+    @abstractmethod
+    def get_pending_shares_for_user(self, user_id: UUID) -> list[RecipeShareEntity]:
+        """List all pending share invitations for a user."""
+
+    @abstractmethod
+    def get_pending_shares_count(self, user_id: UUID) -> int:
+        """Count pending share invitations for a user."""
+
+    @abstractmethod
+    def get_shares_for_recipe(self, recipe_id: UUID) -> list[RecipeShareEntity]:
+        """List all shares (any status) for a recipe."""
+
+    @abstractmethod
+    def get_share_for_recipe_and_user(
+        self, recipe_id: UUID, user_id: UUID
+    ) -> RecipeShareEntity | None:
+        """Get the share record for a specific recipe and user."""
+
+    @abstractmethod
+    def update_share_status(
+        self, share_id: UUID, status: ShareStatus
+    ) -> RecipeShareEntity | None:
+        """Update the status of a share invitation."""
+
+    @abstractmethod
+    def accept_all_pending_shares(self, user_id: UUID) -> list[RecipeShareEntity]:
+        """Accept all pending shares for a user in a single transaction."""
+
+    @abstractmethod
+    def delete_share(self, share_id: UUID) -> bool:
+        """Delete a share record. Returns True if deleted."""
+
+    @abstractmethod
+    def get_user_role_for_recipe(self, recipe_id: UUID, user_id: UUID) -> str | None:
+        """Return 'owner', 'editor', 'reader', or None if no access."""
 
 
 class ImageStoragePort(ABC):

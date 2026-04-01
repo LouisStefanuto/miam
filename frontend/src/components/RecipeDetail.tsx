@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ArrowLeft, Star, Pencil, Save, X, Plus, Trash2, Minus, Camera, Check, ImagePlus, ImageMinus, Copy, ClipboardCheck, Sun, Snowflake, Flower, LeafyGreen, Vegan } from 'lucide-react';
+import { ArrowLeft, Star, Pencil, Save, X, Plus, Trash2, Minus, Camera, Check, ImagePlus, ImageMinus, Copy, ClipboardCheck, Sun, Snowflake, Flower, LeafyGreen, Vegan, LogOut, Users, CopyPlus } from 'lucide-react';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 import { SortableIngredientItem } from './SortableIngredientItem';
 import { Badge } from '@/components/ui/badge';
@@ -70,9 +70,13 @@ interface RecipeDetailProps {
   onAddTag?: (tag: string) => void;
   onDeleteTag?: (tag: string) => void;
   onDelete?: () => void;
+  onRemoveFromCollection?: () => void;
+  onDuplicateAndRemove?: () => void;
+  shareButton?: React.ReactNode;
+  initialEditing?: boolean;
 }
 
-export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, onTestedToggle, allTags, onAddTag, onDeleteTag, onDelete }: RecipeDetailProps) {
+export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, onTestedToggle, allTags, onAddTag, onDeleteTag, onDelete, onRemoveFromCollection, onDuplicateAndRemove, shareButton, initialEditing }: RecipeDetailProps) {
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState<Recipe>(recipe);
   const [displayServings, setDisplayServings] = useState(recipe.servings);
@@ -90,6 +94,13 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (initialEditing && !editing) {
+      startEdit();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialEditing]);
 
   useEffect(() => {
     if (editing) return;
@@ -273,30 +284,86 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         <div className="absolute top-4 right-4 flex gap-2">
           {!editing && (
             <>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-destructive hover:bg-red-100 transition-colors">
-                    <Trash2 size={16} />
-                  </button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="font-display">Supprimer cette recette ?</AlertDialogTitle>
-                    <AlertDialogDescription className="font-body">
-                      La recette « {recipe.title} » sera supprimée définitivement. Cette action est irréversible.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
-                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body" onClick={() => onDelete?.()}>
-                      Supprimer
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-              <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-card-foreground hover:bg-card transition-colors" onClick={startEdit}>
-                <Pencil size={16} />
-              </button>
+              {/* Owner: delete recipe */}
+              {recipe.userRole !== 'reader' && recipe.userRole !== 'editor' && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-destructive hover:bg-red-100 transition-colors">
+                      <Trash2 size={16} />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="font-display">Supprimer cette recette ?</AlertDialogTitle>
+                      <AlertDialogDescription className="font-body">
+                        La recette « {recipe.title} » sera supprimée définitivement. Cette action est irréversible.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
+                      <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body" onClick={() => onDelete?.()}>
+                        Supprimer
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              {/* Non-owner: duplicate and remove from collection */}
+              {(recipe.userRole === 'reader' || recipe.userRole === 'editor') && onDuplicateAndRemove && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-muted-foreground hover:bg-card transition-colors">
+                      <CopyPlus size={16} />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="font-display">Dupliquer et retirer ?</AlertDialogTitle>
+                      <AlertDialogDescription className="font-body">
+                        Une copie de « {recipe.title} » sera créée dans votre bibliothèque et la recette partagée sera retirée. Vous pourrez modifier votre copie librement.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
+                      <AlertDialogAction className="font-body" onClick={onDuplicateAndRemove}>
+                        Dupliquer et retirer
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              {/* Non-owner: remove from collection */}
+              {(recipe.userRole === 'reader' || recipe.userRole === 'editor') && onRemoveFromCollection && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-muted-foreground hover:bg-card transition-colors">
+                      <LogOut size={16} />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="font-display">Retirer cette recette ?</AlertDialogTitle>
+                      <AlertDialogDescription className="font-body">
+                        La recette « {recipe.title} » sera retirée de votre collection. Vous pourrez la retrouver si on vous la partage à nouveau.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
+                      <AlertDialogAction className="font-body" onClick={onRemoveFromCollection}>
+                        Retirer
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              {/* Owner/editor: edit button */}
+              {recipe.userRole !== 'reader' && (
+                <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-card-foreground hover:bg-card transition-colors" onClick={startEdit}>
+                  <Pencil size={16} />
+                </button>
+              )}
+              {/* Owner: share button */}
+              {shareButton}
               <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-card-foreground hover:bg-card transition-colors" onClick={copyAsMarkdown}>
                 {copied ? <ClipboardCheck size={16} /> : <Copy size={16} />}
               </button>
@@ -364,9 +431,10 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 <Vegan size={14} className="text-green-600" />Végé
               </span>
             )}
-            {/* Testé toggle - always interactive */}
+            {/* Testé toggle - interactive for owner/editor only */}
             <button
               onClick={() => {
+                if (recipe.userRole === 'reader') return;
                 if (editing) {
                   setEditData({ ...editData, tested: !editData.tested });
                 } else {
@@ -396,9 +464,9 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                   <button
                     key={i}
                     type="button"
-                    onClick={() => onRatingChange?.(i)}
+                    onClick={() => recipe.userRole !== 'reader' && onRatingChange?.(i)}
                     onMouseEnter={() => setHoveredStar(i)}
-                    className="cursor-pointer"
+                    className={recipe.userRole === 'reader' ? '' : 'cursor-pointer'}
                   >
                     <Star
                       size={22}
@@ -427,6 +495,17 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
       </div>
 
       <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-8">
+        {/* Shared recipe indicator */}
+        {recipe.userRole && recipe.userRole !== 'owner' && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/60 border border-border text-sm font-body">
+            <Users size={16} className="text-muted-foreground shrink-0" />
+            <span className="text-muted-foreground">
+              Partagee par <span className="font-medium text-foreground">{recipe.ownerName || 'Quelqu\'un'}</span>
+              {' - '}
+              {recipe.userRole === 'editor' ? 'Editeur' : 'Lecture seule'}
+            </span>
+          </div>
+        )}
         {/* Quick info cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {editing ? (

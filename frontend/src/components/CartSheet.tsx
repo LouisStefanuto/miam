@@ -190,9 +190,8 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
         <SheetTrigger asChild>{trigger}</SheetTrigger>
       ) : (
         <SheetTrigger asChild>
-          <Button variant="outline" className="font-body font-semibold gap-2 shrink-0 relative focus-visible:ring-0 focus-visible:ring-offset-0">
+          <Button variant="outline" className="font-body font-semibold shrink-0 relative focus-visible:ring-0 focus-visible:ring-offset-0 px-3">
             <ShoppingCart size={18} />
-            Panier
             {count > 0 && (
               <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
                 {count}

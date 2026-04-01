@@ -7,10 +7,14 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from pydantic import BaseModel
 
-from miam.api.deps import get_current_user_id, get_recipe_management_service
+from miam.api.deps import (
+    get_current_user_id,
+    get_recipe_management_service,
+    get_recipe_share_service,
+)
 from miam.domain.entities import RecipeEntity
 from miam.domain.schemas import BatchRecipeCreate, RecipeCreate, RecipeUpdate
-from miam.domain.services import RecipeManagementService
+from miam.domain.services import RecipeManagementService, RecipeShareService
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
 
@@ -93,6 +97,8 @@ class RecipeDetailResponse(BaseModel):
     images: list[ImageDetailResponse]
     sources: list[SourceResponse]
     created_at: datetime | None = None
+    user_role: str | None = None
+    owner_name: str | None = None
 
 
 class PaginatedRecipeResponse(BaseModel):
@@ -144,6 +150,8 @@ def map_recipe_to_response(recipe: RecipeEntity) -> RecipeDetailResponse:
             for src in recipe.sources
         ],
         created_at=recipe.created_at,
+        user_role=recipe.user_role,
+        owner_name=recipe.owner_name,
     )
 
 
@@ -158,6 +166,7 @@ def search_recipes(
     season: Annotated[str | None, Query()] = None,
     limit: Annotated[int | None, Query(ge=1, le=100)] = None,
     offset: Annotated[int, Query(ge=0)] = 0,
+    ownership: Annotated[str | None, Query()] = None,
 ) -> PaginatedRecipeResponse:
     """Search recipes with optional filters and pagination."""
     result = service.search_recipes(
@@ -169,6 +178,7 @@ def search_recipes(
         season=season,
         limit=limit,
         offset=offset,
+        ownership=ownership,
     )
     return PaginatedRecipeResponse(
         items=[map_recipe_to_response(r) for r in result.items],
@@ -200,8 +210,13 @@ def delete_recipe(
     service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
     user_id: Annotated[UUID, Depends(get_current_user_id)],
 ) -> None:
-    """Delete a recipe by ID."""
-    deleted = service.delete_recipe(recipe_id, user_id)
+    """Delete a recipe by ID. Only the owner can delete."""
+    try:
+        deleted = service.delete_recipe(recipe_id, user_id)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)
+        ) from exc
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -236,12 +251,48 @@ def get_recipes(
     user_id: Annotated[UUID, Depends(get_current_user_id)],
     limit: Annotated[int | None, Query(ge=1, le=100)] = None,
     offset: Annotated[int, Query(ge=0)] = 0,
+    ownership: Annotated[str | None, Query()] = None,
 ) -> PaginatedRecipeResponse:
     """Retrieve recipes with optional pagination."""
-    result = service.search_recipes(user_id=user_id, limit=limit, offset=offset)
+    result = service.search_recipes(
+        user_id=user_id, limit=limit, offset=offset, ownership=ownership
+    )
     return PaginatedRecipeResponse(
         items=[map_recipe_to_response(r) for r in result.items],
         total=result.total,
         limit=limit,
         offset=offset,
     )
+
+
+class CollaboratorResponse(BaseModel):
+    id: UUID
+    shared_with_email: str | None = None
+    shared_with_name: str | None = None
+    role: str
+    status: str
+
+
+@router.get("/{recipe_id}/shares")
+def get_recipe_shares(
+    recipe_id: Annotated[UUID, Path()],
+    service: Annotated[RecipeShareService, Depends(get_recipe_share_service)],
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+) -> list[CollaboratorResponse]:
+    """List collaborators for a recipe. Only the owner can view this."""
+    try:
+        shares = service.get_recipe_shares(recipe_id, user_id)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)
+        ) from exc
+    return [
+        CollaboratorResponse(
+            id=s.id,
+            shared_with_email=s.shared_with_email,
+            shared_with_name=s.shared_with_name,
+            role=s.role.value,
+            status=s.status.value,
+        )
+        for s in shares
+    ]

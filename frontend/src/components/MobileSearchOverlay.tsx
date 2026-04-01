@@ -1,5 +1,5 @@
 import { KeyboardEvent, useRef, useEffect, useState } from 'react';
-import { ArrowLeft, Search, X, Check, Leaf, Zap, UtensilsCrossed, Sun, Gauge, RotateCcw, Grid2X2, Wine, Salad, Beef, CupSoda, Cake, Flower, Snowflake, Grape, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Search, X, Check, Leaf, Zap, Users, UtensilsCrossed, Sun, Gauge, RotateCcw, Grid2X2, Wine, Salad, Beef, CupSoda, Cake, Flower, Snowflake, Grape, LucideIcon } from 'lucide-react';
 import { Filters, defaultFilters } from '@/components/FilterBar';
 
 interface MobileSearchOverlayProps {
@@ -115,7 +115,8 @@ export default function MobileSearchOverlay({
     filters.difficulty !== defaultFilters.difficulty ||
     filters.tested !== defaultFilters.tested ||
     filters.vegetarian !== defaultFilters.vegetarian ||
-    filters.rapido !== defaultFilters.rapido;
+    filters.rapido !== defaultFilters.rapido ||
+    filters.ownership !== defaultFilters.ownership;
 
   const resetAll = () => {
     onSearchQueryChange('');
@@ -246,7 +247,13 @@ export default function MobileSearchOverlay({
                 label="Rapido"
                 activeColor="bg-primary/12 border-primary/35 text-primary"
               />
-              <div />
+              <ToggleCard
+                active={filters.ownership === 'shared'}
+                onClick={() => set('ownership', filters.ownership === 'shared' ? 'all' : 'shared')}
+                icon={<Users size={20} />}
+                label="Partagées"
+                activeColor="bg-primary/12 border-primary/35 text-primary"
+              />
             </div>
           </Section>
 

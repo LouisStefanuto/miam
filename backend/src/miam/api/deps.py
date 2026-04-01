@@ -13,6 +13,7 @@ from miam.domain.services import (
     RecipeExportService,
     RecipeImportService,
     RecipeManagementService,
+    RecipeShareService,
 )
 from miam.infra.db.session import SessionLocal
 from miam.infra.exporter_markdown import MarkdownExporter
@@ -21,7 +22,11 @@ from miam.infra.google_auth import GoogleTokenVerifier
 from miam.infra.image_storage import LocalImageStorage
 from miam.infra.importer_instagram import InstagramParser
 from miam.infra.jwt_handler import JwtTokenHandler
-from miam.infra.repositories import RecipeRepository, UserRepository
+from miam.infra.repositories import (
+    RecipeRepository,
+    RecipeShareRepository,
+    UserRepository,
+)
 
 
 class AuthSettings(BaseSettings):
@@ -101,7 +106,17 @@ def get_recipe_management_service(
 ) -> RecipeManagementService:
     repo = RecipeRepository(db)
     image_storage = LocalImageStorage("images")
-    return RecipeManagementService(repo, image_storage)
+    share_repo = RecipeShareRepository(db)
+    return RecipeManagementService(repo, image_storage, share_repo)
+
+
+def get_recipe_share_service(
+    db: Session = Depends(get_db),  # noqa: B008
+) -> RecipeShareService:
+    share_repo = RecipeShareRepository(db)
+    user_repo = UserRepository(db)
+    recipe_repo = RecipeRepository(db)
+    return RecipeShareService(share_repo, user_repo, recipe_repo)
 
 
 def get_recipe_export_service(

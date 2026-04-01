@@ -23,6 +23,9 @@ const ImportJSONPage = lazy(() => import("./pages/ImportJSONPage"));
 const ImportInstagramPage = lazy(() => import("./pages/ImportInstagramPage"));
 const AddRecipePage = lazy(() => import("./pages/AddRecipePage"));
 const CartPage = lazy(() => import("./pages/CartPage"));
+const SharesPage = lazy(() => import("./pages/SharesPage"));
+const ShareBatchPage = lazy(() => import("./pages/ShareBatchPage"));
+const ShareInboxPage = lazy(() => import("./pages/ShareInboxPage"));
 const ExportPage = lazy(() => import("./pages/ExportPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -64,6 +67,9 @@ const App = () => (
             <Route path="/import/json" element={<ProtectedRoute><ImportJSONPage /></ProtectedRoute>} />
             <Route path="/import/instagram" element={<ProtectedRoute><ImportInstagramPage /></ProtectedRoute>} />
             <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+            <Route path="/shares" element={<ProtectedRoute><SharesPage /></ProtectedRoute>} />
+            <Route path="/shares/batch" element={<ProtectedRoute><ShareBatchPage /></ProtectedRoute>} />
+            <Route path="/shares/inbox" element={<ProtectedRoute><ShareInboxPage /></ProtectedRoute>} />
             <Route path="/export" element={<ProtectedRoute><ExportPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
