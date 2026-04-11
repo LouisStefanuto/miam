@@ -31,27 +31,27 @@ export function SortableCartIngredientItem({ id, name, details, checked, onToggl
     <li
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-2 font-body text-sm group ${checked ? 'text-muted-foreground' : ''}`}
+      className={`flex items-center gap-3 py-0.5 font-body text-base group ${checked ? 'text-muted-foreground' : ''}`}
     >
       <button
         type="button"
-        className="cursor-grab active:cursor-grabbing text-muted-foreground md:text-muted-foreground/0 md:group-hover:text-muted-foreground hover:!text-foreground touch-none shrink-0 transition-colors"
+        className="cursor-grab active:cursor-grabbing text-muted-foreground md:text-muted-foreground/0 md:group-hover:text-muted-foreground hover:!text-foreground touch-none shrink-0 transition-colors p-1"
         {...attributes}
         {...listeners}
       >
-        <GripVertical size={14} />
+        <GripVertical size={20} />
       </button>
       <button
         type="button"
         onClick={() => onToggle(id)}
-        className={`w-4 h-4 shrink-0 rounded border transition-colors flex items-center justify-center ${
+        className={`w-6 h-6 shrink-0 rounded border-2 transition-colors flex items-center justify-center ${
           checked
             ? 'bg-primary border-primary text-primary-foreground'
             : 'border-muted-foreground/30 hover:border-primary'
         }`}
       >
         {checked && (
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 5.5L4 7.5L8 3" />
           </svg>
         )}
@@ -62,10 +62,10 @@ export function SortableCartIngredientItem({ id, name, details, checked, onToggl
       </span>
       <button
         onClick={() => onRemove(id)}
-        className="shrink-0 p-1 rounded-full text-muted-foreground md:text-muted-foreground/0 md:group-hover:text-muted-foreground hover:!text-destructive transition-colors"
+        className="shrink-0 p-2 rounded-full text-muted-foreground md:text-muted-foreground/0 md:group-hover:text-muted-foreground hover:!text-destructive transition-colors"
         title="Retirer de la liste"
       >
-        <X size={14} />
+        <X size={20} />
       </button>
     </li>
   );
