@@ -1,6 +1,7 @@
 import { KeyboardEvent, useRef, useEffect } from 'react';
 import { Search, X, SlidersHorizontal } from 'lucide-react';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
+import { useLongPress } from '@/hooks/use-long-press';
 
 interface MobileHeaderProps {
   searchTags: string[];
@@ -11,6 +12,8 @@ interface MobileHeaderProps {
   hasActiveFilters?: boolean;
   inlineSearch: boolean;
   onInlineSearchChange: (open: boolean) => void;
+  onLogoTap?: () => void;
+  onLogoLongPress?: () => void;
 }
 
 export default function MobileHeader({
@@ -18,9 +21,14 @@ export default function MobileHeader({
   searchQuery, onSearchQueryChange,
   onFiltersTap, hasActiveFilters,
   inlineSearch, onInlineSearchChange,
+  onLogoTap, onLogoLongPress,
 }: MobileHeaderProps) {
   const { headerOffset } = useScrollDirection();
   const inputRef = useRef<HTMLInputElement>(null);
+  const logoHandlers = useLongPress(
+    () => onLogoTap?.(),
+    () => onLogoLongPress?.(),
+  );
 
   useEffect(() => {
     if (inlineSearch) {
@@ -57,7 +65,13 @@ export default function MobileHeader({
       className="sticky top-0 z-20 flex items-center gap-3 px-3 h-14 bg-background border-b border-border md:hidden will-change-transform"
       style={{ transform: `translateY(${headerOffset}px)` }}
     >
-      <img src="/icon.png" alt="Miam" className="w-8 h-8 shrink-0" />
+      <img
+        src="/icon.png"
+        alt="Miam"
+        className="w-8 h-8 shrink-0 select-none"
+        draggable={false}
+        {...logoHandlers}
+      />
 
       <div className="flex-1 flex items-center gap-1.5 flex-wrap min-h-9 px-2.5 bg-secondary/60 border border-border rounded-lg transition-colors">
         {inlineSearch ? (
