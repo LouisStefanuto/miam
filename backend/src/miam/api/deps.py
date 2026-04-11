@@ -129,5 +129,10 @@ def get_recipe_export_service(
     return RecipeExportService(repo, word_exporter, markdown_exporter)
 
 
-def get_recipe_import_service() -> RecipeImportService:
-    return RecipeImportService(instagram_parser=InstagramParser())
+def get_recipe_import_service(
+    db: Session = Depends(get_db),  # noqa: B008
+) -> RecipeImportService:
+    return RecipeImportService(
+        instagram_parser=InstagramParser(),
+        recipe_repo=RecipeRepository(db),
+    )
