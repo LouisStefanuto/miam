@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRecipe, useRecipes, useUpdateRecipe, useDeleteRecipe, useCreateRecipe } from '@/hooks/use-recipes';
@@ -8,6 +8,7 @@ import { toast } from '@/hooks/use-toast';
 import { useCart } from '@/contexts/CartContext';
 import { Recipe } from '@/data/recipes';
 import { leaveRecipe, fetchImageAsDataUrl } from '@/lib/api';
+import { useOverlayClose } from '@/components/CatalogLayout';
 
 const RecipeDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +23,8 @@ const RecipeDetailPage = () => {
   const queryClient = useQueryClient();
   const [customTags, setCustomTags] = useState<string[]>([]);
   const initialEditing = !!(location.state as { edit?: boolean })?.edit;
+  const { requestClose } = useOverlayClose();
+  const handleBack = useCallback(() => requestClose('/'), [requestClose]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -169,7 +172,7 @@ const RecipeDetailPage = () => {
   return (
     <RecipeDetail
       recipe={recipe}
-      onBack={() => navigate('/')}
+      onBack={handleBack}
       onRatingChange={recipe.userRole !== 'reader' ? handleRatingChange : undefined}
       onSave={recipe.userRole !== 'reader' ? handleSave : undefined}
       onTestedToggle={recipe.userRole !== 'reader' ? handleTestedToggle : undefined}

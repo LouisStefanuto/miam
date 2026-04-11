@@ -9,9 +9,7 @@ const SharesPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-20 flex items-center justify-center px-4 h-14 bg-background border-b border-border md:hidden">
-        <h1 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
-          <Share2 size={20} /> Partages
-        </h1>
+        <h1 className="font-display text-lg font-bold text-foreground">Partages</h1>
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6 space-y-3 pb-24">

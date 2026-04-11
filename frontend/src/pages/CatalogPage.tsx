@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, PenLine, Camera, Instagram, Download, FileDown, FileText, FileJson, X, ArrowUpDown, Check, Share2, Inbox } from 'lucide-react';
-import { useShake } from '@/hooks/use-shake';
+
 
 const BeaverCatchGame = lazy(() => import('@/components/BeaverCatchGame'));
 import CartSheet from '@/components/CartSheet';
@@ -86,7 +86,6 @@ const CatalogPage = () => {
     setSelectedRecipes(new Set());
   }, []);
   const openBeaverGame = useCallback(() => setShowBeaverGame(true), []);
-  useShake(openBeaverGame);
 
   // Dev shortcut: Shift+B to test the easter egg on desktop
   useEffect(() => {
@@ -231,6 +230,8 @@ const CatalogPage = () => {
         hasActiveFilters={hasActiveFilters}
         inlineSearch={inlineSearch}
         onInlineSearchChange={setInlineSearch}
+        onLogoTap={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        onLogoLongPress={openBeaverGame}
       />
 
       {/* Mobile search overlay */}

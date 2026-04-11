@@ -158,7 +158,7 @@ const CartPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-20 flex items-center justify-center px-4 h-14 bg-background border-b border-border md:hidden">
-        <h1 className="font-display text-lg font-bold text-foreground">Panier ({count})</h1>
+        <h1 className="font-display text-xl font-bold text-foreground">Panier ({count})</h1>
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-4 pb-24 space-y-6">
@@ -170,26 +170,26 @@ const CartPage = () => {
           <>
             {/* Selected recipes */}
             <div className="space-y-2">
-              <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              <h3 className="font-body text-base font-semibold text-muted-foreground uppercase tracking-wide">
                 Recettes sélectionnées
               </h3>
               {cartRecipes.map((recipe) => (
-                <div key={recipe.id} className="flex items-center gap-3 p-2 rounded-lg bg-secondary/50 group">
+                <div key={recipe.id} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 group">
                   {recipe.image ? (
-                    <AuthImage src={recipe.image} alt={recipe.title} className="w-12 h-12 rounded object-cover shrink-0" />
+                    <AuthImage src={recipe.image} alt={recipe.title} className="w-14 h-14 rounded-md object-cover shrink-0" />
                   ) : (
-                    <div className="w-12 h-12 rounded bg-muted shrink-0" />
+                    <div className="w-14 h-14 rounded-md bg-muted shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-body text-sm font-medium truncate">{recipe.title}</p>
-                    <p className="text-xs text-muted-foreground font-body">{recipe.servings} pers. · {recipe.ingredients.length} ingrédients</p>
+                    <p className="font-body text-base font-medium truncate">{recipe.title}</p>
+                    <p className="text-sm text-muted-foreground font-body">{recipe.servings} pers. · {recipe.ingredients.length} ingrédients</p>
                   </div>
                   <button
                     onClick={() => remove(recipe.id)}
-                    className="shrink-0 p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    className="shrink-0 p-2 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                     title="Retirer du panier"
                   >
-                    <X size={16} />
+                    <X size={20} />
                   </button>
                 </div>
               ))}
@@ -198,12 +198,12 @@ const CartPage = () => {
             {/* Shopping list */}
             {ingredients.length > 0 && (
               <div className="space-y-2">
-                <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                <h3 className="font-body text-base font-semibold text-muted-foreground uppercase tracking-wide">
                   Liste de courses
                 </h3>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={sortedIngredients.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-                    <ul className="space-y-1">
+                    <ul className="space-y-1.5">
                       {sortedIngredients.map((ing) => (
                         <SortableCartIngredientItem
                           key={ing.id}
@@ -223,12 +223,12 @@ const CartPage = () => {
 
             {/* Actions */}
             <div className="space-y-2">
-              <Button onClick={copyShoppingList} className="w-full gradient-warm text-primary-foreground font-body font-semibold gap-2">
-                <ClipboardCopy size={16} />
+              <Button onClick={copyShoppingList} className="w-full gradient-warm text-primary-foreground font-body font-semibold gap-2 h-12 text-base">
+                <ClipboardCopy size={20} />
                 Copier la liste de courses
               </Button>
-              <Button onClick={clear} variant="ghost" className="w-full font-body text-muted-foreground gap-2">
-                <Trash2 size={16} />
+              <Button onClick={clear} variant="ghost" className="w-full font-body text-muted-foreground gap-2 h-12 text-base">
+                <Trash2 size={20} />
                 Vider le panier
               </Button>
             </div>

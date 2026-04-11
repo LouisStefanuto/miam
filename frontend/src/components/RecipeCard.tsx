@@ -39,7 +39,7 @@ const StarRating = ({ rating, size = 14 }: { rating: number; size?: number }) =>
       <Star
         key={i}
         size={size}
-        className={i <= rating ? 'fill-primary text-primary' : 'text-muted'}
+        className={i <= rating ? 'fill-primary text-primary' : 'text-white/30'}
       />
     ))}
   </div>
@@ -80,16 +80,16 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
             <img
               src={imageSrc}
               alt={recipe.title}
-              className={`w-full h-full object-cover ${!recipe.tested ? 'opacity-60 saturate-[0.3]' : ''}`}
+              className="w-full h-full object-cover"
               loading="lazy"
             />
           ) : (
-            <div className={`w-full h-full bg-muted flex items-center justify-center ${!recipe.tested ? 'opacity-60' : ''}`}>
+            <div className="w-full h-full bg-muted flex items-center justify-center">
               <img src={beaverIcon} alt="Pas d'image" className="w-10 h-10 opacity-50 grayscale" />
             </div>
           )}
           {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-foreground/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
 
           {/* Top right: selection check or cart button */}
           <div className="absolute top-2 right-2">
@@ -149,11 +149,11 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
           <img
             src={imageSrc}
             alt={recipe.title}
-            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${!recipe.tested ? 'opacity-60 saturate-[0.3]' : ''}`}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
         ) : (
-          <div className={`w-full h-full bg-muted flex items-center justify-center ${!recipe.tested ? 'opacity-60' : ''}`}>
+          <div className="w-full h-full bg-muted flex items-center justify-center">
             <img src={beaverIcon} alt="Pas d'image" className="w-10 h-10 opacity-50 grayscale" />
           </div>
         )}

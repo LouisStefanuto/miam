@@ -224,7 +224,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
       )}
 
       {/* Hero image area */}
-      <div className={`animate-fade-in relative h-[300px] md:h-[400px] overflow-hidden ${errors.length > 0 ? 'mt-24' : 'mt-14'}`}>
+      <div className={`relative h-[300px] md:h-[400px] overflow-hidden ${errors.length > 0 ? 'mt-24' : 'mt-14'}`}>
         {data.image ? (
           <img src={data.image} alt={data.title} className="w-full h-full object-cover" />
         ) : (

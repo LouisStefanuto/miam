@@ -129,7 +129,7 @@ export default function MobileSearchOverlay({
   return (
     <div
       className={`fixed inset-0 z-50 bg-background flex flex-col md:hidden transition-transform duration-300 ease-out ${
-        visible ? 'translate-y-0' : 'translate-y-full'
+        visible ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
       {/* Search header */}
