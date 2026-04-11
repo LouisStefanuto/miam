@@ -70,8 +70,22 @@ class RecipeManagementService(RecipeServicePort):
     def create_recipes(
         self, data: list[RecipeCreate], owner_id: UUID
     ) -> list[RecipeEntity]:
-        """Create multiple recipes in a single atomic transaction."""
-        return self.repository.add_recipes(data, owner_id=owner_id)
+        """Create multiple recipes in a single atomic transaction.
+
+        Recipes whose sources already exist in the database are skipped.
+        """
+        raw_contents = {src.raw_content for recipe in data for src in recipe.sources}
+        existing = self.repository.get_existing_source_raw_contents(
+            raw_contents, owner_id
+        )
+        new_recipes = [
+            recipe
+            for recipe in data
+            if not any(src.raw_content in existing for src in recipe.sources)
+        ]
+        if not new_recipes:
+            return []
+        return self.repository.add_recipes(new_recipes, owner_id=owner_id)
 
     def get_recipe_by_id(self, recipe_id: UUID, user_id: UUID) -> RecipeEntity | None:
         """Retrieve a recipe by ID, scoped to the given user."""
@@ -244,12 +258,28 @@ class RecipeShareService(RecipeShareServicePort):
 class RecipeImportService(RecipeImportServicePort):
     """Service for importing recipes from external sources."""
 
-    def __init__(self, instagram_parser: InstagramParserPort) -> None:
+    def __init__(
+        self,
+        instagram_parser: InstagramParserPort,
+        recipe_repo: RecipeRepositoryPort,
+    ) -> None:
         self.instagram_parser = instagram_parser
+        self.recipe_repo = recipe_repo
 
-    def parse_instagram(self, data: InstagramResponse) -> list[ParsedRecipe]:
-        """Parse Instagram data using the injected parser adapter."""
-        return self.instagram_parser.parse(data)
+    def parse_instagram(
+        self, data: InstagramResponse, user_id: UUID
+    ) -> list[ParsedRecipe]:
+        """Parse Instagram data, excluding recipes whose source already exists."""
+        parsed = self.instagram_parser.parse(data)
+        raw_contents = {src.raw_content for p in parsed for src in p.recipe.sources}
+        existing = self.recipe_repo.get_existing_source_raw_contents(
+            raw_contents, user_id
+        )
+        return [
+            p
+            for p in parsed
+            if not any(src.raw_content in existing for src in p.recipe.sources)
+        ]
 
 
 class AuthService(AuthServicePort):

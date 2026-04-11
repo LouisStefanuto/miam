@@ -487,6 +487,22 @@ class RecipeRepository(RecipeRepositoryPort):
         )
         return self.session.execute(stmt).scalars().first() is not None
 
+    def get_existing_source_raw_contents(
+        self, raw_contents: set[str], user_id: UUID
+    ) -> set[str]:
+        """Return the subset of raw_contents already present in recipes visible to user."""
+        if not raw_contents:
+            return set()
+        stmt = (
+            select(Source.raw_content)
+            .join(Recipe, Source.recipe_id == Recipe.id)
+            .where(
+                Source.raw_content.in_(raw_contents),
+                self._visible_recipe_filter(user_id),
+            )
+        )
+        return set(self.session.execute(stmt).scalars().all())
+
     def delete_recipe(self, recipe_id: UUID, user_id: UUID) -> bool:
         """Delete a recipe and all related entities, scoped to user."""
         recipe = self._load_recipe(recipe_id, user_id)

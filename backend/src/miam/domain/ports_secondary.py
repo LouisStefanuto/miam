@@ -84,6 +84,12 @@ class RecipeRepositoryPort(ABC):
         """Delete an Image record by ID. Returns True if deleted, False if not found/owned."""
 
     @abstractmethod
+    def get_existing_source_raw_contents(
+        self, raw_contents: set[str], user_id: UUID
+    ) -> set[str]:
+        """Return the subset of raw_contents that already exist in recipes visible to user."""
+
+    @abstractmethod
     def image_belongs_to_user(self, image_id: UUID, user_id: UUID) -> bool:
         """Check if an image belongs to a recipe owned by the given user."""
 
