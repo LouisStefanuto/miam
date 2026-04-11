@@ -74,9 +74,7 @@ class RecipeManagementService(RecipeServicePort):
 
         Recipes whose sources already exist in the database are skipped.
         """
-        raw_contents = {
-            src.raw_content for recipe in data for src in recipe.sources
-        }
+        raw_contents = {src.raw_content for recipe in data for src in recipe.sources}
         existing = self.repository.get_existing_source_raw_contents(
             raw_contents, owner_id
         )
@@ -273,11 +271,7 @@ class RecipeImportService(RecipeImportServicePort):
     ) -> list[ParsedRecipe]:
         """Parse Instagram data, excluding recipes whose source already exists."""
         parsed = self.instagram_parser.parse(data)
-        raw_contents = {
-            src.raw_content
-            for p in parsed
-            for src in p.recipe.sources
-        }
+        raw_contents = {src.raw_content for p in parsed for src in p.recipe.sources}
         existing = self.recipe_repo.get_existing_source_raw_contents(
             raw_contents, user_id
         )

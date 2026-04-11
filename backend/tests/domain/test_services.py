@@ -572,9 +572,7 @@ class TestRecipeImportService:
             [ParsedRecipe(recipe=recipe, image_url="https://cdn.instagram.com/img.jpg")]
         )
         repo = StubRecipeRepository()
-        service = RecipeImportService(
-            instagram_parser=stub_parser, recipe_repo=repo
-        )
+        service = RecipeImportService(instagram_parser=stub_parser, recipe_repo=repo)
 
         payload = InstagramResponse(items=[])
         result = service.parse_instagram(payload, uuid4())
@@ -587,9 +585,7 @@ class TestRecipeImportService:
     def test_parse_instagram_passes_data_through(self) -> None:
         stub_parser = StubInstagramParser([])
         repo = StubRecipeRepository()
-        service = RecipeImportService(
-            instagram_parser=stub_parser, recipe_repo=repo
-        )
+        service = RecipeImportService(instagram_parser=stub_parser, recipe_repo=repo)
 
         payload = InstagramResponse.model_validate({"items": [{"media": {}}]})
         service.parse_instagram(payload, uuid4())
@@ -608,7 +604,9 @@ class TestRecipeImportService:
             description="",
             category="plat",
             owner_id=user_id,
-            sources=[SourceEntity(type=SourceType.instagram.value, raw_content="chef123")],
+            sources=[
+                SourceEntity(type=SourceType.instagram.value, raw_content="chef123")
+            ],
         )
         repo.recipes[existing_recipe.id] = existing_recipe
 
@@ -628,9 +626,7 @@ class TestRecipeImportService:
                 ParsedRecipe(recipe=duplicate_recipe),
             ]
         )
-        service = RecipeImportService(
-            instagram_parser=stub_parser, recipe_repo=repo
-        )
+        service = RecipeImportService(instagram_parser=stub_parser, recipe_repo=repo)
 
         result = service.parse_instagram(InstagramResponse(items=[]), user_id)
 
