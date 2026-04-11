@@ -141,6 +141,14 @@ class AuthServicePort(ABC):
         and returns a signed JWT.
         """
 
+    @abstractmethod
+    def validate_token(self, token: str) -> UUID:
+        """Decode a JWT token and verify the user exists.
+
+        Returns the user ID if valid.
+        Raises ValueError if the token is invalid/expired or the user doesn't exist.
+        """
+
 
 class RecipeExportServicePort(ABC):
     @abstractmethod

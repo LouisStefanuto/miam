@@ -313,6 +313,13 @@ class AuthService(AuthServicePort):
 
         return self.jwt_token.create_access_token(user.id)
 
+    def validate_token(self, token: str) -> UUID:
+        """Decode a JWT token and verify the user exists."""
+        user_id = self.jwt_token.decode_access_token(token)
+        if self.user_repository.get_user_by_id(user_id) is None:
+            raise ValueError("User not found")
+        return user_id
+
 
 class RecipeExportService(RecipeExportServicePort):
     """Service for exporting recipes to different formats."""

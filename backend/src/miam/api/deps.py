@@ -63,30 +63,6 @@ def _get_jwt_handler(settings: AuthSettings) -> JwtTokenHandler:
     )
 
 
-def get_current_user_id(
-    credentials: HTTPAuthorizationCredentials | None = Depends(_security),  # noqa: B008
-    miam_auth_token: str | None = Cookie(default=None),  # noqa: B008
-    settings: AuthSettings = Depends(get_auth_settings),  # noqa: B008
-) -> UUID:
-    """Extract and validate the JWT from the HttpOnly cookie or Authorization header."""
-    token = miam_auth_token or (credentials.credentials if credentials else None)
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    handler = _get_jwt_handler(settings)
-    try:
-        return handler.decode_access_token(token)
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        ) from exc
-
-
 def get_auth_service(
     db: Session = Depends(get_db),  # noqa: B008
     settings: AuthSettings = Depends(get_auth_settings),  # noqa: B008
@@ -99,6 +75,29 @@ def get_auth_service(
         jwt_token=jwt_handler,
         user_repository=user_repo,
     )
+
+
+def get_current_user_id(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_security),  # noqa: B008
+    miam_auth_token: str | None = Cookie(default=None),  # noqa: B008
+    auth_service: AuthService = Depends(get_auth_service),  # noqa: B008
+) -> UUID:
+    """Extract and validate the JWT from the HttpOnly cookie or Authorization header."""
+    token = miam_auth_token or (credentials.credentials if credentials else None)
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    try:
+        return auth_service.validate_token(token)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from exc
 
 
 def get_recipe_management_service(
