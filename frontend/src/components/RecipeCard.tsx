@@ -80,11 +80,11 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
             <img
               src={imageSrc}
               alt={recipe.title}
-              className={`w-full h-full object-cover ${!recipe.tested ? 'opacity-60 saturate-[0.3]' : ''}`}
+              className="w-full h-full object-cover"
               loading="lazy"
             />
           ) : (
-            <div className={`w-full h-full bg-muted flex items-center justify-center ${!recipe.tested ? 'opacity-60' : ''}`}>
+            <div className="w-full h-full bg-muted flex items-center justify-center">
               <img src={beaverIcon} alt="Pas d'image" className="w-10 h-10 opacity-50 grayscale" />
             </div>
           )}
@@ -149,11 +149,11 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
           <img
             src={imageSrc}
             alt={recipe.title}
-            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${!recipe.tested ? 'opacity-60 saturate-[0.3]' : ''}`}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
         ) : (
-          <div className={`w-full h-full bg-muted flex items-center justify-center ${!recipe.tested ? 'opacity-60' : ''}`}>
+          <div className="w-full h-full bg-muted flex items-center justify-center">
             <img src={beaverIcon} alt="Pas d'image" className="w-10 h-10 opacity-50 grayscale" />
           </div>
         )}
