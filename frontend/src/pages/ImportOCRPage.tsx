@@ -9,7 +9,7 @@ const ImportOCRPage = () => {
 
   return (
     <RecipeImportOCR
-      onBack={() => navigate('/')}
+      onBack={() => navigate('/add')}
       onImportRecipes={(imported) => {
         queryClient.invalidateQueries({ queryKey: ['recipes'] });
         toast({ title: `${imported.length} recette${imported.length > 1 ? 's' : ''} importée${imported.length > 1 ? 's' : ''} !` });

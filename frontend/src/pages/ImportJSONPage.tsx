@@ -9,7 +9,7 @@ const ImportJSONPage = () => {
 
   return (
     <RecipeImportJSON
-      onBack={() => navigate('/')}
+      onBack={() => navigate('/add')}
       onImportRecipes={() => {
         queryClient.invalidateQueries({ queryKey: ['recipes'] });
         toast({ title: 'Import terminé !' });

@@ -8,7 +8,7 @@ const ImportInstagramPage = () => {
 
   return (
     <RecipeImportInstagram
-      onBack={() => navigate('/')}
+      onBack={() => navigate('/add')}
       onImportDone={() => {
         queryClient.invalidateQueries({ queryKey: ['recipes'] });
         navigate('/');

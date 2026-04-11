@@ -53,7 +53,7 @@ const CreateRecipePage = () => {
 
   return (
     <RecipeForm
-      onBack={() => navigate('/')}
+      onBack={() => navigate('/add')}
       onSave={handleSave}
       allTags={allTags}
       onAddTag={handleAddTag}
