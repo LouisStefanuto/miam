@@ -13,7 +13,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SwipeBack from "./components/SwipeBack";
 import MobileBottomBar from "./components/MobileBottomBar";
-import CatalogPage from "./pages/CatalogPage";
+import CatalogLayout from "./components/CatalogLayout";
 import LoginPage from "./pages/LoginPage";
 
 const RecipeDetailPage = lazy(() => import("./pages/RecipeDetailPage"));
@@ -59,10 +59,12 @@ const App = () => (
           <Suspense>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/" element={<ProtectedRoute><CatalogPage /></ProtectedRoute>} />
+            <Route path="/" element={<ProtectedRoute><CatalogLayout /></ProtectedRoute>}>
+              <Route index element={null} />
+              <Route path="recipes/:id" element={<RecipeDetailPage />} />
+              <Route path="recipes/new" element={<CreateRecipePage />} />
+            </Route>
             <Route path="/add" element={<ProtectedRoute><AddRecipePage /></ProtectedRoute>} />
-            <Route path="/recipes/new" element={<ProtectedRoute><CreateRecipePage /></ProtectedRoute>} />
-            <Route path="/recipes/:id" element={<ProtectedRoute><RecipeDetailPage /></ProtectedRoute>} />
             <Route path="/import/ocr" element={<ProtectedRoute><ImportOCRPage /></ProtectedRoute>} />
             <Route path="/import/json" element={<ProtectedRoute><ImportJSONPage /></ProtectedRoute>} />
             <Route path="/import/instagram" element={<ProtectedRoute><ImportInstagramPage /></ProtectedRoute>} />

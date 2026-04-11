@@ -262,7 +262,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
       )}
 
       {/* Header image */}
-      <div className={`animate-fade-in relative h-[300px] md:h-[400px] overflow-hidden select-none ${editing ? 'mt-14' : ''}`}>
+      <div className={`relative h-[300px] md:h-[400px] overflow-hidden select-none ${editing ? 'mt-14' : ''}`}>
         {imageSrc ? (
           <img src={imageSrc} alt={current.title} className="w-full h-full object-cover" />
         ) : (

@@ -1,9 +1,10 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecipes, useCreateRecipe, useUpdateRecipe } from '@/hooks/use-recipes';
 import RecipeForm from '@/components/RecipeForm';
 import { toast } from '@/hooks/use-toast';
 import { Recipe } from '@/data/recipes';
+import { useOverlayClose } from '@/components/CatalogLayout';
 
 const CreateRecipePage = () => {
   const navigate = useNavigate();
@@ -11,6 +12,8 @@ const CreateRecipePage = () => {
   const createMutation = useCreateRecipe();
   const updateMutation = useUpdateRecipe();
   const [customTags, setCustomTags] = useState<string[]>([]);
+  const { requestClose } = useOverlayClose();
+  const handleBack = useCallback(() => requestClose('/'), [requestClose]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -53,7 +56,7 @@ const CreateRecipePage = () => {
 
   return (
     <RecipeForm
-      onBack={() => navigate('/add')}
+      onBack={handleBack}
       onSave={handleSave}
       allTags={allTags}
       onAddTag={handleAddTag}
