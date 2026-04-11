@@ -84,9 +84,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await fetch(`${API_BASE}/auth/google`, {
       method: 'POST',
       credentials: 'same-origin',
+      redirect: 'manual',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id_token: credential }),
     });
+    if (handleCfRedirect(res)) return;
     if (!res.ok) {
       const detail = await res.text();
       throw new Error(`Login failed: ${detail}`);
