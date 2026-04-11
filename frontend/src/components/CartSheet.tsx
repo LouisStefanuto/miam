@@ -213,7 +213,7 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
           <div className="flex-1 overflow-y-auto space-y-6 pr-2">
             {/* Selected recipes */}
             <div className="space-y-2">
-              <h3 className="font-display text-base font-semibold text-muted-foreground uppercase tracking-wide">
+              <h3 className="font-body text-base font-semibold text-muted-foreground uppercase tracking-wide">
                 Recettes sélectionnées
               </h3>
               {cartRecipes.map((recipe) => (
@@ -241,7 +241,7 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
             {/* Shopping list preview */}
             {ingredients.length > 0 && (
               <div className="space-y-2">
-                <h3 className="font-display text-base font-semibold text-muted-foreground uppercase tracking-wide">
+                <h3 className="font-body text-base font-semibold text-muted-foreground uppercase tracking-wide">
                   Liste de courses
                 </h3>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
