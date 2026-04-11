@@ -39,7 +39,7 @@ const StarRating = ({ rating, size = 14 }: { rating: number; size?: number }) =>
       <Star
         key={i}
         size={size}
-        className={i <= rating ? 'fill-primary text-primary' : 'text-muted'}
+        className={i <= rating ? 'fill-primary text-primary' : 'text-white/30'}
       />
     ))}
   </div>
@@ -89,7 +89,7 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
             </div>
           )}
           {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-foreground/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
 
           {/* Top right: selection check or cart button */}
           <div className="absolute top-2 right-2">
