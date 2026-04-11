@@ -58,7 +58,13 @@ export default function RecipeImportJSON({ onBack, onImportRecipes }: RecipeImpo
     if (!jsonData) return;
     setImporting(true);
     try {
-      await importRecipesBatch(jsonData);
+      const sanitized = {
+        recipes: jsonData.recipes.map((r: Record<string, unknown>) => {
+          const { id, images, sources, owner_name, ...rest } = r as Record<string, unknown>;
+          return { ...rest, images: [], sources: [] };
+        }),
+      };
+      await importRecipesBatch(sanitized);
       const allRecipes = await fetchRecipes();
       onImportRecipes(allRecipes);
       toast({ title: `${jsonData.recipes.length} recette${jsonData.recipes.length > 1 ? 's' : ''} importée${jsonData.recipes.length > 1 ? 's' : ''} !` });
