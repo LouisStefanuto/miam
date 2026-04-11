@@ -146,11 +146,16 @@ class InstagramOwner(_InstagramBase):
     username: str = "unknown"
 
 
+class InstagramId(_InstagramBase):
+    id: str = ""
+
+
 class InstagramCaption(_InstagramBase):
     text: str = ""
 
 
 class InstagramMedia(_InstagramBase):
+    id: InstagramId = InstagramId()
     owner: InstagramOwner = InstagramOwner()
     caption: InstagramCaption = InstagramCaption()
     image_versions2: InstagramImageVersions | None = None

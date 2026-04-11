@@ -31,5 +31,5 @@ def parse_instagram(
     The frontend can display these for editing, then use
     POST /recipes/batch and POST /images to persist them.
     """
-    parsed = service.parse_instagram(payload)
+    parsed = service.parse_instagram(payload, _user_id)
     return ParsedInstagramResponse(recipes=parsed)
