@@ -19,7 +19,13 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSON
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    backref,
+    mapped_column,
+    relationship,
+)
 
 from miam.domain.entities import (
     AuthProvider,
@@ -237,7 +243,7 @@ class RecipeShare(Base):
         nullable=False,
     )
 
-    recipe = relationship("Recipe", backref="shares")
+    recipe = relationship("Recipe", backref=backref("shares", passive_deletes=True))
     shared_by = relationship("User", foreign_keys=[shared_by_user_id])
     shared_with = relationship("User", foreign_keys=[shared_with_user_id])
 

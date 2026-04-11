@@ -178,8 +178,6 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
   const handleSubmit = () => {
     const missing: string[] = [];
     if (!data.title.trim()) missing.push('Titre');
-    if (!data.ingredients.some((i) => i.name.trim())) missing.push('Au moins un ingrédient');
-    if (!data.steps.some((s) => s.text.trim())) missing.push('Au moins une étape');
     if (missing.length > 0) {
       setErrors(missing);
       return;
