@@ -1,6 +1,5 @@
-import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
-import { Sun, Moon, Monitor, Check, LogOut, User, ArrowLeft } from 'lucide-react';
+import { Sun, Moon, Monitor, Check, LogOut, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccentColor, ACCENT_COLORS, type AccentColor } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,6 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 const colorKeys = Object.keys(ACCENT_COLORS) as AccentColor[];
 
 export default function SettingsPage() {
-  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const { accentColor, setAccentColor } = useAccentColor();
@@ -18,11 +16,8 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-20 flex items-center px-4 h-14 bg-background border-b border-border">
-        <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate('/')}>
-          <ArrowLeft size={18} />
-        </Button>
-        <h1 className="font-display text-lg font-bold text-foreground flex-1 text-center mr-9">Paramètres</h1>
+      <header className="sticky top-0 z-20 flex items-center justify-center px-4 h-14 bg-background border-b border-border md:hidden">
+        <h1 className="font-display text-lg font-bold text-foreground">Paramètres</h1>
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6 pb-24 md:pb-6 space-y-8">
