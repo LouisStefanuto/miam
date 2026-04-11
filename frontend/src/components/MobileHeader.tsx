@@ -1,7 +1,7 @@
 import { KeyboardEvent, useRef, useEffect } from 'react';
 import { Search, X, SlidersHorizontal } from 'lucide-react';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
-import { useLongPress } from '@/hooks/use-long-press';
+import { useShakeEscalation } from '@/hooks/use-shake-escalation';
 
 interface MobileHeaderProps {
   searchTags: string[];
@@ -25,7 +25,7 @@ export default function MobileHeader({
 }: MobileHeaderProps) {
   const { headerOffset } = useScrollDirection();
   const inputRef = useRef<HTMLInputElement>(null);
-  const logoHandlers = useLongPress(
+  const { ref: logoRef, handlers: logoHandlers } = useShakeEscalation(
     () => onLogoTap?.(),
     () => onLogoLongPress?.(),
   );
@@ -66,9 +66,11 @@ export default function MobileHeader({
       style={{ transform: `translateY(${headerOffset}px)` }}
     >
       <img
+        ref={logoRef}
         src="/icon.png"
         alt="Miam"
         className="w-8 h-8 shrink-0 select-none"
+        style={{ WebkitTouchCallout: 'none' }}
         draggable={false}
         {...logoHandlers}
       />
