@@ -322,11 +322,11 @@ export interface ParsedInstagramRecipe {
   image_url: string | null;
 }
 
-export async function parseInstagram(instagramJson: unknown): Promise<ParsedInstagramRecipe[]> {
+export async function parseInstagram(rawText: string): Promise<ParsedInstagramRecipe[]> {
   const res = await apiFetch(`${API_BASE}/import/instagram/parse`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(instagramJson),
+    headers: { 'Content-Type': 'text/plain' },
+    body: rawText,
   });
   if (!res.ok) {
     const detail = await res.text();

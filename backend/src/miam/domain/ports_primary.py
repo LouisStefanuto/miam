@@ -121,8 +121,13 @@ class RecipeImportServicePort(ABC):
     """Primary port for importing recipes from external sources."""
 
     @abstractmethod
-    def parse_instagram(self, data: InstagramResponse) -> list[ParsedRecipe]:
-        """Parse Instagram data and return parsed recipes with image URLs."""
+    def parse_instagram(
+        self, data: InstagramResponse, user_id: UUID
+    ) -> list[ParsedRecipe]:
+        """Parse Instagram data and return parsed recipes with image URLs.
+
+        Recipes whose source already exists in the database are excluded.
+        """
 
 
 class AuthServicePort(ABC):

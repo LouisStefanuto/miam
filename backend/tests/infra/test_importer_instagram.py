@@ -26,6 +26,7 @@ def _make_instagram_item(
     *,
     caption: str = "My recipe\nStep 1\nStep 2",
     username: str = "chef_john",
+    media_id: str = "abc123",
     image_url: str | None = "https://cdn.instagram.com/image.jpg",
 ) -> InstagramItem:
     """Build a minimal Instagram item for testing."""
@@ -36,6 +37,7 @@ def _make_instagram_item(
         )
     return InstagramItem(
         media=InstagramMedia(
+            id=media_id,
             owner=InstagramOwner(username=username),
             caption=InstagramCaption(text=caption),
             image_versions2=image_versions2,
@@ -208,7 +210,7 @@ class TestInstagramParser:
         assert parsed.recipe.tags == ["instagram"]
         assert len(parsed.recipe.sources) == 1
         assert parsed.recipe.sources[0].type == SourceType.instagram
-        assert parsed.recipe.sources[0].raw_content == "chef"
+        assert parsed.recipe.sources[0].raw_content == "chefabc123"
         assert parsed.image_url == "https://cdn.instagram.com/image.jpg"
 
     def test_parses_multiple_items(self) -> None:

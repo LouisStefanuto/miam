@@ -58,7 +58,7 @@ class InstagramParser(InstagramParserPort):
                 sources=[
                     SourceCreate(
                         type=SourceType.instagram,
-                        raw_content=media.owner.username,
+                        raw_content=media.owner.username + media.id,
                     )
                 ],
                 tags=["instagram"],

@@ -20,10 +20,10 @@ export default function RecipeImportInstagram({ onBack, onImportDone }: RecipeIm
   const [brokenImages, setBrokenImages] = useState<Set<number>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const parseJsonData = async (data: unknown) => {
+  const parseRawText = async (text: string) => {
     setParsing(true);
     try {
-      const recipes = await parseInstagram(data);
+      const recipes = await parseInstagram(text);
       if (recipes.length === 0) {
         setError('Aucune recette trouvée dans ces données.');
         return;
@@ -48,16 +48,7 @@ export default function RecipeImportInstagram({ onBack, onImportDone }: RecipeIm
       return;
     }
 
-    const text = await file.text();
-    let data: unknown;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      setError('Le fichier ne contient pas du JSON valide.');
-      return;
-    }
-
-    await parseJsonData(data);
+    await parseRawText(await file.text());
   };
 
   const handlePaste = async () => {
@@ -71,15 +62,7 @@ export default function RecipeImportInstagram({ onBack, onImportDone }: RecipeIm
       return;
     }
 
-    let data: unknown;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      setError('Le contenu collé n\'est pas du JSON valide.');
-      return;
-    }
-
-    await parseJsonData(data);
+    await parseRawText(text);
   };
 
   const handleDrop = (e: React.DragEvent) => {

@@ -151,6 +151,7 @@ class InstagramCaption(_InstagramBase):
 
 
 class InstagramMedia(_InstagramBase):
+    id: str = ""
     owner: InstagramOwner = InstagramOwner()
     caption: InstagramCaption = InstagramCaption()
     image_versions2: InstagramImageVersions | None = None

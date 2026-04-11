@@ -6,6 +6,7 @@ from miam.domain.entities import (
     ImageEntity,
     PaginatedResult,
     RecipeEntity,
+    SourceEntity,
 )
 from miam.domain.ports_secondary import (
     ImageStoragePort,
@@ -20,6 +21,7 @@ from miam.domain.schemas import (
     ParsedRecipe,
     RecipeCreate,
     RecipeUpdate,
+    SourceCreate,
 )
 from miam.domain.services import (
     RecipeExportService,
@@ -136,6 +138,17 @@ class StubRecipeRepository(RecipeRepositoryPort):
         for recipe in self.recipes.values():
             recipe.images = [img for img in recipe.images if img.id != image_id]
         return True
+
+    def get_existing_source_raw_contents(
+        self, raw_contents: set[str], user_id: UUID
+    ) -> set[str]:
+        existing = set()
+        for recipe in self.recipes.values():
+            if recipe.owner_id == user_id:
+                for src in recipe.sources:
+                    if src.raw_content in raw_contents:
+                        existing.add(src.raw_content)
+        return existing
 
     def image_belongs_to_user(self, image_id: UUID, user_id: UUID) -> bool:
         for recipe in self.recipes.values():
@@ -558,10 +571,11 @@ class TestRecipeImportService:
         stub_parser = StubInstagramParser(
             [ParsedRecipe(recipe=recipe, image_url="https://cdn.instagram.com/img.jpg")]
         )
-        service = RecipeImportService(instagram_parser=stub_parser)
+        repo = StubRecipeRepository()
+        service = RecipeImportService(instagram_parser=stub_parser, recipe_repo=repo)
 
         payload = InstagramResponse(items=[])
-        result = service.parse_instagram(payload)
+        result = service.parse_instagram(payload, uuid4())
 
         assert len(result) == 1
         assert result[0].recipe.title == "Pasta"
@@ -570,9 +584,51 @@ class TestRecipeImportService:
 
     def test_parse_instagram_passes_data_through(self) -> None:
         stub_parser = StubInstagramParser([])
-        service = RecipeImportService(instagram_parser=stub_parser)
+        repo = StubRecipeRepository()
+        service = RecipeImportService(instagram_parser=stub_parser, recipe_repo=repo)
 
         payload = InstagramResponse.model_validate({"items": [{"media": {}}]})
-        service.parse_instagram(payload)
+        service.parse_instagram(payload, uuid4())
 
         assert stub_parser.parse_calls[0] == payload
+
+    def test_parse_instagram_filters_existing_sources(self) -> None:
+        from miam.domain.entities import Category, SourceType
+
+        user_id = uuid4()
+        repo = StubRecipeRepository()
+        # Simulate an existing recipe with a known source
+        existing_recipe = RecipeEntity(
+            id=uuid4(),
+            title="Existing",
+            description="",
+            category="plat",
+            owner_id=user_id,
+            sources=[
+                SourceEntity(type=SourceType.instagram.value, raw_content="chef123")
+            ],
+        )
+        repo.recipes[existing_recipe.id] = existing_recipe
+
+        new_recipe = RecipeCreate(
+            title="New",
+            category=Category.plat,
+            sources=[SourceCreate(type=SourceType.instagram, raw_content="chefABC")],
+        )
+        duplicate_recipe = RecipeCreate(
+            title="Duplicate",
+            category=Category.plat,
+            sources=[SourceCreate(type=SourceType.instagram, raw_content="chef123")],
+        )
+        stub_parser = StubInstagramParser(
+            [
+                ParsedRecipe(recipe=new_recipe),
+                ParsedRecipe(recipe=duplicate_recipe),
+            ]
+        )
+        service = RecipeImportService(instagram_parser=stub_parser, recipe_repo=repo)
+
+        result = service.parse_instagram(InstagramResponse(items=[]), user_id)
+
+        assert len(result) == 1
+        assert result[0].recipe.title == "New"
