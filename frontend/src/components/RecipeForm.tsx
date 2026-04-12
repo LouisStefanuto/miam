@@ -1,18 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ArrowLeft, Plus, Trash2, Star, Save, Camera, X, Check, Minus, ImagePlus, ImageMinus } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Star, Save, Camera, X, Check, Minus, ImagePlus, ImageMinus, Flower, Sun, Grape, Snowflake, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, LucideIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 import { SortableIngredientItem } from './SortableIngredientItem';
-import veganIcon from '@/assets/icons/vegetalien.png';
 import cuissonIcon from '@/assets/icons/cuisson.png';
 import melangeIcon from '@/assets/icons/melange.png';
 import servingsIcon from '@/assets/icons/servings.png';
@@ -40,10 +36,21 @@ interface RecipeFormProps {
   onDeleteTag?: (tag: string) => void;
 }
 
-const types: RecipeType[] = ['apéro', 'entrée', 'plat', 'pâtes', 'dessert', 'boisson'];
-const seasons: Season[] = ['printemps', 'été', 'automne', 'hiver'];
+const typeOptions: { value: RecipeType; label: string; icon: LucideIcon }[] = [
+  { value: 'apéro', label: 'Apéro', icon: Wine },
+  { value: 'entrée', label: 'Entrée', icon: Salad },
+  { value: 'plat', label: 'Plat', icon: Beef },
+  { value: 'pâtes', label: 'Pâtes', icon: UtensilsCrossed },
+  { value: 'dessert', label: 'Dessert', icon: Cake },
+  { value: 'boisson', label: 'Boisson', icon: CupSoda },
+];
+const seasonOptions: { value: Season; label: string; icon: LucideIcon }[] = [
+  { value: 'printemps', label: 'Printemps', icon: Flower },
+  { value: 'été', label: 'Été', icon: Sun },
+  { value: 'automne', label: 'Automne', icon: Grape },
+  { value: 'hiver', label: 'Hiver', icon: Snowflake },
+];
 const difficulties: Difficulty[] = ['facile', 'moyen', 'difficile'];
-const dietOptions: Diet[] = ['végétarien'];
 
 const defaultIngredients = (): Ingredient[] =>
   Array.from({ length: 5 }, () => ({ name: '', quantity: '', unit: '' }));
@@ -223,21 +230,19 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
         </div>
       )}
 
-      {/* Hero image area */}
-      <div className={`relative h-[300px] md:h-[400px] overflow-hidden ${errors.length > 0 ? 'mt-24' : 'mt-14'}`}>
-        {data.image ? (
-          <img src={data.image} alt={data.title} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full bg-muted" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 to-transparent" />
+      {/* Header: image circle + title */}
+      <div className={`px-4 md:px-8 ${errors.length > 0 ? 'mt-24' : 'mt-14'} pt-6`}>
         <input ref={imageRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-        <div className="absolute inset-0 z-10 flex items-center justify-center">
+        <div className="flex items-center gap-4">
+          {/* Image circle */}
           {data.image ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors">
-                  <Camera size={24} className="text-card-foreground" />
+                <button className="relative flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden ring-2 ring-primary/20 hover:ring-primary/40 transition-all cursor-pointer group">
+                  <img src={data.image} alt={data.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Camera size={20} className="text-white" />
+                  </div>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
@@ -250,53 +255,29 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors" onClick={() => imageRef.current?.click()}>
-              <Camera size={24} className="text-card-foreground" />
+            <button
+              onClick={() => imageRef.current?.click()}
+              className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full bg-muted border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors flex items-center justify-center cursor-pointer"
+            >
+              <Camera size={24} className="text-muted-foreground/50" />
             </button>
           )}
-        </div>
 
-        <div className="absolute bottom-6 left-6 right-6 z-20">
-          <div className="flex items-center gap-2 mb-2">
-            <Select value={data.type} onValueChange={(v) => set('type', v as RecipeType)}>
-              <SelectTrigger className="w-auto h-7 text-xs capitalize font-body bg-primary text-primary-foreground border-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {types.map((t) => <SelectItem key={t} value={t} className="capitalize font-body text-xs">{t}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={data.season ?? '_none'} onValueChange={(v) => set('season', v === '_none' ? null : v as Season)}>
-              <SelectTrigger className="w-auto h-7 text-xs capitalize font-body bg-card text-card-foreground border-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_none" className="font-body text-xs">Aucune saison</SelectItem>
-                {seasons.map((s) => <SelectItem key={s} value={s} className="capitalize font-body text-xs">{s}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <button
-              onClick={() => set('tested', !data.tested)}
-              className={`inline-flex items-center h-7 px-2 text-xs font-body rounded-md transition-colors cursor-pointer active:scale-95 gap-1 ${
-                data.tested ? 'bg-primary text-primary-foreground' : 'bg-card text-card-foreground'
-              }`}
-            >
-              {data.tested && <Check size={12} />} {data.tested ? 'Testé' : 'À tester'}
-            </button>
+          {/* Title + description */}
+          <div className="flex-1 min-w-0 space-y-2">
+            <Input
+              value={data.title}
+              onChange={(e) => set('title', e.target.value)}
+              placeholder="Titre de la recette"
+              className="font-display text-2xl md:text-3xl font-bold bg-transparent border-b border-border text-foreground h-auto p-0 rounded-none focus-visible:ring-0 placeholder:text-muted-foreground/40"
+            />
+            <Input
+              value={data.description}
+              onChange={(e) => set('description', e.target.value)}
+              placeholder="Description"
+              className="font-body text-sm md:text-base bg-transparent border-b border-border text-muted-foreground placeholder:text-muted-foreground/40 h-auto p-0 rounded-none focus-visible:ring-0"
+            />
           </div>
-          <Input
-            value={data.title}
-            onChange={(e) => set('title', e.target.value)}
-            placeholder="Titre de la recette"
-
-            className="font-display text-3xl md:text-4xl font-bold bg-transparent border-b border-primary-foreground/50 text-primary-foreground h-auto p-0 rounded-none focus-visible:ring-0 placeholder:text-primary-foreground/40"
-          />
-          <Input
-            value={data.description}
-            onChange={(e) => set('description', e.target.value)}
-            placeholder="Description"
-            className="font-body text-sm md:text-base bg-transparent border-b border-primary-foreground/50 text-primary-foreground/80 placeholder:text-primary-foreground/40 h-auto p-0 rounded-none focus-visible:ring-0 mt-1 drop-shadow-md"
-          />
         </div>
       </div>
 
@@ -368,61 +349,146 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
           ))}
         </div>
 
-        {/* Tags */}
-        <div className="space-y-2">
-          <span className="font-body text-sm font-semibold text-foreground">Tags</span>
-          <div className="flex flex-wrap gap-2">
-            {combinedTags.map((tag) => (
-              <div key={tag} className="flex items-center gap-0.5">
+        {/* Tags & categories — mirrors MobileSearchOverlay design, packed */}
+        <div className="space-y-4">
+          {/* Type — icon grid */}
+          <FormSection title="Type" icon={<UtensilsCrossed size={13} />}>
+            <div className="grid grid-cols-6 gap-1.5">
+              {typeOptions.map((opt) => {
+                const active = data.type === opt.value;
+                const Icon = opt.icon;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => set('type', opt.value)}
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
+                    className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
+                      active
+                        ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
+                        : 'bg-card border-border text-muted-foreground active:bg-secondary'
+                    }`}
+                  >
+                    <Icon size={18} className={active ? 'text-primary' : ''} />
+                    <span className="text-[10px] font-body font-medium">{opt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </FormSection>
+
+          {/* Season — segmented control */}
+          <FormSection title="Saison" icon={<Sun size={13} />}>
+            <div className="flex gap-1 bg-secondary/70 rounded-xl p-1">
+              {seasonOptions.map((opt) => {
+                const active = data.season === opt.value;
+                const Icon = opt.icon;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => set('season', data.season === opt.value ? null : opt.value as Season)}
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
+                    className={`flex-1 flex items-center justify-center gap-1 text-[12px] py-1.5 rounded-lg font-body font-medium ${
+                      active
+                        ? 'bg-card text-primary shadow-sm ring-1 ring-primary/35'
+                        : 'text-muted-foreground active:text-foreground'
+                    }`}
+                  >
+                    <Icon size={14} />
+                  </button>
+                );
+              })}
+            </div>
+          </FormSection>
+
+          {/* Preferences — toggle cards */}
+          <FormSection title="Préférences">
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                onClick={() => set('tested', !data.tested)}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+                className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
+                  data.tested
+                    ? 'bg-primary/12 border-primary/35 text-primary'
+                    : 'bg-card border-border text-muted-foreground active:bg-secondary'
+                }`}
+              >
+                <Check size={18} />
+                <span className="text-[10px] font-body font-semibold">Testé</span>
+              </button>
+              <button
+                onClick={() => toggleDiet('végétarien')}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+                className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
+                  data.diets.includes('végétarien')
+                    ? 'bg-success/12 border-success/35 text-success'
+                    : 'bg-card border-border text-muted-foreground active:bg-secondary'
+                }`}
+              >
+                <Leaf size={18} />
+                <span className="text-[10px] font-body font-semibold">Végé</span>
+              </button>
+            </div>
+          </FormSection>
+
+          {/* Tags — outline ghost pills */}
+          <FormSection title="Tags">
+            <div className="flex flex-wrap gap-1.5">
+              {combinedTags.map((tag) => (
                 <button
+                  key={tag}
                   onClick={() => toggleTag(tag)}
-                  className={`text-xs px-3 py-1 rounded-full font-body capitalize transition-colors ${
-                    data.tags.includes(tag) ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-primary/20'
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  className={`text-[13px] pl-3 pr-2 py-1.5 rounded-full border font-body font-medium capitalize transition-all duration-150 active:scale-95 inline-flex items-center gap-1 ${
+                    data.tags.includes(tag)
+                      ? 'bg-primary/15 border-primary/40 text-primary'
+                      : 'bg-transparent border-border text-muted-foreground active:border-foreground/30 active:text-foreground'
                   }`}
                 >
                   {tag}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setTagToDelete(tag); }}
+                    className="rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                    title={`Supprimer "${tag}"`}
+                  >
+                    <X size={10} />
+                  </button>
                 </button>
-                <button onClick={() => setTagToDelete(tag)} className="text-destructive/60 hover:text-destructive transition-colors p-0.5" title={`Supprimer le tag "${tag}" partout`}>
-                  <X size={10} />
-                </button>
-              </div>
-            ))}
-            <div className="flex items-center gap-1">
-              <Input value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addNewTag())} placeholder="Nouveau tag…" className="h-7 w-28 text-xs font-body" />
-              <Button type="button" size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={addNewTag}><Plus size={12} /></Button>
-            </div>
-          </div>
-          <AlertDialog open={!!tagToDelete} onOpenChange={(open) => !open && setTagToDelete(null)}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle className="font-display">Supprimer le tag « {tagToDelete} » ?</AlertDialogTitle>
-                <AlertDialogDescription className="font-body">
-                  Ce tag sera supprimé de toutes les recettes. Cette action est irréversible.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
-                <AlertDialogAction
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body"
-                  onClick={() => { onDeleteTag?.(tagToDelete!); setTagToDelete(null); }}
-                >
-                  Supprimer
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <div className="space-y-2 mt-3">
-            <span className="font-body text-sm font-semibold text-foreground">Régime</span>
-            <div className="flex flex-wrap gap-3">
-              {dietOptions.map((diet) => (
-                <label key={diet} className="flex items-center gap-2 cursor-pointer font-body text-sm capitalize">
-                  <Checkbox checked={data.diets.includes(diet)} onCheckedChange={() => toggleDiet(diet)} />
-                  {diet}
-                </label>
               ))}
+              <div className="flex items-center gap-1">
+                <Input
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addNewTag())}
+                  placeholder="Nouveau tag…"
+                  className="h-8 w-28 text-xs font-body rounded-full border-dashed"
+                />
+                <Button type="button" size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full" onClick={addNewTag}>
+                  <Plus size={14} />
+                </Button>
+              </div>
             </div>
-          </div>
+          </FormSection>
         </div>
+
+        <AlertDialog open={!!tagToDelete} onOpenChange={(open) => !open && setTagToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="font-display">Supprimer le tag « {tagToDelete} » ?</AlertDialogTitle>
+              <AlertDialogDescription className="font-body">
+                Ce tag sera supprimé de toutes les recettes. Cette action est irréversible.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body"
+                onClick={() => { onDeleteTag?.(tagToDelete!); setTagToDelete(null); }}
+              >
+                Supprimer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <div className="space-y-8">
           {/* Ingredients */}
@@ -482,6 +548,18 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
 function IconDisk({ children }: { children: React.ReactNode }) {
   return (
     <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center [&>img]:[filter:brightness(0)_invert(1)] dark:[&>img]:[filter:brightness(0)]">
+      {children}
+    </div>
+  );
+}
+
+function FormSection({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 mb-2">
+        {icon && <span className="text-muted-foreground">{icon}</span>}
+        <p className="text-xs font-body font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>
+      </div>
       {children}
     </div>
   );
