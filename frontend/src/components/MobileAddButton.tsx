@@ -17,9 +17,9 @@ export default function MobileAddButton() {
 
   const actions = [
     { icon: <PenLine size={18} />, label: 'Manuel', onClick: () => navigate('/recipes/new') },
-    { icon: <Camera size={18} />, label: 'Photos', onClick: () => navigate('/import/ocr') },
-    { icon: <FileJson size={18} />, label: 'JSON', onClick: () => navigate('/import/json') },
     { icon: <Instagram size={18} />, label: 'Instagram', onClick: () => navigate('/import/instagram') },
+    { icon: <FileJson size={18} />, label: 'JSON', onClick: () => navigate('/import/json') },
+    { icon: <Camera size={18} />, label: 'Photos', disabled: true, comingSoon: true },
   ];
 
   return (
@@ -42,11 +42,12 @@ export default function MobileAddButton() {
               setOpen(false);
               action.onClick?.();
             }}
-            className={`flex items-center gap-3 group disabled:opacity-40 transition-all duration-200 ${open ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
+            className={`flex items-center gap-3 group disabled:opacity-60 transition-all duration-200 ${open ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
             style={{ transitionDelay: open ? `${i * 50}ms` : '0ms' }}
           >
-            <span className="text-sm font-body font-medium bg-card border border-border rounded-lg px-3 py-1.5 shadow-lg whitespace-nowrap">
+            <span className="text-sm font-body font-medium bg-card border border-border rounded-lg px-3 py-1.5 shadow-lg whitespace-nowrap flex items-center gap-1.5">
               {action.label}
+              {action.comingSoon && <span className="text-[10px] font-medium bg-muted text-muted-foreground rounded-full px-1.5 py-0.5">Bientôt</span>}
             </span>
             <span className="w-10 h-10 rounded-full bg-card border border-border shadow-lg flex items-center justify-center text-foreground group-hover:bg-secondary transition-colors">
               {action.icon}

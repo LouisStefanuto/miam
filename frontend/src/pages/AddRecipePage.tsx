@@ -10,10 +10,10 @@ const modes = [
     to: '/recipes/new',
   },
   {
-    icon: Camera,
-    label: 'Importer depuis des photos',
-    description: 'Scanner une recette avec l\'appareil photo',
-    to: '/import/ocr',
+    icon: Instagram,
+    label: 'Importer depuis Instagram',
+    description: 'Importer des recettes depuis un export Instagram',
+    to: '/import/instagram',
   },
   {
     icon: FileJson,
@@ -22,13 +22,14 @@ const modes = [
     to: '/import/json',
   },
   {
-    icon: Instagram,
-    label: 'Importer depuis Instagram',
-    description: 'Importer des recettes depuis un export Instagram',
-    to: '/import/instagram',
-    disabled: false,
+    icon: Camera,
+    label: 'Importer depuis des photos',
+    description: 'Scanner une recette avec l\'appareil photo',
+    to: '/import/ocr',
+    disabled: true,
+    comingSoon: true,
   },
-] as const;
+];
 
 const AddRecipePage = () => {
   const navigate = useNavigate();
@@ -52,13 +53,18 @@ const AddRecipePage = () => {
             key={mode.label}
             disabled={mode.disabled}
             onClick={() => mode.to && navigate(mode.to)}
-            className="w-full flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:bg-secondary/50 transition-colors text-left disabled:opacity-40 disabled:cursor-not-allowed"
+            className={`w-full flex items-center gap-4 p-4 rounded-xl border border-border transition-colors text-left ${mode.disabled ? 'bg-muted/60 opacity-60 cursor-not-allowed' : 'bg-card hover:bg-secondary/50'}`}
           >
-            <span className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <mode.icon size={22} className="text-primary" />
+            <span className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${mode.disabled ? 'bg-muted' : 'bg-primary/10'}`}>
+              <mode.icon size={22} className={mode.disabled ? 'text-muted-foreground' : 'text-primary'} />
             </span>
             <div className="min-w-0">
-              <p className="font-body font-semibold text-foreground">{mode.label}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-body font-semibold text-foreground">{mode.label}</p>
+                {mode.comingSoon && (
+                  <span className="text-xs font-medium bg-muted text-muted-foreground rounded-full px-2 py-0.5">Bientôt</span>
+                )}
+              </div>
               <p className="font-body text-sm text-muted-foreground">{mode.description}</p>
             </div>
           </button>
