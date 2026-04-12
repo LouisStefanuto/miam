@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ArrowLeft, Plus, Trash2, Star, Save, Camera, X, Check, Minus, ImagePlus, ImageMinus, Flower, Sun, Grape, Snowflake, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Star, Save, Camera, X, Check, Minus, ImagePlus, ImageMinus, Flower, Sun, Grape, Snowflake, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, LucideIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -278,7 +278,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
 
       <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-8">
         {/* Quick info cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
             <IconDisk><img src={melangeIcon} alt="Préparation" className="w-5 h-5" /></IconDisk>
             <input
@@ -332,17 +332,24 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             <span className="text-xs capitalize font-body">{data.difficulty}</span>
             <span className="text-xs text-muted-foreground font-body">Clic pour changer</span>
           </button>
+          <button
+            type="button"
+            onClick={() => set('rating', data.rating >= 5 ? 0 : data.rating + 1)}
+            className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1 cursor-pointer hover:bg-secondary transition-colors"
+          >
+            <div className="w-10 h-10 flex items-center justify-center">
+              <div className="flex gap-0.5">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Star key={i} size={16} className={i <= data.rating ? 'fill-primary text-primary' : 'text-muted'} />
+                ))}
+              </div>
+            </div>
+            <span className="text-xs font-body">{['Pas noté', 'Ça se laisse manger', 'Plutôt pas mal !', 'Je reprendrais bien du rab', 'Un vrai régal !', 'Une recette qui met tout le monde d\'accord'][data.rating]}</span>
+            <span className="text-xs text-muted-foreground font-body">Clic pour changer</span>
+          </button>
         </div>
 
-        {/* Rating */}
-        <div className="flex items-center gap-2">
-          <span className="font-body text-sm font-semibold text-foreground">Note :</span>
-          {[1, 2, 3, 4, 5].map((i) => (
-            <button key={i} type="button" onClick={() => set('rating', i)}>
-              <Star size={20} className={i <= data.rating ? 'fill-primary text-primary' : 'text-muted'} />
-            </button>
-          ))}
-        </div>
+        {/* Rating is now inside the quick info grid */}
 
         {/* Tags & categories — mirrors MobileSearchOverlay design, packed */}
         <div className="space-y-4">
@@ -488,11 +495,10 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
 
         <div className="space-y-8">
           {/* Ingredients */}
-          <div className="bg-card rounded-lg p-4 shadow-card">
-            <h2 className="font-display text-xl font-semibold mb-4 text-card-foreground">Ingrédients</h2>
+          <FormSection title="Ingrédients">
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={ingredientIds} strategy={verticalListSortingStrategy}>
-                <ul className="space-y-2">
+                <ul className="space-y-1.5">
                   {data.ingredients.map((ing, i) => (
                     <SortableIngredientItem
                       key={ingredientIds[i]}
@@ -508,33 +514,52 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                 </ul>
               </SortableContext>
             </DndContext>
-            <Button type="button" variant="outline" size="sm" onClick={addIngredient} className="font-body gap-1 mt-3 w-full">
+            <button
+              type="button"
+              onClick={addIngredient}
+              className="w-full mt-2 py-2 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
+            >
               <Plus size={14} /> Ajouter
-            </Button>
-          </div>
+            </button>
+          </FormSection>
 
           {/* Steps */}
-          <div>
-            <h2 className="font-display text-xl font-semibold mb-4 text-foreground">Préparation</h2>
-            <ol className="space-y-4">
+          <FormSection title="Préparation">
+            <ol className="space-y-2">
               {data.steps.map((step, i) => (
-                <li key={i} className="flex gap-4 items-start">
-                  <span className="flex-shrink-0 w-8 h-8 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-sm">
-                    {i + 1}
-                  </span>
-                  <div className="flex gap-2 items-start flex-1">
-                    <Textarea data-step-textarea value={step.text} onChange={(e) => updateStep(i, e.target.value)} onKeyDown={(e) => handleStepKeyDown(e, i)} placeholder={`Étape ${i + 1}`} className="font-body min-h-[50px] text-sm [field-sizing:content]" />
+                <li key={i} className="group relative">
+                  <div className="flex items-start gap-3 bg-secondary/40 rounded-xl p-3.5">
+                    <span className="flex-shrink-0 w-7 h-7 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-xs mt-1">
+                      {i + 1}
+                    </span>
+                    <textarea
+                      data-step-textarea
+                      value={step.text}
+                      onChange={(e) => updateStep(i, e.target.value)}
+                      onKeyDown={(e) => handleStepKeyDown(e, i)}
+                      placeholder={`Décrivez l'étape ${i + 1}…`}
+                      className="flex-1 bg-transparent font-body text-base outline-none resize-none placeholder:text-muted-foreground/40 min-h-[3rem] [field-sizing:content]"
+                    />
                     {data.steps.length > 1 && (
-                      <button onClick={() => removeStep(i)} className="text-destructive hover:text-destructive/80 mt-2"><Trash2 size={14} /></button>
+                      <button
+                        onClick={() => removeStep(i)}
+                        className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-destructive/10 text-destructive hover:bg-destructive/20 active:scale-90 transition-colors mt-0.5"
+                      >
+                        <Minus size={12} strokeWidth={2.5} />
+                      </button>
                     )}
                   </div>
                 </li>
               ))}
             </ol>
-            <Button type="button" variant="outline" size="sm" onClick={addStep} className="font-body gap-1 mt-4">
+            <button
+              type="button"
+              onClick={addStep}
+              className="w-full mt-2 py-2 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
+            >
               <Plus size={14} /> Ajouter une étape
-            </Button>
-          </div>
+            </button>
+          </FormSection>
         </div>
       </div>
     </div>

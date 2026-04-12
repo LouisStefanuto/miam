@@ -1,8 +1,7 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Trash2 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { GripVertical, Minus } from 'lucide-react';
 import { Ingredient } from '@/data/recipes';
 
 interface SortableIngredientItemProps {
@@ -43,17 +42,17 @@ export function SortableIngredientItem({
     <li
       ref={setNodeRef}
       style={style}
-      className="flex gap-1 items-center py-1.5 border-b border-border last:border-0"
+      className="group flex items-center gap-2 bg-secondary/40 rounded-xl px-3 py-2.5"
     >
       <button
         type="button"
-        className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground touch-none"
+        className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground touch-none shrink-0"
         {...attributes}
         {...listeners}
       >
-        <GripVertical size={16} />
+        <GripVertical size={14} />
       </button>
-      <Input
+      <input
         data-ingredient-name
         value={ingredient.name}
         onChange={(e) => {
@@ -61,26 +60,32 @@ export function SortableIngredientItem({
           onUpdate(index, 'name', v.charAt(0).toUpperCase() + v.slice(1));
         }}
         onKeyDown={(e) => onKeyDown(e, index)}
-        placeholder="Nom"
-        className="font-body text-sm flex-1 h-8 min-w-0"
+        placeholder="Ingrédient"
+        className="flex-1 min-w-0 bg-transparent text-base font-body outline-none placeholder:text-muted-foreground/40"
       />
-      <Input
-        value={String(ingredient.quantity)}
-        onChange={(e) => onUpdate(index, 'quantity', e.target.value)}
-        onKeyDown={(e) => onKeyDown(e, index)}
-        placeholder="Qté"
-        className="font-body text-sm w-16 h-8"
-      />
-      <Input
-        value={ingredient.unit}
-        onChange={(e) => onUpdate(index, 'unit', e.target.value)}
-        onKeyDown={(e) => onKeyDown(e, index)}
-        placeholder="Unité"
-        className="font-body text-sm w-16 h-8"
-      />
+      <div className="flex items-center gap-1 shrink-0">
+        <input
+          value={String(ingredient.quantity)}
+          onChange={(e) => onUpdate(index, 'quantity', e.target.value)}
+          onKeyDown={(e) => onKeyDown(e, index)}
+          placeholder="Qté"
+          className="w-14 text-center bg-card/80 text-base font-body font-medium rounded-lg py-1.5 outline-none placeholder:text-muted-foreground/40 border border-transparent focus:border-primary/30"
+        />
+        <input
+          value={ingredient.unit}
+          onChange={(e) => onUpdate(index, 'unit', e.target.value)}
+          onKeyDown={(e) => onKeyDown(e, index)}
+          placeholder="Unité"
+          className="w-16 text-center bg-card/80 text-base font-body rounded-lg py-1.5 outline-none placeholder:text-muted-foreground/40 border border-transparent focus:border-primary/30"
+        />
+      </div>
       {canRemove && (
-        <button type="button" onClick={() => onRemove(index)} className="text-destructive hover:text-destructive/80">
-          <Trash2 size={14} />
+        <button
+          type="button"
+          onClick={() => onRemove(index)}
+          className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-destructive/10 text-destructive hover:bg-destructive/20 active:scale-90 transition-colors"
+        >
+          <Minus size={12} strokeWidth={2.5} />
         </button>
       )}
     </li>
