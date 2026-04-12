@@ -206,24 +206,19 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
   return (
     <div>
       {/* Sticky top bar */}
-      <div className="fixed top-0 left-0 right-0 z-[60] bg-card/95 backdrop-blur-sm border-b border-border shadow-card px-4 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-[60] bg-card/95 backdrop-blur-sm border-b border-border shadow-card px-4 py-3 flex items-center justify-between">
         <Button variant="ghost" size="icon" onClick={onBack}>
           <ArrowLeft size={20} />
           <span className="sr-only">Retour</span>
         </Button>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="font-body gap-1.5" onClick={onBack}>
-            <X size={14} /> Annuler
-          </Button>
-          <Button size="sm" className="gradient-warm text-primary-foreground font-body gap-1.5" onClick={handleSubmit}>
-            <Save size={14} /> Enregistrer
-          </Button>
-        </div>
+        <Button size="sm" className="gradient-warm text-primary-foreground font-body gap-1.5" onClick={handleSubmit}>
+          <Save size={14} /> Enregistrer
+        </Button>
       </div>
 
       {/* Validation errors */}
       {errors.length > 0 && (
-        <div className="fixed top-14 left-0 right-0 z-[59] bg-destructive/10 border-b border-destructive/30 px-4 py-2 text-center">
+        <div className="bg-destructive/10 border-b border-destructive/30 px-4 py-2 text-center">
           <p className="text-sm font-body text-destructive font-medium">
             Champs requis : {errors.join(', ')}
           </p>
@@ -231,7 +226,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
       )}
 
       {/* Header: image circle + title */}
-      <div className={`px-4 md:px-8 ${errors.length > 0 ? 'mt-24' : 'mt-14'} pt-6`}>
+      <div className="px-4 md:px-8 pt-6">
         <input ref={imageRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
         <div className="flex items-center gap-4">
           {/* Image circle */}
@@ -376,9 +371,9 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             </div>
           </FormSection>
 
-          {/* Season — segmented control */}
+          {/* Season — icon grid like type */}
           <FormSection title="Saison" icon={<Sun size={13} />}>
-            <div className="flex gap-1 bg-secondary/70 rounded-xl p-1">
+            <div className="grid grid-cols-4 gap-1.5">
               {seasonOptions.map((opt) => {
                 const active = data.season === opt.value;
                 const Icon = opt.icon;
@@ -387,13 +382,14 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                     key={opt.value}
                     onClick={() => set('season', data.season === opt.value ? null : opt.value as Season)}
                     style={{ WebkitTapHighlightColor: 'transparent' }}
-                    className={`flex-1 flex items-center justify-center gap-1 text-[12px] py-1.5 rounded-lg font-body font-medium ${
+                    className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
                       active
-                        ? 'bg-card text-primary shadow-sm ring-1 ring-primary/35'
-                        : 'text-muted-foreground active:text-foreground'
+                        ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
+                        : 'bg-card border-border text-muted-foreground active:bg-secondary'
                     }`}
                   >
-                    <Icon size={14} />
+                    <Icon size={18} className={active ? 'text-primary' : ''} />
+                    <span className="text-[10px] font-body font-medium">{opt.label}</span>
                   </button>
                 );
               })}
