@@ -315,7 +315,7 @@ const CatalogPage = () => {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-2 md:py-8 pb-20 md:pb-8 space-y-3 md:space-y-6">
+      <main className="max-w-7xl mx-auto px-4 md:px-8 py-1 md:py-8 pb-20 md:pb-8 space-y-1.5 md:space-y-6">
 
         <div className="space-y-2">
           {/* Search + Add button on same line */}
@@ -384,13 +384,13 @@ const CatalogPage = () => {
         </div>
 
         {/* Results count + reset + sort */}
-        <div className="flex items-center justify-between md:justify-start gap-2">
+        <div className="flex items-center justify-between md:justify-start gap-2 py-1 md:py-0">
           <div className="flex items-center gap-2">
-            <p className="text-sm text-muted-foreground font-body">
+            <p className="text-base text-muted-foreground font-body">
               {filtered.length} recette{filtered.length !== 1 ? 's' : ''} trouvée{filtered.length !== 1 ? 's' : ''}
             </p>
             {hasActiveFilters && (
-              <button onClick={resetAll} className="md:hidden flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0">
+              <button onClick={resetAll} className="md:hidden flex items-center gap-1 text-sm text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0">
                 <X size={14} />
                 Réinitialiser
               </button>
@@ -400,7 +400,7 @@ const CatalogPage = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="h-8 w-8 flex items-center justify-center rounded-md bg-secondary text-muted-foreground hover:text-foreground transition-colors">
-                  <ArrowUpDown size={14} />
+                  <ArrowUpDown size={16} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-popover z-50">
@@ -408,7 +408,7 @@ const CatalogPage = () => {
                   <DropdownMenuItem
                     key={opt.value}
                     onClick={() => setFilters({ ...filters, sort: opt.value })}
-                    className="flex items-center gap-3 text-xs font-body"
+                    className="flex items-center gap-3 text-sm font-body"
                   >
                     <Check size={14} className={filters.sort === opt.value ? 'text-foreground' : 'opacity-0'} />
                     {opt.label}
