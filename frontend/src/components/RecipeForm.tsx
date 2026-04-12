@@ -288,7 +288,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             value={data.title}
             onChange={(e) => set('title', e.target.value)}
             placeholder="Titre de la recette"
-            autoFocus={!initialRecipe}
+
             className="font-display text-3xl md:text-4xl font-bold bg-transparent border-b border-primary-foreground/50 text-primary-foreground h-auto p-0 rounded-none focus-visible:ring-0 placeholder:text-primary-foreground/40"
           />
           <Input
