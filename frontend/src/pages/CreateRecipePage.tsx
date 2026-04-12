@@ -4,7 +4,7 @@ import { useRecipes, useCreateRecipe, useUpdateRecipe } from '@/hooks/use-recipe
 import RecipeForm from '@/components/RecipeForm';
 import { toast } from '@/hooks/use-toast';
 import { Recipe } from '@/data/recipes';
-import { useOverlayClose } from '@/components/CatalogLayout';
+
 
 const CreateRecipePage = () => {
   const navigate = useNavigate();
@@ -12,8 +12,7 @@ const CreateRecipePage = () => {
   const createMutation = useCreateRecipe();
   const updateMutation = useUpdateRecipe();
   const [customTags, setCustomTags] = useState<string[]>([]);
-  const { requestClose } = useOverlayClose();
-  const handleBack = useCallback(() => requestClose('/'), [requestClose]);
+  const handleBack = useCallback(() => navigate('/add'), [navigate]);
 
   useEffect(() => {
     window.scrollTo(0, 0);

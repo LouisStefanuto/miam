@@ -75,10 +75,10 @@ export default function MobileHeader({
         {...logoHandlers}
       />
 
-      <div className="flex-1 flex items-center gap-1.5 flex-wrap min-h-9 px-2.5 bg-secondary/60 border border-border rounded-lg transition-colors">
+      <div className="flex-1 flex items-center gap-1.5 flex-wrap min-h-10 px-2.5 bg-secondary/60 border border-border rounded-lg transition-colors">
         {inlineSearch ? (
           <>
-            <Search className="text-muted-foreground shrink-0" size={16} />
+            <Search className="text-muted-foreground shrink-0" size={18} />
             {searchTags.map((tag) => (
               <span
                 key={tag}
@@ -103,7 +103,7 @@ export default function MobileHeader({
               onKeyDown={handleKeyDown}
               onBlur={handleBlur}
               placeholder="Rechercher…"
-              className="flex-1 min-w-[80px] h-9 bg-transparent font-body text-sm outline-none placeholder:text-muted-foreground"
+              className="flex-1 min-w-[80px] h-10 bg-transparent font-body text-base outline-none placeholder:text-muted-foreground"
             />
           </>
         ) : (
@@ -111,7 +111,7 @@ export default function MobileHeader({
             className="flex-1 flex items-center gap-1.5 flex-wrap active:bg-secondary/80"
             onClick={() => onInlineSearchChange(true)}
           >
-            <Search className="text-muted-foreground shrink-0" size={16} />
+            <Search className="text-muted-foreground shrink-0" size={18} />
             {searchTags.map((tag) => (
               <span
                 key={tag}
@@ -130,16 +130,16 @@ export default function MobileHeader({
               </span>
             ))}
             {searchTags.length === 0 && (
-              <span className="flex-1 text-sm font-body text-muted-foreground">Rechercher…</span>
+              <span className="flex-1 text-base font-body text-muted-foreground">Rechercher…</span>
             )}
           </div>
         )}
         <button
           onClick={(e) => { e.stopPropagation(); onFiltersTap(); }}
-          className="ml-auto shrink-0 w-7 h-7 rounded-full flex items-center justify-center"
+          className="ml-auto shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
-          <SlidersHorizontal size={14} className="text-muted-foreground" />
+          <SlidersHorizontal size={16} className="text-muted-foreground" />
         </button>
       </div>
     </header>
