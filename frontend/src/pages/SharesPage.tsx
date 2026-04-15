@@ -33,7 +33,7 @@ const SharesPage = () => {
           <span className="relative w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
             <Inbox size={22} className="text-primary" />
             {pendingCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-orange-500 text-white text-[11px] flex items-center justify-center font-bold">
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[11px] flex items-center justify-center font-bold">
                 {pendingCount}
               </span>
             )}

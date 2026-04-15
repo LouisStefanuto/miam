@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ArrowLeft, Plus, Star, Save, Camera, X, Check, Minus, ImagePlus, ImageMinus, Flower, Sun, Grape, Snowflake, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Star, Save, Camera, X, Check, Minus, ImagePlus, ImageMinus, Flower, Sun, Grape, Snowflake, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, Timer, Flame, Users, LucideIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 import { Button } from '@/components/ui/button';
@@ -9,14 +9,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 import { SortableIngredientItem } from './SortableIngredientItem';
-import cuissonIcon from '@/assets/icons/cuisson.png';
-import melangeIcon from '@/assets/icons/melange.png';
-import servingsIcon from '@/assets/icons/servings.png';
+import { useAuthImage } from '@/hooks/use-auth-image';
 
 const DifficultyBars = ({ level }: { level: number }) => (
   <div className="flex gap-0.5 items-end">
     {[1, 2, 3].map((i) => (
-      <div key={i} className={`w-1.5 rounded-sm ${i <= level ? 'bg-primary' : 'bg-muted'}`} style={{ height: `${8 + i * 4}px` }} />
+      <div key={i} className={`w-1.5 rounded-sm ${i <= level ? 'bg-primary' : 'bg-muted'}`} style={{ height: `${6 + i * 3}px` }} />
     ))}
   </div>
 );
@@ -58,6 +56,7 @@ const defaultIngredients = (): Ingredient[] =>
 export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = [], onAddTag, onDeleteTag }: RecipeFormProps) {
   const [data, setData] = useState<Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>>({
     title: initialRecipe?.title ?? '',
+    description: initialRecipe?.description ?? '',
     image: initialRecipe?.image,
     type: initialRecipe?.type ?? 'plat',
     season: initialRecipe?.season ?? null,
@@ -78,6 +77,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     () => data.ingredients.map(() => crypto.randomUUID())
   );
   const imageRef = useRef<HTMLInputElement>(null);
+  const imageSrc = useAuthImage(data.image);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -234,7 +234,11 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="relative flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden ring-2 ring-primary/20 hover:ring-primary/40 transition-all cursor-pointer group">
-                  <img src={data.image} alt={data.title} className="w-full h-full object-cover" />
+                  {imageSrc ? (
+                    <img src={imageSrc} alt={data.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-muted animate-pulse" />
+                  )}
                   <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Camera size={20} className="text-white" />
                   </div>
@@ -277,79 +281,77 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
       </div>
 
       <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-8">
-        {/* Quick info cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
-            <IconDisk><img src={melangeIcon} alt="Préparation" className="w-5 h-5" /></IconDisk>
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={data.prepTime || ''}
-              onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); set('prepTime', v ? +v : 0); }}
-              placeholder="0"
-              className="h-7 w-16 text-center text-sm font-body font-semibold bg-transparent border-b-2 border-primary/30 focus:border-primary outline-none transition-colors"
-            />
-            <span className="text-xs text-muted-foreground font-body">Préparation (min)</span>
-          </div>
-          <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
-            <IconDisk><img src={cuissonIcon} alt="Cuisson" className="w-5 h-5" /></IconDisk>
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={data.cookTime || ''}
-              onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); set('cookTime', v ? +v : 0); }}
-              placeholder="0"
-              className="h-7 w-16 text-center text-sm font-body font-semibold bg-transparent border-b-2 border-primary/30 focus:border-primary outline-none transition-colors"
-            />
-            <span className="text-xs text-muted-foreground font-body">Cuisson (min)</span>
-          </div>
-          <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
-            <IconDisk><img src={servingsIcon} alt="Portions" className="w-5 h-5" /></IconDisk>
-            <div className="flex items-center gap-3">
-              <button type="button" onClick={() => set('servings', Math.max(1, data.servings - 1))} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors">
-                <Minus size={16} />
+        {/* Quick info bars */}
+        <div className="space-y-1.5">
+          <div className="bg-card rounded-xl shadow-card grid grid-cols-3">
+            {/* Prep time */}
+            <label className="flex items-center justify-center gap-1.5 py-3 px-2 cursor-text border-r border-border">
+              <Timer size={16} className="text-muted-foreground" />
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={data.prepTime || ''}
+                onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); set('prepTime', v ? +v : 0); }}
+                placeholder="0"
+                className="w-8 text-center text-sm font-body font-semibold bg-transparent outline-none"
+              />
+              <span className="text-[10px] text-muted-foreground font-body">min</span>
+            </label>
+            {/* Cook time */}
+            <label className="flex items-center justify-center gap-1.5 py-3 px-2 cursor-text border-r border-border">
+              <Flame size={16} className="text-muted-foreground" />
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={data.cookTime || ''}
+                onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); set('cookTime', v ? +v : 0); }}
+                placeholder="0"
+                className="w-8 text-center text-sm font-body font-semibold bg-transparent outline-none"
+              />
+              <span className="text-[10px] text-muted-foreground font-body">min</span>
+            </label>
+            {/* Servings */}
+            <div className="flex items-center justify-center py-1 px-2">
+              <button type="button" onClick={() => set('servings', Math.max(1, data.servings - 1))} className="relative w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors before:absolute before:-inset-2 before:content-['']">
+                <Minus size={12} />
               </button>
-              <span className="text-sm font-body font-semibold text-card-foreground min-w-[1.5rem] text-center">{data.servings}</span>
-              <button type="button" onClick={() => set('servings', data.servings + 1)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors">
-                <Plus size={16} />
+              <div className="flex items-center gap-1 mx-2">
+                <Users size={16} className="text-muted-foreground" />
+                <span className="text-sm font-body font-semibold min-w-[1rem] text-center">{data.servings}</span>
+              </div>
+              <button type="button" onClick={() => set('servings', data.servings + 1)} className="relative w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors before:absolute before:-inset-2 before:content-['']">
+                <Plus size={12} />
               </button>
             </div>
-            <span className="text-xs text-muted-foreground font-body">Portions</span>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              const idx = difficulties.indexOf(data.difficulty);
-              set('difficulty', difficulties[(idx + 1) % difficulties.length] as Difficulty);
-            }}
-            className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1 cursor-pointer hover:bg-secondary transition-colors"
-          >
-            <div className="w-10 h-10 flex items-center justify-center">
+          <div className="bg-card rounded-xl shadow-card grid grid-cols-3">
+            {/* Difficulty */}
+            <button
+              type="button"
+              onClick={() => {
+                const idx = difficulties.indexOf(data.difficulty);
+                set('difficulty', difficulties[(idx + 1) % difficulties.length] as Difficulty);
+              }}
+              className="flex items-center justify-center gap-1.5 py-3 px-2 hover:bg-secondary/50 transition-colors cursor-pointer rounded-l-xl border-r border-border"
+            >
               <DifficultyBars level={difficultyLevels[data.difficulty].bars} />
-            </div>
-            <span className="text-xs capitalize font-body">{data.difficulty}</span>
-            <span className="text-xs text-muted-foreground font-body">Clic pour changer</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => set('rating', data.rating >= 5 ? 0 : data.rating + 1)}
-            className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1 cursor-pointer hover:bg-secondary transition-colors"
-          >
-            <div className="w-10 h-10 flex items-center justify-center">
-              <div className="flex gap-0.5">
+              <span className="text-xs capitalize font-body font-medium">{data.difficulty}</span>
+            </button>
+            {/* Rating */}
+            <div className="col-span-2 flex flex-col items-center gap-1 py-3 px-2">
+              <div className="flex gap-1">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} size={16} className={i <= data.rating ? 'fill-primary text-primary' : 'text-muted'} />
+                  <button key={i} type="button" onClick={() => set('rating', data.rating === i ? 0 : i)}>
+                    <Star size={20} className={i <= data.rating ? 'fill-primary text-primary' : 'text-muted'} />
+                  </button>
                 ))}
               </div>
+              <span className="text-[11px] font-body text-muted-foreground">{['Pas noté', 'Ça se laisse manger', 'Plutôt pas mal !', 'Je reprendrais du rab', 'Un vrai régal !', 'Une recette qui met tout le monde d\'accord'][data.rating]}</span>
             </div>
-            <span className="text-xs font-body">{['Pas noté', 'Ça se laisse manger', 'Plutôt pas mal !', 'Je reprendrais bien du rab', 'Un vrai régal !', 'Une recette qui met tout le monde d\'accord'][data.rating]}</span>
-            <span className="text-xs text-muted-foreground font-body">Clic pour changer</span>
-          </button>
+          </div>
         </div>
-
-        {/* Rating is now inside the quick info grid */}
 
         {/* Tags & categories — mirrors MobileSearchOverlay design, packed */}
         <div className="space-y-4">
@@ -380,7 +382,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
 
           {/* Season — icon grid like type */}
           <FormSection title="Saison" icon={<Sun size={13} />}>
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-6 gap-1.5">
               {seasonOptions.map((opt) => {
                 const active = data.season === opt.value;
                 const Icon = opt.icon;
@@ -403,32 +405,32 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             </div>
           </FormSection>
 
-          {/* Preferences — toggle cards */}
+          {/* Preferences — icon grid like seasons */}
           <FormSection title="Préférences">
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-6 gap-1.5">
               <button
                 onClick={() => set('tested', !data.tested)}
                 style={{ WebkitTapHighlightColor: 'transparent' }}
                 className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
                   data.tested
-                    ? 'bg-primary/12 border-primary/35 text-primary'
+                    ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
                     : 'bg-card border-border text-muted-foreground active:bg-secondary'
                 }`}
               >
-                <Check size={18} />
-                <span className="text-[10px] font-body font-semibold">Testé</span>
+                <Check size={18} className={data.tested ? 'text-primary' : ''} />
+                <span className="text-[10px] font-body font-medium">Testé</span>
               </button>
               <button
                 onClick={() => toggleDiet('végétarien')}
                 style={{ WebkitTapHighlightColor: 'transparent' }}
                 className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
                   data.diets.includes('végétarien')
-                    ? 'bg-success/12 border-success/35 text-success'
+                    ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
                     : 'bg-card border-border text-muted-foreground active:bg-secondary'
                 }`}
               >
-                <Leaf size={18} />
-                <span className="text-[10px] font-body font-semibold">Végé</span>
+                <Leaf size={18} className={data.diets.includes('végétarien') ? 'text-primary' : ''} />
+                <span className="text-[10px] font-body font-medium">Végé</span>
               </button>
             </div>
           </FormSection>
@@ -562,14 +564,6 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
           </FormSection>
         </div>
       </div>
-    </div>
-  );
-}
-
-function IconDisk({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center [&>img]:[filter:brightness(0)_invert(1)] dark:[&>img]:[filter:brightness(0)]">
-      {children}
     </div>
   );
 }

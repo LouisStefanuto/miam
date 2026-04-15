@@ -1,21 +1,9 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ArrowLeft, Star, Pencil, Save, X, Plus, Trash2, Minus, Camera, Check, ImagePlus, ImageMinus, Copy, ClipboardCheck, Sun, Snowflake, Flower, LeafyGreen, Vegan, LogOut, Users, CopyPlus } from 'lucide-react';
-import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
-import { SortableIngredientItem } from './SortableIngredientItem';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Star, Pencil, Trash2, Minus, Plus, Check, Copy, ClipboardCheck, Users, CopyPlus, LogOut, Vegan, Timer, Flame, Sun, Snowflake, Flower, LeafyGreen, LucideIcon } from 'lucide-react';
+import { Recipe } from '@/data/recipes';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-
-import cuissonIcon from '@/assets/icons/cuisson.png';
-import melangeIcon from '@/assets/icons/melange.png';
-import servingsIcon from '@/assets/icons/servings.png';
+import RecipeForm from './RecipeForm';
 import { recipeToMarkdown } from '@/lib/recipe-to-markdown';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthImage } from '@/hooks/use-auth-image';
@@ -23,11 +11,7 @@ import { useAuthImage } from '@/hooks/use-auth-image';
 const DifficultyBars = ({ level }: { level: number }) => (
   <div className="flex gap-0.5 items-end">
     {[1, 2, 3].map((i) => (
-      <div
-        key={i}
-        className={`w-1.5 rounded-sm ${i <= level ? 'bg-primary' : 'bg-muted'}`}
-        style={{ height: `${8 + i * 4}px` }}
-      />
+      <div key={i} className={`w-1.5 rounded-sm ${i <= level ? 'bg-primary' : 'bg-muted'}`} style={{ height: `${6 + i * 3}px` }} />
     ))}
   </div>
 );
@@ -38,24 +22,13 @@ const difficultyLevels: Record<string, { label: string; bars: number }> = {
   difficile: { label: 'Difficile', bars: 3 },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const seasonIcons: Record<string, any> = {
+const seasonIcons: Record<string, LucideIcon> = {
   printemps: Flower,
   été: Sun,
   automne: LeafyGreen,
   hiver: Snowflake,
 };
 
-const difficultyLabels: Record<string, string> = {
-  facile: 'Facile',
-  moyen: 'Moyen',
-  difficile: 'Difficile',
-};
-
-const types: RecipeType[] = ['apéro', 'entrée', 'plat', 'pâtes', 'dessert', 'boisson'];
-const seasons: Season[] = ['printemps', 'été', 'automne', 'hiver'];
-const difficulties: Difficulty[] = ['facile', 'moyen', 'difficile'];
-const dietOptions: Diet[] = ['végétarien'];
 const chipBase = 'inline-flex items-center h-7 px-2 text-xs font-body rounded-md';
 const chipPrimary = 'bg-primary text-primary-foreground';
 const chipSecondary = 'bg-card text-card-foreground';
@@ -77,28 +50,15 @@ interface RecipeDetailProps {
 }
 
 export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, onTestedToggle, allTags, onAddTag, onDeleteTag, onDelete, onRemoveFromCollection, onDuplicateAndRemove, shareButton, initialEditing }: RecipeDetailProps) {
-  const [editing, setEditing] = useState(false);
-  const [editData, setEditData] = useState<Recipe>(recipe);
+  const [editing, setEditing] = useState(!!initialEditing);
   const [displayServings, setDisplayServings] = useState(recipe.servings);
-  const [newTag, setNewTag] = useState('');
-  const [tagToDelete, setTagToDelete] = useState<string | null>(null);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [copied, setCopied] = useState(false);
-  const [ingredientIds, setIngredientIds] = useState<string[]>(
-    () => recipe.ingredients.map(() => crypto.randomUUID())
-  );
-  const imageInputRef = useRef<HTMLInputElement>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
   const { toast } = useToast();
+  const imageSrc = useAuthImage(recipe.image);
 
   useEffect(() => {
-    if (initialEditing && !editing) {
-      startEdit();
-    }
+    if (initialEditing && !editing) setEditing(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialEditing]);
 
@@ -120,7 +80,6 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   };
 
   const servingsRatio = displayServings / recipe.servings;
-
   const scaleQuantity = (qty: number | string) => {
     const num = typeof qty === 'string' ? parseFloat(qty) : qty;
     if (isNaN(num)) return qty;
@@ -128,369 +87,154 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
     return scaled % 1 === 0 ? scaled : scaled.toFixed(1);
   };
 
-  const startEdit = () => {
-    setEditData({ ...recipe });
-    setIngredientIds(recipe.ingredients.map(() => crypto.randomUUID()));
-    setEditing(true);
-  };
-
-  const cancelEdit = () => {
-    setEditing(false);
-    setEditData(recipe);
-  };
-
-  const saveEdit = () => {
-    onSave?.({ ...editData, updatedAt: new Date().toISOString().split('T')[0] });
+  const handleFormSave = (updatedRecipe: Recipe) => {
+    onSave?.({ ...recipe, ...updatedRecipe });
     setEditing(false);
   };
 
-  const updateIngredient = (i: number, field: keyof Ingredient, value: string) => {
-    const updated = [...editData.ingredients];
-    (updated[i] as any)[field] = value;
-    setEditData({ ...editData, ingredients: updated });
-  };
+  const isOwner = !recipe.userRole || recipe.userRole === 'owner';
 
-  const addIngredient = () => {
-    setEditData({ ...editData, ingredients: [...editData.ingredients, { name: '', quantity: '', unit: '' }] });
-    setIngredientIds((ids) => [...ids, crypto.randomUUID()]);
-  };
-  const removeIngredient = (i: number) => {
-    setEditData({ ...editData, ingredients: editData.ingredients.filter((_, idx) => idx !== i) });
-    setIngredientIds((ids) => ids.filter((_, idx) => idx !== i));
-  };
-  const moveIngredient = (from: number, to: number) => {
-    setEditData({ ...editData, ingredients: arrayMove(editData.ingredients, from, to) });
-    setIngredientIds((ids) => arrayMove(ids, from, to));
-  };
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = ingredientIds.indexOf(active.id as string);
-      const newIndex = ingredientIds.indexOf(over.id as string);
-      moveIngredient(oldIndex, newIndex);
-    }
-  };
-  const handleIngredientKeyDown = (e: React.KeyboardEvent, i: number) => {
-    if (e.altKey && e.key === 'ArrowUp' && i > 0) {
-      e.preventDefault();
-      moveIngredient(i, i - 1);
-      setTimeout(() => {
-        const inputs = document.querySelectorAll<HTMLInputElement>('[data-ingredient-name]');
-        inputs[i - 1]?.focus();
-      }, 50);
-      return;
-    }
-    if (e.altKey && e.key === 'ArrowDown' && i < editData.ingredients.length - 1) {
-      e.preventDefault();
-      moveIngredient(i, i + 1);
-      setTimeout(() => {
-        const inputs = document.querySelectorAll<HTMLInputElement>('[data-ingredient-name]');
-        inputs[i + 1]?.focus();
-      }, 50);
-      return;
-    }
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (i === editData.ingredients.length - 1) addIngredient();
-      setTimeout(() => {
-        const inputs = document.querySelectorAll<HTMLInputElement>('[data-ingredient-name]');
-        inputs[i + 1]?.focus();
-      }, 50);
-    }
-  };
+  // Edit mode — delegate to RecipeForm
+  if (editing) {
+    return (
+      <RecipeForm
+        onBack={() => setEditing(false)}
+        onSave={handleFormSave}
+        initialRecipe={recipe}
+        allTags={allTags}
+        onAddTag={onAddTag}
+        onDeleteTag={onDeleteTag}
+      />
+    );
+  }
 
-  const updateStep = (i: number, text: string) => {
-    const updated = [...editData.steps];
-    updated[i] = { text };
-    setEditData({ ...editData, steps: updated });
-  };
-  const addStep = () => setEditData({ ...editData, steps: [...editData.steps, { text: '' }] });
-  const removeStep = (i: number) => setEditData({ ...editData, steps: editData.steps.filter((_, idx) => idx !== i) });
-
-  const toggleDiet = (diet: Diet) => {
-    setEditData({
-      ...editData,
-      diets: editData.diets.includes(diet) ? editData.diets.filter((d) => d !== diet) : [...editData.diets, diet],
-    });
-  };
-
-  const toggleTag = (tag: string) => {
-    setEditData({
-      ...editData,
-      tags: editData.tags.includes(tag) ? editData.tags.filter((t) => t !== tag) : [...editData.tags, tag],
-    });
-  };
-
-  const addNewTag = () => {
-    const tag = newTag.trim().toLowerCase();
-    if (tag && !editData.tags.includes(tag)) {
-      setEditData({ ...editData, tags: [...editData.tags, tag] });
-      onAddTag?.(tag);
-    }
-    setNewTag('');
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setEditData({ ...editData, image: ev.target?.result as string });
-    reader.readAsDataURL(file);
-  };
-
-  const current = editing ? editData : recipe;
-  const imageSrc = useAuthImage(current.image);
-
+  // Read mode
   return (
     <div>
-      {/* Sticky save/cancel bar when editing */}
-      {editing && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-card px-4 py-3 flex items-center justify-between">
-          <Button variant="ghost" size="icon" onClick={onBack}>
-            <ArrowLeft size={20} />
-            <span className="sr-only">Menu</span>
-          </Button>
-          <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="font-body gap-1.5" onClick={cancelEdit}>
-            <X size={14} /> Annuler
-          </Button>
-          <Button size="sm" className="gradient-warm text-primary-foreground font-body gap-1.5" onClick={saveEdit}>
-            <Save size={14} /> Sauvegarder
-          </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Header image */}
-      <div className={`relative h-[300px] md:h-[400px] overflow-hidden select-none ${editing ? 'mt-14' : ''}`}>
-        {imageSrc ? (
-          <img src={imageSrc} alt={current.title} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full bg-muted" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 to-transparent" />
-        {!editing && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onBack}
-            className="absolute top-4 left-4 bg-card/80 backdrop-blur-sm hover:bg-card"
-          >
-            <ArrowLeft size={20} className="text-card-foreground" />
-            <span className="sr-only">Retour</span>
-          </Button>
-        )}
-        {/* Action buttons top right */}
-        <div className="absolute top-4 right-4 flex gap-2">
-          {!editing && (
-            <>
-              {/* Owner: delete recipe */}
-              {recipe.userRole !== 'reader' && recipe.userRole !== 'editor' && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-destructive hover:bg-red-100 transition-colors">
-                      <Trash2 size={16} />
-                    </button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="font-display">Supprimer cette recette ?</AlertDialogTitle>
-                      <AlertDialogDescription className="font-body">
-                        La recette « {recipe.title} » sera supprimée définitivement. Cette action est irréversible.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
-                      <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body" onClick={() => onDelete?.()}>
-                        Supprimer
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-              {/* Non-owner: duplicate and remove from collection */}
-              {(recipe.userRole === 'reader' || recipe.userRole === 'editor') && onDuplicateAndRemove && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-muted-foreground hover:bg-card transition-colors">
-                      <CopyPlus size={16} />
-                    </button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="font-display">Dupliquer et retirer ?</AlertDialogTitle>
-                      <AlertDialogDescription className="font-body">
-                        Une copie de « {recipe.title} » sera créée dans votre bibliothèque et la recette partagée sera retirée. Vous pourrez modifier votre copie librement.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
-                      <AlertDialogAction className="font-body" onClick={onDuplicateAndRemove}>
-                        Dupliquer et retirer
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-              {/* Non-owner: remove from collection */}
-              {(recipe.userRole === 'reader' || recipe.userRole === 'editor') && onRemoveFromCollection && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-muted-foreground hover:bg-card transition-colors">
-                      <LogOut size={16} />
-                    </button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="font-display">Retirer cette recette ?</AlertDialogTitle>
-                      <AlertDialogDescription className="font-body">
-                        La recette « {recipe.title} » sera retirée de votre collection. Vous pourrez la retrouver si on vous la partage à nouveau.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
-                      <AlertDialogAction className="font-body" onClick={onRemoveFromCollection}>
-                        Retirer
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-              {/* Owner/editor: edit button */}
-              {recipe.userRole !== 'reader' && (
-                <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-card-foreground hover:bg-card transition-colors" onClick={startEdit}>
-                  <Pencil size={16} />
-                </button>
-              )}
-              {/* Owner: share button */}
-              {shareButton}
-              <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-card-foreground hover:bg-card transition-colors" onClick={copyAsMarkdown}>
-                {copied ? <ClipboardCheck size={16} /> : <Copy size={16} />}
-              </button>
-            </>
+      {/* Sticky top bar */}
+      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-card px-4 py-3 flex items-center justify-between">
+        <Button variant="ghost" size="icon" onClick={onBack}>
+          <ArrowLeft size={20} />
+          <span className="sr-only">Retour</span>
+        </Button>
+        <div className="flex gap-1">
+          {/* Owner: delete */}
+          {isOwner && onDelete && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10 dark:text-red-500 dark:hover:text-red-400 dark:hover:bg-red-900/40">
+                  <Trash2 size={18} />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-display">Supprimer cette recette ?</AlertDialogTitle>
+                  <AlertDialogDescription className="font-body">
+                    La recette « {recipe.title} » sera supprimée définitivement. Cette action est irréversible.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
+                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body" onClick={onDelete}>
+                    Supprimer
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
+          {/* Non-owner: duplicate & remove */}
+          {!isOwner && onDuplicateAndRemove && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon"><CopyPlus size={18} /></Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-display">Dupliquer et retirer ?</AlertDialogTitle>
+                  <AlertDialogDescription className="font-body">
+                    Une copie de « {recipe.title} » sera créée dans votre bibliothèque et la recette partagée sera retirée. Vous pourrez modifier votre copie librement.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
+                  <AlertDialogAction className="font-body" onClick={onDuplicateAndRemove}>Dupliquer et retirer</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          {/* Non-owner: remove from collection */}
+          {!isOwner && onRemoveFromCollection && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon"><LogOut size={18} /></Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-display">Retirer cette recette ?</AlertDialogTitle>
+                  <AlertDialogDescription className="font-body">
+                    La recette « {recipe.title} » sera retirée de votre collection. Vous pourrez la retrouver si on vous la partage à nouveau.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
+                  <AlertDialogAction className="font-body" onClick={onRemoveFromCollection}>Retirer</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          {/* Edit */}
+          {recipe.userRole !== 'reader' && (
+            <Button variant="ghost" size="icon" onClick={() => setEditing(true)}>
+              <Pencil size={18} />
+            </Button>
+          )}
+          {/* Share */}
+          {shareButton}
+          {/* Copy markdown */}
+          <Button variant="ghost" size="icon" onClick={copyAsMarkdown}>
+            {copied ? <ClipboardCheck size={18} /> : <Copy size={18} />}
+          </Button>
         </div>
-        {/* Image actions when editing */}
-        {editing && (
-          <>
-            <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none [&>*]:pointer-events-auto">
-              {editData.image ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors">
-                      <Camera size={24} className="text-card-foreground" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem className="font-body gap-2" onClick={() => imageInputRef.current?.click()}>
-                      <ImagePlus size={16} /> Modifier l'image
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="font-body gap-2 text-destructive focus:text-destructive" onClick={() => setEditData({ ...editData, image: undefined })}>
-                      <ImageMinus size={16} /> Supprimer l'image
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <button className="bg-card/80 backdrop-blur-sm rounded-full p-4 hover:bg-card transition-colors" onClick={() => imageInputRef.current?.click()}>
-                  <Camera size={24} className="text-card-foreground" />
-                </button>
-              )}
+      </div>
+
+      {/* Image circle + title */}
+      <div className="px-4 md:px-8 pt-6">
+        <div className="flex items-center gap-4">
+          {imageSrc ? (
+            <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden ring-2 ring-primary/20">
+              <img src={imageSrc} alt={recipe.title} className="w-full h-full object-cover" />
             </div>
-          </>
-        )}
-        <div className="absolute bottom-6 left-6 right-6">
-          <div className="flex items-center gap-2 mb-2">
-            {editing ? (
-              <Select value={editData.type} onValueChange={(v) => setEditData({ ...editData, type: v as RecipeType })}>
-                <SelectTrigger className={`${chipBase} ${chipPrimary} w-auto border-0 capitalize`}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {types.map((t) => <SelectItem key={t} value={t} className="capitalize font-body text-xs">{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            ) : (
-              <span className={`${chipBase} ${chipPrimary} capitalize`}>{current.type}</span>
+          ) : recipe.image ? (
+            <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full bg-muted animate-pulse" />
+          ) : (
+            <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full bg-muted" />
+          )}
+          <div className="flex-1 min-w-0 space-y-1">
+            <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground">{recipe.title}</h1>
+            <div className="flex gap-0.5" onMouseLeave={() => setHoveredStar(0)}>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => recipe.userRole !== 'reader' && onRatingChange?.(i)}
+                  onMouseEnter={() => setHoveredStar(i)}
+                  className={recipe.userRole === 'reader' ? '' : 'cursor-pointer'}
+                >
+                  <Star
+                    size={20}
+                    className={
+                      (hoveredStar > 0 ? i <= hoveredStar : i <= recipe.rating)
+                        ? 'fill-primary text-primary'
+                        : 'text-muted'
+                    }
+                  />
+                </button>
+              ))}
+            </div>
+            {recipe.description && (
+              <p className="font-body text-sm text-muted-foreground">{recipe.description}</p>
             )}
-            {editing ? (
-              <Select value={editData.season ?? '_none'} onValueChange={(v) => setEditData({ ...editData, season: v === '_none' ? null : v as Season })}>
-                <SelectTrigger className={`${chipBase} ${chipSecondary} w-auto border-0 capitalize gap-1`}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none" className="font-body text-xs">Aucune saison</SelectItem>
-                  {seasons.map((s) => <SelectItem key={s} value={s} className="capitalize font-body text-xs">{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            ) : (
-              (() => { if (!current.season) return null; const SeasonIcon = seasonIcons[current.season]; return SeasonIcon ? <span className={`${chipBase} ${chipSecondary} capitalize gap-1`}><SeasonIcon size={14} className="text-gray-600 dark:text-gray-300" />{current.season}</span> : null; })()
-            )}
-            {current.diets.includes('végétarien') && (
-              <span className={`${chipBase} ${chipSecondary} gap-1`}>
-                <Vegan size={14} className="text-green-600" />Végé
-              </span>
-            )}
-            {/* Testé toggle - interactive for owner/editor only */}
-            <button
-              onClick={() => {
-                if (recipe.userRole === 'reader') return;
-                if (editing) {
-                  setEditData({ ...editData, tested: !editData.tested });
-                } else {
-                  onTestedToggle?.(!current.tested);
-                }
-              }}
-              className={`${chipBase} transition-colors cursor-pointer active:scale-95 gap-1 ${
-                current.tested ? chipPrimary : chipSecondary
-              }`}
-            >
-              {current.tested && <Check size={12} />} {current.tested ? 'Testé' : 'À tester'}
-            </button>
           </div>
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-primary-foreground drop-shadow-lg flex items-center gap-3 flex-wrap">
-            {editing ? (
-              <Input
-                value={editData.title}
-                onChange={(e) => setEditData({ ...editData, title: e.target.value })}
-                className="font-display text-3xl md:text-4xl font-bold bg-transparent border-b border-primary-foreground/50 text-primary-foreground h-auto p-0 rounded-none focus-visible:ring-0"
-              />
-            ) : (
-              current.title
-            )}
-            {!editing && (
-              <span className="flex gap-0.5" onMouseLeave={() => setHoveredStar(0)}>
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => recipe.userRole !== 'reader' && onRatingChange?.(i)}
-                    onMouseEnter={() => setHoveredStar(i)}
-                    className={recipe.userRole === 'reader' ? '' : 'cursor-pointer'}
-                  >
-                    <Star
-                      size={22}
-                      className={
-                        (hoveredStar > 0 ? i <= hoveredStar : i <= current.rating)
-                          ? 'fill-primary text-primary drop-shadow-md'
-                          : 'text-primary-foreground/40'
-                      }
-                    />
-                  </button>
-                ))}
-              </span>
-            )}
-          </h1>
-          {editing ? (
-            <Input
-              value={editData.description}
-              onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-              placeholder="Description"
-              className="font-body text-sm md:text-base bg-transparent border-b border-primary-foreground/50 text-primary-foreground/80 placeholder:text-primary-foreground/40 h-auto p-0 rounded-none focus-visible:ring-0 mt-1 drop-shadow-md"
-            />
-          ) : current.description ? (
-            <p className="text-primary-foreground/80 font-body text-sm md:text-base mt-1 drop-shadow-md">{current.description}</p>
-          ) : null}
         </div>
       </div>
 
@@ -500,278 +244,134 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/60 border border-border text-sm font-body">
             <Users size={16} className="text-muted-foreground shrink-0" />
             <span className="text-muted-foreground">
-              Partagee par <span className="font-medium text-foreground">{recipe.ownerName || 'Quelqu\'un'}</span>
-              {' - '}
-              {recipe.userRole === 'editor' ? 'Editeur' : 'Lecture seule'}
+              Partagée par <span className="font-medium text-foreground">{recipe.ownerName || 'Quelqu\'un'}</span>
+              {' — '}
+              {recipe.userRole === 'editor' ? 'Éditeur' : 'Lecture seule'}
             </span>
           </div>
         )}
-        {/* Quick info cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {editing ? (
-            <>
-              <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
-                <IconDisk><img src={melangeIcon} alt="Préparation" className="w-5 h-5" /></IconDisk>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={editData.prepTime || ''}
-                  onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); setEditData({ ...editData, prepTime: v ? +v : 0 }); }}
-                  placeholder="0"
-                  className="h-7 w-16 text-center text-sm font-body font-semibold bg-transparent border-b-2 border-primary/30 focus:border-primary outline-none transition-colors"
-                />
-                <span className="text-xs text-muted-foreground font-body">Préparation (min)</span>
-              </div>
-              <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
-                <IconDisk><img src={cuissonIcon} alt="Cuisson" className="w-5 h-5" /></IconDisk>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={editData.cookTime || ''}
-                  onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); setEditData({ ...editData, cookTime: v ? +v : 0 }); }}
-                  placeholder="0"
-                  className="h-7 w-16 text-center text-sm font-body font-semibold bg-transparent border-b-2 border-primary/30 focus:border-primary outline-none transition-colors"
-                />
-                <span className="text-xs text-muted-foreground font-body">Cuisson (min)</span>
-              </div>
-              <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
-                <IconDisk><img src={servingsIcon} alt="Portions" className="w-5 h-5" /></IconDisk>
-                <div className="flex items-center gap-3">
-                  <button type="button" onClick={() => setEditData({ ...editData, servings: Math.max(1, editData.servings - 1) })} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors">
-                    <Minus size={16} />
-                  </button>
-                  <span className="text-sm font-body font-semibold text-card-foreground min-w-[1.5rem] text-center">{editData.servings}</span>
-                  <button type="button" onClick={() => setEditData({ ...editData, servings: editData.servings + 1 })} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors">
-                    <Plus size={16} />
-                  </button>
-                </div>
-                <span className="text-xs text-muted-foreground font-body">Portions</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const idx = difficulties.indexOf(editData.difficulty);
-                  setEditData({ ...editData, difficulty: difficulties[(idx + 1) % difficulties.length] });
-                }}
-                className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1 cursor-pointer hover:bg-secondary transition-colors"
-              >
-                <div className="w-10 h-10 flex items-center justify-center">
-                  <DifficultyBars level={difficultyLevels[editData.difficulty].bars} />
-                </div>
-                <span className="text-xs capitalize font-body">{editData.difficulty}</span>
-                <span className="text-xs text-muted-foreground font-body">Clic pour changer</span>
+
+        {/* Quick info bars */}
+        <div className="space-y-1.5">
+          <div className="bg-card rounded-xl shadow-card grid grid-cols-3">
+            {/* Prep time */}
+            <div className="flex items-center justify-center gap-1.5 py-3 px-2 border-r border-border">
+              <Timer size={16} className="text-muted-foreground" />
+              <span className="text-sm font-body font-semibold">{recipe.prepTime || '-'}</span>
+              {recipe.prepTime > 0 && <span className="text-[10px] text-muted-foreground font-body">min</span>}
+            </div>
+            {/* Cook time */}
+            <div className="flex items-center justify-center gap-1.5 py-3 px-2 border-r border-border">
+              <Flame size={16} className="text-muted-foreground" />
+              <span className="text-sm font-body font-semibold">{recipe.cookTime || '-'}</span>
+              {recipe.cookTime > 0 && <span className="text-[10px] text-muted-foreground font-body">min</span>}
+            </div>
+            {/* Servings */}
+            <div className="flex items-center justify-center py-1 px-2">
+              <button type="button" onClick={() => setDisplayServings(Math.max(1, displayServings - 1))} className="relative w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors before:absolute before:-inset-2 before:content-['']">
+                <Minus size={12} />
               </button>
-            </>
-          ) : (
-            <>
-              <InfoCard icon={melangeIcon} label="Préparation" value={current.prepTime ? `${current.prepTime} min` : '-'} />
-              <InfoCard icon={cuissonIcon} label="Cuisson" value={current.cookTime ? `${current.cookTime} min` : '-'} />
-              <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
-                <IconDisk><img src={servingsIcon} alt="Portions" className="w-5 h-5" /></IconDisk>
-                <div className="flex items-center gap-3">
-                  <button onClick={() => setDisplayServings(Math.max(1, displayServings - 1))} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors">
-                    <Minus size={16} />
-                  </button>
-                  <span className="text-sm font-body font-semibold text-card-foreground min-w-[1.5rem] text-center">{displayServings}</span>
-                  <button onClick={() => setDisplayServings(displayServings + 1)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors">
-                    <Plus size={16} />
-                  </button>
-                </div>
-                <span className="text-xs text-muted-foreground font-body">Portions</span>
+              <div className="flex items-center gap-1 mx-2">
+                <Users size={16} className="text-muted-foreground" />
+                <span className="text-sm font-body font-semibold min-w-[1rem] text-center">{displayServings}</span>
               </div>
-              <InfoCard icon={<DifficultyBars level={difficultyLevels[current.difficulty].bars} />} label="Complexité" value={difficultyLabels[current.difficulty]} />
-            </>
-          )}
+              <button type="button" onClick={() => setDisplayServings(displayServings + 1)} className="relative w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors before:absolute before:-inset-2 before:content-['']">
+                <Plus size={12} />
+              </button>
+            </div>
+          </div>
+          <div className="bg-card rounded-xl shadow-card grid grid-cols-3">
+            {/* Difficulty */}
+            <div className="flex items-center justify-center gap-1.5 py-3 px-2 rounded-l-xl border-r border-border">
+              <DifficultyBars level={difficultyLevels[recipe.difficulty].bars} />
+              <span className="text-xs capitalize font-body font-medium">{recipe.difficulty}</span>
+            </div>
+            {/* Type / Season / Diet / Tested */}
+            <div className="col-span-2 flex items-center justify-center gap-2 py-3 px-2 flex-wrap">
+              <span className={`${chipBase} ${chipPrimary} capitalize`}>{recipe.type}</span>
+              {recipe.season && (() => {
+                const SeasonIcon = seasonIcons[recipe.season];
+                return SeasonIcon ? (
+                  <span className={`${chipBase} ${chipSecondary} capitalize gap-1`}>
+                    <SeasonIcon size={14} />{recipe.season}
+                  </span>
+                ) : null;
+              })()}
+              {recipe.diets.includes('végétarien') && (
+                <span className={`${chipBase} ${chipSecondary} gap-1`}>
+                  <Vegan size={14} className="text-green-600" />Végé
+                </span>
+              )}
+              <button
+                onClick={() => {
+                  if (recipe.userRole === 'reader') return;
+                  onTestedToggle?.(!recipe.tested);
+                }}
+                className={`${chipBase} transition-colors cursor-pointer active:scale-95 gap-1 ${
+                  recipe.tested ? chipPrimary : chipSecondary
+                }`}
+              >
+                {recipe.tested && <Check size={12} />} {recipe.tested ? 'Testé' : 'À tester'}
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Rating in edit mode */}
-        {editing && (
-          <div className="flex items-center gap-2">
-            <span className="font-body text-sm font-semibold text-foreground">Note :</span>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <button key={i} type="button" onClick={() => setEditData({ ...editData, rating: i })}>
-                <Star size={20} className={i <= editData.rating ? 'fill-primary text-primary' : 'text-muted'} />
-              </button>
+        {/* Tags */}
+        {recipe.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {recipe.tags.map((tag) => (
+              <span
+                key={tag}
+                className="text-[13px] px-3 py-1.5 rounded-full border border-primary/40 bg-primary/15 text-primary font-body font-medium capitalize"
+              >
+                {tag}
+              </span>
             ))}
           </div>
         )}
 
-
-        {/* Tags */}
-        {editing ? (
-          <div className="space-y-2">
-            <span className="font-body text-sm font-semibold text-foreground">Tags</span>
-            <div className="flex flex-wrap gap-2">
-              {[...new Set([...allTags, ...editData.tags])].map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => toggleTag(tag)}
-                  className={`flex items-center gap-1 text-xs pl-3 pr-1.5 py-1 rounded-full font-body capitalize transition-colors ${
-                    editData.tags.includes(tag)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-secondary-foreground hover:bg-primary/20'
-                  }`}
-                >
-                  {tag}
-                  <span
-                    role="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setTagToDelete(tag);
-                    }}
-                    className="hover:text-destructive transition-colors ml-0.5"
-                    title={`Supprimer le tag "${tag}" partout`}
-                  >
-                    <X size={12} />
+        {/* Ingredients */}
+        <FormSection title="Ingrédients">
+          <div className="bg-card rounded-xl shadow-card p-4">
+            <ul className="space-y-2">
+              {recipe.ingredients.map((ing, i) => (
+                <li key={i} className="flex justify-between items-center py-1.5 border-b border-border last:border-0 font-body text-sm">
+                  <span className="text-card-foreground">{ing.name}</span>
+                  <span className="text-muted-foreground whitespace-nowrap ml-3">
+                    {scaleQuantity(ing.quantity)} {ing.unit}
                   </span>
-                </button>
-              ))}
-              <div className="flex items-center gap-1">
-                <Input
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addNewTag())}
-                  placeholder="Nouveau tag…"
-                  className="h-7 w-28 text-xs font-body"
-                />
-                <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={addNewTag}><Plus size={12} /></Button>
-              </div>
-            </div>
-            <AlertDialog open={!!tagToDelete} onOpenChange={(open) => !open && setTagToDelete(null)}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="font-display">Supprimer le tag « {tagToDelete} » ?</AlertDialogTitle>
-                  <AlertDialogDescription className="font-body">
-                    Ce tag sera supprimé de toutes les recettes. Cette action est irréversible.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="font-body">Annuler</AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body"
-                    onClick={() => {
-                      setEditData((d) => ({ ...d, tags: d.tags.filter((t) => t !== tagToDelete) }));
-                      onDeleteTag?.(tagToDelete!);
-                      setTagToDelete(null);
-                    }}
-                  >
-                    Supprimer
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            <div className="space-y-2 mt-3">
-              <span className="font-body text-sm font-semibold text-foreground">Régime</span>
-              <div className="flex flex-wrap gap-3">
-                {dietOptions.map((diet) => (
-                  <label key={diet} className="flex items-center gap-2 cursor-pointer font-body text-sm capitalize">
-                    <Checkbox checked={editData.diets.includes(diet)} onCheckedChange={() => toggleDiet(diet)} />
-                    {diet}
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-        ) : (
-          current.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {current.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="font-body capitalize">{tag}</Badge>
-              ))}
-            </div>
-          )
-        )}
-
-        <div className={editing ? "space-y-8" : "grid md:grid-cols-[2fr_3fr] gap-8"}>
-          {/* Ingredients */}
-          <div className="bg-card rounded-lg p-4 shadow-card">
-            <h2 className="font-display text-xl font-semibold mb-4 text-card-foreground">Ingrédients</h2>
-            {editing ? (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={ingredientIds} strategy={verticalListSortingStrategy}>
-                  <ul className="space-y-2">
-                    {editData.ingredients.map((ing, i) => (
-                      <SortableIngredientItem
-                        key={ingredientIds[i]}
-                        id={ingredientIds[i]}
-                        ingredient={ing}
-                        index={i}
-                        onUpdate={updateIngredient}
-                        onRemove={removeIngredient}
-                        onKeyDown={handleIngredientKeyDown}
-                        canRemove={editData.ingredients.length > 1}
-                      />
-                    ))}
-                  </ul>
-                </SortableContext>
-              </DndContext>
-            ) : (
-              <ul className="space-y-2">
-                {current.ingredients.map((ing, i) => (
-                  <li key={i} className="flex justify-between items-center py-1.5 border-b border-border last:border-0 font-body text-sm">
-                    <span className="text-card-foreground">{ing.name}</span>
-                    <span className="text-muted-foreground whitespace-nowrap ml-3">
-                      {scaleQuantity(ing.quantity)} {ing.unit}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {editing && (
-              <Button type="button" variant="outline" size="sm" onClick={addIngredient} className="font-body gap-1 mt-3 w-full">
-                <Plus size={14} /> Ajouter
-              </Button>
-            )}
-          </div>
-
-          {/* Steps */}
-          <div>
-            <h2 className="font-display text-xl font-semibold mb-4 text-foreground">Préparation</h2>
-            <ol className="space-y-4">
-              {(editing ? editData.steps : current.steps).map((step, i) => (
-                <li key={i} className="flex gap-4 items-start">
-                  <span className="flex-shrink-0 w-8 h-8 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-sm">
-                    {i + 1}
-                  </span>
-                  {editing ? (
-                    <div className="flex gap-2 items-start flex-1">
-                      <Textarea value={step.text} onChange={(e) => updateStep(i, e.target.value)} className="font-body min-h-[50px] text-sm [field-sizing:content]" />
-                      <button onClick={() => removeStep(i)} className="text-destructive hover:text-destructive/80 mt-2"><Trash2 size={14} /></button>
-                    </div>
-                  ) : (
-                    <p className="font-body text-foreground pt-1 leading-relaxed whitespace-pre-line">{step.text}</p>
-                  )}
                 </li>
               ))}
-            </ol>
-            {editing && (
-              <Button type="button" variant="outline" size="sm" onClick={addStep} className="font-body gap-1 mt-4">
-                <Plus size={14} /> Ajouter une étape
-              </Button>
-            )}
+            </ul>
           </div>
-        </div>
+        </FormSection>
+
+        {/* Steps */}
+        <FormSection title="Préparation">
+          <ol className="space-y-2">
+            {recipe.steps.map((step, i) => (
+              <li key={i}>
+                <div className="flex items-start gap-3 bg-secondary/40 rounded-xl p-3.5">
+                  <span className="flex-shrink-0 w-7 h-7 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-xs mt-1">
+                    {i + 1}
+                  </span>
+                  <p className="font-body text-foreground leading-relaxed whitespace-pre-line">{step.text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </FormSection>
       </div>
     </div>
   );
 }
 
-function IconDisk({ children }: { children: React.ReactNode }) {
+function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center [&>img]:[filter:brightness(0)_invert(1)] dark:[&>img]:[filter:brightness(0)]">
+    <div>
+      <p className="text-xs font-body font-semibold text-muted-foreground uppercase tracking-wider mb-2">{title}</p>
       {children}
-    </div>
-  );
-}
-
-function InfoCard({ icon, label, value }: { icon: string | React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="bg-card rounded-lg p-4 shadow-card flex flex-col items-center gap-1">
-      {typeof icon === 'string' ? <IconDisk><img src={icon} alt={label} className="w-5 h-5" /></IconDisk> : <div className="w-10 h-10 flex items-center justify-center">{icon}</div>}
-      <span className="text-sm font-body font-semibold text-card-foreground">{value}</span>
-      <span className="text-xs text-muted-foreground font-body">{label}</span>
     </div>
   );
 }
