@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 import { SortableIngredientItem } from './SortableIngredientItem';
+import { useAuthImage } from '@/hooks/use-auth-image';
 
 const DifficultyBars = ({ level }: { level: number }) => (
   <div className="flex gap-0.5 items-end">
@@ -55,6 +56,7 @@ const defaultIngredients = (): Ingredient[] =>
 export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = [], onAddTag, onDeleteTag }: RecipeFormProps) {
   const [data, setData] = useState<Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>>({
     title: initialRecipe?.title ?? '',
+    description: initialRecipe?.description ?? '',
     image: initialRecipe?.image,
     type: initialRecipe?.type ?? 'plat',
     season: initialRecipe?.season ?? null,
@@ -75,6 +77,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     () => data.ingredients.map(() => crypto.randomUUID())
   );
   const imageRef = useRef<HTMLInputElement>(null);
+  const imageSrc = useAuthImage(data.image);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -231,7 +234,11 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="relative flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden ring-2 ring-primary/20 hover:ring-primary/40 transition-all cursor-pointer group">
-                  <img src={data.image} alt={data.title} className="w-full h-full object-cover" />
+                  {imageSrc ? (
+                    <img src={imageSrc} alt={data.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-muted animate-pulse" />
+                  )}
                   <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Camera size={20} className="text-white" />
                   </div>
