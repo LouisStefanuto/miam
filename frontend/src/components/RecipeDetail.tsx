@@ -177,7 +177,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
     <div>
       {/* Sticky top bar */}
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-card px-4 py-3 flex items-center justify-between">
-        <Button variant="ghost" size="icon" onClick={onBack}>
+        <Button variant="ghost" size="icon" onClick={onBack} className="md:text-muted-foreground md:hover:text-primary">
           <ArrowLeft size={20} />
           <span className="sr-only">Retour</span>
         </Button>
@@ -210,7 +210,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           {!isOwner && onDuplicateAndRemove && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon"><CopyPlus size={18} /></Button>
+                <Button variant="ghost" size="icon" className="md:text-muted-foreground md:hover:text-primary"><CopyPlus size={18} /></Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -230,7 +230,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           {!isOwner && onRemoveFromCollection && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon"><LogOut size={18} /></Button>
+                <Button variant="ghost" size="icon" className="md:text-muted-foreground md:hover:text-primary"><LogOut size={18} /></Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -248,14 +248,14 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           )}
           {/* Edit */}
           {recipe.userRole !== 'reader' && (
-            <Button variant="ghost" size="icon" onClick={() => setEditing(true)}>
+            <Button variant="ghost" size="icon" onClick={() => setEditing(true)} className="md:text-muted-foreground md:hover:text-primary">
               <Pencil size={18} />
             </Button>
           )}
           {/* Share */}
           {shareButton}
           {/* Copy markdown */}
-          <Button variant="ghost" size="icon" onClick={copyAsMarkdown}>
+          <Button variant="ghost" size="icon" onClick={copyAsMarkdown} className="md:text-muted-foreground md:hover:text-primary">
             {copied ? <ClipboardCheck size={18} /> : <Copy size={18} />}
           </Button>
         </div>
