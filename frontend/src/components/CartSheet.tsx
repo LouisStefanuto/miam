@@ -190,12 +190,13 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
         <SheetTrigger asChild>{trigger}</SheetTrigger>
       ) : (
         <SheetTrigger asChild>
-          <Button variant="outline" className="font-body font-semibold shrink-0 relative focus-visible:ring-0 focus-visible:ring-offset-0 px-3">
+          <Button
+            variant="outline"
+            className={`font-body font-semibold shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3 gap-1.5 ${count > 0 ? '!text-primary' : ''}`}
+          >
             <ShoppingCart size={18} />
             {count > 0 && (
-              <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
-                {count}
-              </span>
+              <span className="text-sm font-bold tabular-nums">{count}</span>
             )}
           </Button>
         </SheetTrigger>

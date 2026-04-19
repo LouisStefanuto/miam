@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 export type AccentColor = "orange" | "rose" | "blue" | "green" | "purple" | "teal";
 
@@ -84,15 +84,8 @@ export const ACCENT_COLORS: Record<AccentColor, AccentColorDef> = {
   },
 };
 
-const STORAGE_KEY = "miam-accent-color";
-const DEFAULT_COLOR: AccentColor = "orange";
-
-interface AccentColorContextValue {
-  accentColor: AccentColor;
-  setAccentColor: (color: AccentColor) => void;
-}
-
-const AccentColorContext = createContext<AccentColorContextValue | undefined>(undefined);
+/** Change this to switch the app's main accent color. */
+export const ACCENT_COLOR: AccentColor = "orange";
 
 function applyAccentColor(color: AccentColor) {
   const def = ACCENT_COLORS[color];
@@ -103,9 +96,6 @@ function applyAccentColor(color: AccentColor) {
   root.style.setProperty("--sidebar-ring", def.sidebarRing);
   root.style.setProperty("--gradient-warm", def.gradientWarm);
 
-  // Shadow depends on dark/light — we set both and let CSS pick
-  // Since we can't conditionally set via JS easily, we set the light version
-  // and use a MutationObserver for dark mode changes
   const isDark = root.classList.contains("dark");
   root.style.setProperty(
     "--shadow-card-hover",
@@ -114,42 +104,15 @@ function applyAccentColor(color: AccentColor) {
 }
 
 export function AccentColorProvider({ children }: { children: ReactNode }) {
-  const [accentColor, setAccentColorState] = useState<AccentColor>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return (stored && stored in ACCENT_COLORS) ? stored as AccentColor : DEFAULT_COLOR;
-  });
-
-  // Apply on mount and when color changes
   useEffect(() => {
-    applyAccentColor(accentColor);
-    localStorage.setItem(STORAGE_KEY, accentColor);
-  }, [accentColor]);
-
-  // Re-apply shadow when dark/light class changes
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      applyAccentColor(accentColor);
-    });
+    applyAccentColor(ACCENT_COLOR);
+    const observer = new MutationObserver(() => applyAccentColor(ACCENT_COLOR));
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class"],
     });
     return () => observer.disconnect();
-  }, [accentColor]);
+  }, []);
 
-  const setAccentColor = (color: AccentColor) => {
-    setAccentColorState(color);
-  };
-
-  return (
-    <AccentColorContext.Provider value={{ accentColor, setAccentColor }}>
-      {children}
-    </AccentColorContext.Provider>
-  );
-}
-
-export function useAccentColor() {
-  const ctx = useContext(AccentColorContext);
-  if (!ctx) throw new Error("useAccentColor must be used within AccentColorProvider");
-  return ctx;
+  return <>{children}</>;
 }

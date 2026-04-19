@@ -11,8 +11,8 @@ import UserMenu from '@/components/UserMenu';
 import MobileHeader from '@/components/MobileHeader';
 import MobileSearchOverlay from '@/components/MobileSearchOverlay';
 import { useRecipes } from '@/hooks/use-recipes';
+import { useShakeEscalation } from '@/hooks/use-shake-escalation';
 import { useCatalogFilters } from '@/contexts/CatalogFilterContext';
-import HeroSection from '@/components/HeroSection';
 import SearchBar from '@/components/SearchBar';
 import FilterBar, { defaultFilters } from '@/components/FilterBar';
 import RecipeCard from '@/components/RecipeCard';
@@ -86,6 +86,11 @@ const CatalogPage = () => {
     setSelectedRecipes(new Set());
   }, []);
   const openBeaverGame = useCallback(() => setShowBeaverGame(true), []);
+  const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []);
+  const { ref: desktopLogoRef, handlers: desktopLogoHandlers } = useShakeEscalation<HTMLButtonElement>(
+    scrollToTop,
+    openBeaverGame,
+  );
 
   // Dev shortcut: Shift+B to test the easter egg on desktop
   useEffect(() => {
@@ -248,39 +253,54 @@ const CatalogPage = () => {
         resultCount={filtered.length}
       />
 
-      {/* Desktop hero + action buttons (hidden on mobile) */}
-      <div className="relative hidden md:block">
-        <HeroSection />
-        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+      {/* Desktop top banner (hidden on mobile) */}
+      <header className="hidden md:flex items-center justify-between h-16 px-6 bg-background/85 backdrop-blur-md border-b border-border/60 sticky top-0 z-30">
+        <button
+          ref={desktopLogoRef}
+          type="button"
+          className="flex items-center gap-2.5 hover:opacity-80 transition-opacity select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg"
+          aria-label="Miam — Retour en haut"
+          style={{ WebkitTouchCallout: 'none' }}
+          draggable={false}
+          {...desktopLogoHandlers}
+        >
+          <img src="/icon.png" alt="" className="w-9 h-9 rounded-lg pointer-events-none" draggable={false} />
+          <span className="font-display text-2xl font-bold text-foreground tracking-tight pointer-events-none">
+            Miam
+          </span>
+        </button>
+        <div className="flex items-center gap-1.5 [&_button]:bg-transparent [&_button]:border-transparent [&_button]:text-muted-foreground [&_button:hover]:bg-accent [&_button:hover]:text-primary [&_button:active]:text-primary">
           {/* Cart */}
-          <PointerTooltip label="Mon panier d'ingrédients">
+          <PointerTooltip label="Ma liste de courses">
             <div><CartSheet hotkey="p" /></div>
           </PointerTooltip>
 
           {/* Share dropdown */}
           <PointerTooltip label="Partage de recettes">
-            <DropdownMenu open={shareDropdownOpen} onOpenChange={setShareDropdownOpen}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="relative font-body font-semibold shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3"
-                >
-                  <Share2 size={18} />
-                  <PendingSharesBadge />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="font-body">
-                <DropdownMenuItem onClick={() => { setSelectionMode(true); setSelectedRecipes(new Set()); }} className="gap-2 cursor-pointer">
-                  <Share2 size={16} />
-                  Partager des recettes
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setPendingSharesOpen(true)} className="gap-2 cursor-pointer">
-                  <Inbox size={16} />
-                  Boîte de réception
-                  <PendingSharesInlineBadge />
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <span className="inline-flex">
+              <DropdownMenu open={shareDropdownOpen} onOpenChange={setShareDropdownOpen}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="relative font-body font-semibold shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3"
+                  >
+                    <Share2 size={18} />
+                    <PendingSharesBadge />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="font-body">
+                  <DropdownMenuItem onClick={() => { setSelectionMode(true); setSelectedRecipes(new Set()); }} className="gap-2 cursor-pointer">
+                    <Share2 size={16} />
+                    Partager des recettes
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setPendingSharesOpen(true)} className="gap-2 cursor-pointer">
+                    <Inbox size={16} />
+                    Boîte de réception
+                    <PendingSharesInlineBadge />
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </span>
           </PointerTooltip>
           <PendingSharesSheet
             open={pendingSharesOpen}
@@ -289,23 +309,25 @@ const CatalogPage = () => {
 
           {/* Export dropdown */}
           <PointerTooltip label="Exporter mes recettes">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="font-body font-semibold shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3">
-                  <Download size={18} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="font-body">
-                <DropdownMenuItem onClick={() => handleExport('word')} disabled={exporting !== null} className="gap-2 cursor-pointer">
-                  <FileDown size={16} />
-                  Exporter en Word
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('markdown')} disabled={exporting !== null} className="gap-2 cursor-pointer">
-                  <FileText size={16} />
-                  Exporter en Markdown
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <span className="inline-flex">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="font-body font-semibold shrink-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3">
+                    <Download size={18} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="font-body">
+                  <DropdownMenuItem onClick={() => handleExport('word')} disabled={exporting !== null} className="gap-2 cursor-pointer">
+                    <FileDown size={16} />
+                    Exporter en Word
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('markdown')} disabled={exporting !== null} className="gap-2 cursor-pointer">
+                    <FileText size={16} />
+                    Exporter en Markdown
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </span>
           </PointerTooltip>
 
           {/* Account */}
@@ -313,7 +335,7 @@ const CatalogPage = () => {
             <UserMenu />
           </PointerTooltip>
         </div>
-      </div>
+      </header>
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-1 md:py-8 pb-20 md:pb-8 space-y-1.5 md:space-y-6">
 
@@ -386,7 +408,7 @@ const CatalogPage = () => {
         {/* Results count + reset + sort */}
         <div className="flex items-center justify-between md:justify-start gap-2 py-1 md:py-0">
           <div className="flex items-center gap-2">
-            <p className="text-base text-muted-foreground font-body">
+            <p className="text-sm text-muted-foreground font-body">
               {filtered.length} recette{filtered.length !== 1 ? 's' : ''} trouvée{filtered.length !== 1 ? 's' : ''}
             </p>
             {hasActiveFilters && (

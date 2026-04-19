@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Patrick+Hand&family=Indie+Flower&family=Shadows+Into+Light&family=Kalam:wght@400;700&family=Architects+Daughter&family=Reenie+Beanie&family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -60,7 +60,6 @@
 
     --shadow-card: 0 2px 12px -2px hsl(25 20% 15% / 0.08);
     --shadow-card-hover: 0 8px 30px -4px hsl(27 95% 55% / 0.15);
-    --gradient-hero: linear-gradient(180deg, hsl(25 20% 15% / 0.5), hsl(25 20% 15% / 0.7));
     --gradient-warm: linear-gradient(135deg, hsl(27 95% 55%), hsl(35 85% 55%));
   }
 
@@ -144,9 +143,6 @@
   }
   .shadow-card-hover {
     box-shadow: var(--shadow-card-hover);
-  }
-  .gradient-hero {
-    background: var(--gradient-hero);
   }
   .gradient-warm {
     background: var(--gradient-warm);

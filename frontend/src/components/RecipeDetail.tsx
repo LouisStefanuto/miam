@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Pencil, Trash2, Minus, Plus, Check, Copy, ClipboardCheck, Users, CopyPlus, LogOut, Vegan, Timer, Flame, Sun, Snowflake, Flower, LeafyGreen, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Star, Pencil, Trash2, Minus, Plus, Check, Copy, ClipboardCheck, Users, CopyPlus, LogOut, Vegan, Timer, Flame, Sun, Snowflake, Flower, LeafyGreen, Utensils, Circle, LucideIcon } from 'lucide-react';
 import { Recipe } from '@/data/recipes';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -7,6 +7,8 @@ import RecipeForm from './RecipeForm';
 import { recipeToMarkdown } from '@/lib/recipe-to-markdown';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthImage } from '@/hooks/use-auth-image';
+import { useIsMobile } from '@/hooks/use-mobile';
+import beaverIcon from '/icon.png';
 
 const DifficultyBars = ({ level }: { level: number }) => (
   <div className="flex gap-0.5 items-end">
@@ -28,10 +30,6 @@ const seasonIcons: Record<string, LucideIcon> = {
   automne: LeafyGreen,
   hiver: Snowflake,
 };
-
-const chipBase = 'inline-flex items-center h-7 px-2 text-xs font-body rounded-md';
-const chipPrimary = 'bg-primary text-primary-foreground';
-const chipSecondary = 'bg-card text-card-foreground';
 
 interface RecipeDetailProps {
   recipe: Recipe;
@@ -56,6 +54,9 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   const imageSrc = useAuthImage(recipe.image);
+  const isMobile = useIsMobile();
+  const canEdit = recipe.userRole !== 'reader';
+  const imageClickable = !isMobile && canEdit;
 
   useEffect(() => {
     if (initialEditing && !editing) setEditing(true);
@@ -94,6 +95,69 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
 
   const isOwner = !recipe.userRole || recipe.userRole === 'owner';
 
+  const SeasonIcon = recipe.season ? seasonIcons[recipe.season] : null;
+  const canToggleTested = recipe.userRole !== 'reader';
+  const infoRowClass = 'flex items-center gap-2 text-sm font-body text-foreground';
+  const iconSize = 16;
+  const iconClass = 'text-muted-foreground shrink-0';
+
+  const metadataRail = (
+    <ul className="space-y-1.5">
+      <li className={infoRowClass}>
+        <Utensils size={iconSize} className={iconClass} />
+        <span className="capitalize">{recipe.type}</span>
+      </li>
+      {recipe.season && SeasonIcon && (
+        <li className={infoRowClass}>
+          <SeasonIcon size={iconSize} className={iconClass} />
+          <span className="capitalize">{recipe.season}</span>
+        </li>
+      )}
+      <li className={infoRowClass}>
+        <span className={`${iconClass} flex items-center justify-center w-4 h-4`}>
+          <DifficultyBars level={difficultyLevels[recipe.difficulty].bars} />
+        </span>
+        <span className="capitalize">{recipe.difficulty}</span>
+      </li>
+      {recipe.diets.includes('végétarien') && (
+        <li className={infoRowClass}>
+          <Vegan size={iconSize} className="text-green-600 shrink-0" />
+          <span>Végétarien</span>
+        </li>
+      )}
+      <li>
+        <button
+          type="button"
+          onClick={() => canToggleTested && onTestedToggle?.(!recipe.tested)}
+          disabled={!canToggleTested}
+          className={`${infoRowClass} ${canToggleTested ? 'cursor-pointer hover:text-primary' : 'cursor-default'} transition-colors`}
+        >
+          {recipe.tested ? (
+            <Check size={iconSize} className="text-primary shrink-0" />
+          ) : (
+            <Circle size={iconSize} className={iconClass} />
+          )}
+          <span className={recipe.tested ? '' : 'text-muted-foreground'}>
+            {recipe.tested ? 'Testé' : 'À tester'}
+          </span>
+        </button>
+      </li>
+    </ul>
+  );
+
+  const tagsRail = recipe.tags.length > 0 ? (
+    <div className="flex flex-wrap gap-1.5 pt-3 border-t border-border">
+      {recipe.tags.map((tag) => (
+        <span
+          key={tag}
+          className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground font-body capitalize"
+        >
+          {tag}
+        </span>
+      ))}
+    </div>
+  ) : null;
+
   // Edit mode — delegate to RecipeForm
   if (editing) {
     return (
@@ -113,7 +177,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
     <div>
       {/* Sticky top bar */}
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-card px-4 py-3 flex items-center justify-between">
-        <Button variant="ghost" size="icon" onClick={onBack}>
+        <Button variant="ghost" size="icon" onClick={onBack} className="md:text-muted-foreground md:hover:text-primary">
           <ArrowLeft size={20} />
           <span className="sr-only">Retour</span>
         </Button>
@@ -146,7 +210,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           {!isOwner && onDuplicateAndRemove && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon"><CopyPlus size={18} /></Button>
+                <Button variant="ghost" size="icon" className="md:text-muted-foreground md:hover:text-primary"><CopyPlus size={18} /></Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -166,7 +230,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           {!isOwner && onRemoveFromCollection && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon"><LogOut size={18} /></Button>
+                <Button variant="ghost" size="icon" className="md:text-muted-foreground md:hover:text-primary"><LogOut size={18} /></Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -184,62 +248,87 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           )}
           {/* Edit */}
           {recipe.userRole !== 'reader' && (
-            <Button variant="ghost" size="icon" onClick={() => setEditing(true)}>
+            <Button variant="ghost" size="icon" onClick={() => setEditing(true)} className="md:text-muted-foreground md:hover:text-primary">
               <Pencil size={18} />
             </Button>
           )}
           {/* Share */}
           {shareButton}
           {/* Copy markdown */}
-          <Button variant="ghost" size="icon" onClick={copyAsMarkdown}>
+          <Button variant="ghost" size="icon" onClick={copyAsMarkdown} className="md:text-muted-foreground md:hover:text-primary">
             {copied ? <ClipboardCheck size={18} /> : <Copy size={18} />}
           </Button>
         </div>
       </div>
 
-      {/* Image circle + title */}
-      <div className="px-4 md:px-8 pt-6">
-        <div className="flex items-center gap-4">
-          {imageSrc ? (
-            <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden ring-2 ring-primary/20">
-              <img src={imageSrc} alt={recipe.title} className="w-full h-full object-cover" />
-            </div>
-          ) : recipe.image ? (
-            <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full bg-muted animate-pulse" />
-          ) : (
-            <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full bg-muted" />
-          )}
-          <div className="flex-1 min-w-0 space-y-1">
-            <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground">{recipe.title}</h1>
-            <div className="flex gap-0.5" onMouseLeave={() => setHoveredStar(0)}>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => recipe.userRole !== 'reader' && onRatingChange?.(i)}
-                  onMouseEnter={() => setHoveredStar(i)}
-                  className={recipe.userRole === 'reader' ? '' : 'cursor-pointer'}
-                >
-                  <Star
-                    size={20}
-                    className={
-                      (hoveredStar > 0 ? i <= hoveredStar : i <= recipe.rating)
-                        ? 'fill-primary text-primary'
-                        : 'text-muted'
-                    }
-                  />
+      <div className="max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-8 md:pb-8 md:grid md:grid-cols-12 md:gap-12 lg:gap-16">
+        {/* Left: image + title + rating + description */}
+        <aside className="md:col-span-4">
+          <div className="flex items-center md:flex-col md:items-start gap-4 md:gap-4">
+            {(() => {
+              const wrapperBase = 'flex-shrink-0 w-24 h-24 md:w-full md:h-auto md:aspect-square rounded-full';
+              const ringClass = 'ring-1 ring-border';
+              const clickableClass = imageClickable ? 'md:cursor-pointer' : '';
+              const tooltip = imageClickable ? (
+                <span className="hidden md:block pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2.5 py-1 rounded-md bg-foreground text-background text-xs font-body whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                  Changer l'image
+                </span>
+              ) : null;
+              const imageEl = imageSrc ? (
+                <div className={`${wrapperBase} overflow-hidden ${ringClass} ${clickableClass}`}>
+                  <img src={imageSrc} alt={recipe.title} className="w-full h-full object-cover" />
+                </div>
+              ) : recipe.image ? (
+                <div className={`${wrapperBase} bg-muted animate-pulse`} />
+              ) : (
+                <div className={`${wrapperBase} bg-muted flex items-center justify-center ${ringClass} ${clickableClass}`}>
+                  <img src={beaverIcon} alt="Pas d'image" className="w-1/3 h-1/3 opacity-50 grayscale" />
+                </div>
+              );
+              return imageClickable ? (
+                <button type="button" onClick={() => setEditing(true)} aria-label="Modifier la recette" className="group contents md:block md:relative md:w-full">
+                  {imageEl}
+                  {tooltip}
                 </button>
-              ))}
+              ) : imageEl;
+            })()}
+            <div className="flex-1 min-w-0 md:flex-none md:w-full space-y-1">
+              <h1 className="font-display text-xl md:text-2xl font-bold text-foreground">{recipe.title}</h1>
+              <div className="flex gap-0.5" onMouseLeave={() => setHoveredStar(0)}>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => recipe.userRole !== 'reader' && onRatingChange?.(i)}
+                    onMouseEnter={() => setHoveredStar(i)}
+                    className={recipe.userRole === 'reader' ? '' : 'cursor-pointer'}
+                  >
+                    <Star
+                      size={20}
+                      className={
+                        (hoveredStar > 0 ? i <= hoveredStar : i <= recipe.rating)
+                          ? 'fill-primary text-primary'
+                          : 'text-muted'
+                      }
+                    />
+                  </button>
+                ))}
+              </div>
+              {recipe.description && (
+                <p className="font-body text-sm text-muted-foreground">{recipe.description}</p>
+              )}
             </div>
-            {recipe.description && (
-              <p className="font-body text-sm text-muted-foreground">{recipe.description}</p>
-            )}
           </div>
-        </div>
-      </div>
+          {/* Metadata + tags — desktop only (mobile renders them in the body) */}
+          <div className="hidden md:block space-y-3 pt-4">
+            {metadataRail}
+            {tagsRail}
+          </div>
+        </aside>
 
-      <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-8">
-        {/* Shared recipe indicator */}
+        {/* Right: body content */}
+        <div className="md:col-span-8 mt-8 md:mt-0 space-y-8">
+          {/* Shared recipe indicator */}
         {recipe.userRole && recipe.userRole !== 'owner' && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/60 border border-border text-sm font-body">
             <Users size={16} className="text-muted-foreground shrink-0" />
@@ -251,85 +340,42 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           </div>
         )}
 
-        {/* Quick info bars */}
-        <div className="space-y-1.5">
-          <div className="bg-card rounded-xl shadow-card grid grid-cols-3">
-            {/* Prep time */}
-            <div className="flex items-center justify-center gap-1.5 py-3 px-2 border-r border-border">
-              <Timer size={16} className="text-muted-foreground" />
-              <span className="text-sm font-body font-semibold">{recipe.prepTime || '-'}</span>
-              {recipe.prepTime > 0 && <span className="text-[10px] text-muted-foreground font-body">min</span>}
+        {/* Stat cards */}
+        <div className="bg-card rounded-2xl shadow-card grid grid-cols-3 divide-x divide-border overflow-hidden">
+          <Stat icon={Timer} label="Préparation" value={recipe.prepTime} unit="min" />
+          <Stat icon={Flame} label="Cuisson" value={recipe.cookTime} unit="min" />
+          <div className="flex flex-col items-center justify-center gap-1 py-4 px-3">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Users size={14} />
+              <span className="text-[10px] font-body font-semibold uppercase tracking-wider">Portions</span>
             </div>
-            {/* Cook time */}
-            <div className="flex items-center justify-center gap-1.5 py-3 px-2 border-r border-border">
-              <Flame size={16} className="text-muted-foreground" />
-              <span className="text-sm font-body font-semibold">{recipe.cookTime || '-'}</span>
-              {recipe.cookTime > 0 && <span className="text-[10px] text-muted-foreground font-body">min</span>}
-            </div>
-            {/* Servings */}
-            <div className="flex items-center justify-center py-1 px-2">
-              <button type="button" onClick={() => setDisplayServings(Math.max(1, displayServings - 1))} className="relative w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors before:absolute before:-inset-2 before:content-['']">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                aria-label="Diminuer les portions"
+                onClick={() => setDisplayServings(Math.max(1, displayServings - 1))}
+                className="relative w-6 h-6 rounded-full bg-muted text-muted-foreground flex items-center justify-center hover:bg-primary/20 hover:text-foreground transition-colors before:absolute before:-inset-2 before:content-['']"
+              >
                 <Minus size={12} />
               </button>
-              <div className="flex items-center gap-1 mx-2">
-                <Users size={16} className="text-muted-foreground" />
-                <span className="text-sm font-body font-semibold min-w-[1rem] text-center">{displayServings}</span>
-              </div>
-              <button type="button" onClick={() => setDisplayServings(displayServings + 1)} className="relative w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors before:absolute before:-inset-2 before:content-['']">
-                <Plus size={12} />
-              </button>
-            </div>
-          </div>
-          <div className="bg-card rounded-xl shadow-card grid grid-cols-3">
-            {/* Difficulty */}
-            <div className="flex items-center justify-center gap-1.5 py-3 px-2 rounded-l-xl border-r border-border">
-              <DifficultyBars level={difficultyLevels[recipe.difficulty].bars} />
-              <span className="text-xs capitalize font-body font-medium">{recipe.difficulty}</span>
-            </div>
-            {/* Type / Season / Diet / Tested */}
-            <div className="col-span-2 flex items-center justify-center gap-2 py-3 px-2 flex-wrap">
-              <span className={`${chipBase} ${chipPrimary} capitalize`}>{recipe.type}</span>
-              {recipe.season && (() => {
-                const SeasonIcon = seasonIcons[recipe.season];
-                return SeasonIcon ? (
-                  <span className={`${chipBase} ${chipSecondary} capitalize gap-1`}>
-                    <SeasonIcon size={14} />{recipe.season}
-                  </span>
-                ) : null;
-              })()}
-              {recipe.diets.includes('végétarien') && (
-                <span className={`${chipBase} ${chipSecondary} gap-1`}>
-                  <Vegan size={14} className="text-green-600" />Végé
-                </span>
-              )}
+              <span className="font-display text-xl font-bold text-foreground min-w-[1.5rem] text-center tabular-nums">{displayServings}</span>
               <button
-                onClick={() => {
-                  if (recipe.userRole === 'reader') return;
-                  onTestedToggle?.(!recipe.tested);
-                }}
-                className={`${chipBase} transition-colors cursor-pointer active:scale-95 gap-1 ${
-                  recipe.tested ? chipPrimary : chipSecondary
-                }`}
+                type="button"
+                aria-label="Augmenter les portions"
+                onClick={() => setDisplayServings(displayServings + 1)}
+                className="relative w-6 h-6 rounded-full bg-muted text-muted-foreground flex items-center justify-center hover:bg-primary/20 hover:text-foreground transition-colors before:absolute before:-inset-2 before:content-['']"
               >
-                {recipe.tested && <Check size={12} />} {recipe.tested ? 'Testé' : 'À tester'}
+                <Plus size={12} />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Tags */}
-        {recipe.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {recipe.tags.map((tag) => (
-              <span
-                key={tag}
-                className="text-[13px] px-3 py-1.5 rounded-full border border-primary/40 bg-primary/15 text-primary font-body font-medium capitalize"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
+        {/* Metadata + tags — mobile only (desktop renders them under the title) */}
+        <div className="md:hidden space-y-4">
+          {metadataRail}
+          {tagsRail}
+        </div>
 
         {/* Ingredients */}
         <FormSection title="Ingrédients">
@@ -362,6 +408,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
             ))}
           </ol>
         </FormSection>
+        </div>
       </div>
     </div>
   );
@@ -372,6 +419,22 @@ function FormSection({ title, children }: { title: string; children: React.React
     <div>
       <p className="text-xs font-body font-semibold text-muted-foreground uppercase tracking-wider mb-2">{title}</p>
       {children}
+    </div>
+  );
+}
+
+function Stat({ icon: Icon, label, value, unit }: { icon: LucideIcon; label: string; value: number; unit: string }) {
+  const hasValue = value > 0;
+  return (
+    <div className="flex flex-col items-center justify-center gap-1 py-4 px-3">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <Icon size={14} />
+        <span className="text-[10px] font-body font-semibold uppercase tracking-wider">{label}</span>
+      </div>
+      <div className="flex items-baseline gap-1">
+        <span className="font-display text-xl font-bold text-foreground tabular-nums">{hasValue ? value : '—'}</span>
+        {hasValue && <span className="text-xs text-muted-foreground font-body">{unit}</span>}
+      </div>
     </div>
   );
 }

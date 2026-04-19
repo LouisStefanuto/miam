@@ -16,6 +16,8 @@ export default {
       fontFamily: {
         display: ['Playfair Display', 'serif'],
         body: ['Source Sans 3', 'sans-serif'],
+        hand: ['Caveat', 'cursive'],
+        scribble: ['Patrick Hand', 'cursive'],
       },
       colors: {
         border: "hsl(var(--border))",

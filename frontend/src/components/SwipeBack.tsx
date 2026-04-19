@@ -25,7 +25,7 @@ export default function SwipeBack({ children }: { children: React.ReactNode }) {
     touchRef.current = null;
 
     // Don't navigate back if already on home
-    if (location.pathname === '/' || location.pathname === '/login') return;
+    if (location.pathname === '/') return;
 
     if (dx >= MIN_DISTANCE && dy <= MAX_Y_DRIFT) {
       navigate(-1);

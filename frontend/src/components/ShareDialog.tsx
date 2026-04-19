@@ -49,9 +49,9 @@ export default function ShareDialog({ recipeId }: ShareDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="bg-card/80 backdrop-blur-sm rounded-full p-2 text-card-foreground hover:bg-card transition-colors">
-          <Share2 size={16} />
-        </button>
+        <Button variant="ghost" size="icon" className="md:text-muted-foreground md:hover:text-primary">
+          <Share2 size={18} />
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

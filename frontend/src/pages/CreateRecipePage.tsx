@@ -4,15 +4,17 @@ import { useRecipes, useCreateRecipe, useUpdateRecipe } from '@/hooks/use-recipe
 import RecipeForm from '@/components/RecipeForm';
 import { toast } from '@/hooks/use-toast';
 import { Recipe } from '@/data/recipes';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 const CreateRecipePage = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { data: recipes = [] } = useRecipes();
   const createMutation = useCreateRecipe();
   const updateMutation = useUpdateRecipe();
   const [customTags, setCustomTags] = useState<string[]>([]);
-  const handleBack = useCallback(() => navigate('/add'), [navigate]);
+  const handleBack = useCallback(() => navigate(isMobile ? '/add' : '/'), [navigate, isMobile]);
 
   useEffect(() => {
     window.scrollTo(0, 0);

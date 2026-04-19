@@ -1,23 +1,37 @@
 import { useTheme } from 'next-themes';
-import { Sun, Moon, Monitor, Check, LogOut, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Sun, Moon, Monitor, LogOut, User, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAccentColor, ACCENT_COLORS, type AccentColor } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
-const colorKeys = Object.keys(ACCENT_COLORS) as AccentColor[];
-
 export default function SettingsPage() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
-  const { accentColor, setAccentColor } = useAccentColor();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-20 flex items-center justify-center px-4 h-14 bg-background border-b border-border md:hidden">
+      {/* Mobile header */}
+      <header className="sticky top-0 z-20 flex items-center gap-3 px-4 h-14 bg-background border-b border-border md:hidden">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/')} aria-label="Retour au catalogue">
+          <ArrowLeft size={20} />
+        </Button>
         <h1 className="font-display text-lg font-bold text-foreground">Paramètres</h1>
+      </header>
+
+      {/* Desktop top banner */}
+      <header className="hidden md:flex items-center gap-3 h-16 px-6 bg-background/85 backdrop-blur-md border-b border-border/60 sticky top-0 z-30">
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="inline-flex items-center justify-center h-10 w-10 -ml-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-primary active:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label="Retour au catalogue"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="font-display text-2xl font-bold text-foreground tracking-tight">Paramètres</h1>
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6 pb-24 md:pb-6 space-y-8">
@@ -51,35 +65,6 @@ export default function SettingsPage() {
         {/* Appearance section */}
         <section className="space-y-5">
           <h2 className="text-sm font-semibold font-body text-muted-foreground uppercase tracking-wide">Apparence</h2>
-
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium font-body">Couleur d'accent</h3>
-            <div className="flex flex-wrap gap-3">
-              {colorKeys.map((key) => {
-                const def = ACCENT_COLORS[key];
-                const isActive = accentColor === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    aria-label={def.label}
-                    onClick={() => setAccentColor(key)}
-                    className="relative h-10 w-10 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    style={{
-                      background: def.preview,
-                      boxShadow: isActive
-                        ? `0 0 0 2px var(--background), 0 0 0 4px ${def.preview}`
-                        : undefined,
-                    }}
-                  >
-                    {isActive && (
-                      <Check className="absolute inset-0 m-auto h-5 w-5 text-white drop-shadow-md" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
 
           <div className="space-y-3">
             <h3 className="text-sm font-medium font-body">Mode</h3>

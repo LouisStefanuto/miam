@@ -33,13 +33,13 @@ const DifficultyBars = ({ level }: { level: number }) => (
   </div>
 );
 
-const StarRating = ({ rating, size = 14 }: { rating: number; size?: number }) => (
+const StarRating = ({ rating, size = 14, emptyClassName = 'text-white/30' }: { rating: number; size?: number; emptyClassName?: string }) => (
   <div className="flex gap-0.5">
     {[1, 2, 3, 4, 5].map((i) => (
       <Star
         key={i}
         size={size}
-        className={i <= rating ? 'fill-primary text-primary' : 'text-white/30'}
+        className={i <= rating ? 'fill-primary text-primary' : emptyClassName}
       />
     ))}
   </div>
@@ -174,9 +174,6 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
         </div>
         {/* Type badge */}
         <div className="absolute top-2 left-2 flex gap-1.5">
-          <Badge variant="secondary" className="bg-card/95 text-card-foreground font-body text-xs capitalize">
-            {recipe.type}
-          </Badge>
           {recipe.diets.includes('végétarien') && (
             <Badge variant="secondary" className="bg-card/95 text-green-600 font-body text-xs">
               Végé
@@ -198,7 +195,7 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
         </h3>
 
         <div className="mt-2">
-          <StarRating rating={recipe.rating} />
+          <StarRating rating={recipe.rating} emptyClassName="text-muted-foreground/30" />
         </div>
 
         <div className="flex items-end gap-3 text-xs text-muted-foreground font-body mt-2">
