@@ -7,6 +7,8 @@ import RecipeForm from './RecipeForm';
 import { recipeToMarkdown } from '@/lib/recipe-to-markdown';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthImage } from '@/hooks/use-auth-image';
+import { useIsMobile } from '@/hooks/use-mobile';
+import beaverIcon from '/icon.png';
 
 const DifficultyBars = ({ level }: { level: number }) => (
   <div className="flex gap-0.5 items-end">
@@ -52,6 +54,9 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   const imageSrc = useAuthImage(recipe.image);
+  const isMobile = useIsMobile();
+  const canEdit = recipe.userRole !== 'reader';
+  const imageClickable = !isMobile && canEdit;
 
   useEffect(() => {
     if (initialEditing && !editing) setEditing(true);
@@ -260,15 +265,33 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         {/* Left: image + title + rating + description */}
         <aside className="md:col-span-4">
           <div className="flex items-center md:flex-col md:items-start gap-4 md:gap-4">
-            {imageSrc ? (
-              <div className="flex-shrink-0 w-24 h-24 md:w-full md:h-auto md:aspect-square rounded-full overflow-hidden ring-2 ring-primary/20">
-                <img src={imageSrc} alt={recipe.title} className="w-full h-full object-cover" />
-              </div>
-            ) : recipe.image ? (
-              <div className="flex-shrink-0 w-24 h-24 md:w-full md:h-auto md:aspect-square rounded-full bg-muted animate-pulse" />
-            ) : (
-              <div className="flex-shrink-0 w-24 h-24 md:w-full md:h-auto md:aspect-square rounded-full bg-muted" />
-            )}
+            {(() => {
+              const wrapperBase = 'flex-shrink-0 w-24 h-24 md:w-full md:h-auto md:aspect-square rounded-full';
+              const ringClass = 'ring-1 ring-border';
+              const clickableClass = imageClickable ? 'md:cursor-pointer' : '';
+              const tooltip = imageClickable ? (
+                <span className="hidden md:block pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2.5 py-1 rounded-md bg-foreground text-background text-xs font-body whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                  Changer l'image
+                </span>
+              ) : null;
+              const imageEl = imageSrc ? (
+                <div className={`${wrapperBase} overflow-hidden ${ringClass} ${clickableClass}`}>
+                  <img src={imageSrc} alt={recipe.title} className="w-full h-full object-cover" />
+                </div>
+              ) : recipe.image ? (
+                <div className={`${wrapperBase} bg-muted animate-pulse`} />
+              ) : (
+                <div className={`${wrapperBase} bg-muted flex items-center justify-center ${ringClass} ${clickableClass}`}>
+                  <img src={beaverIcon} alt="Pas d'image" className="w-1/3 h-1/3 opacity-50 grayscale" />
+                </div>
+              );
+              return imageClickable ? (
+                <button type="button" onClick={() => setEditing(true)} aria-label="Modifier la recette" className="group contents md:block md:relative md:w-full">
+                  {imageEl}
+                  {tooltip}
+                </button>
+              ) : imageEl;
+            })()}
             <div className="flex-1 min-w-0 md:flex-none md:w-full space-y-1">
               <h1 className="font-display text-xl md:text-2xl font-bold text-foreground">{recipe.title}</h1>
               <div className="flex gap-0.5" onMouseLeave={() => setHoveredStar(0)}>

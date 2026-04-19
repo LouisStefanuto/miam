@@ -23,10 +23,10 @@ export default function CatalogLayout() {
 
   const hasOverlay = location.pathname !== '/';
 
-  // Determine if we should animate: only when navigating from catalog root
-  const cameFromCatalog = useRef(false);
+  // Animate in only when navigating from catalog root. Computed during render so
+  // the first render after navigation uses the correct prev pathname.
+  const cameFromCatalog = prevPathname.current === '/' && hasOverlay;
   useEffect(() => {
-    cameFromCatalog.current = prevPathname.current === '/';
     prevPathname.current = location.pathname;
     setExiting(false);
   }, [location.pathname]);
@@ -63,7 +63,7 @@ export default function CatalogLayout() {
             isMobile
               ? exiting
                 ? 'animate-slide-out-to-right'
-                : cameFromCatalog.current
+                : cameFromCatalog
                   ? 'animate-slide-in-from-right'
                   : ''
               : ''

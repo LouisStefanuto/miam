@@ -271,7 +271,7 @@ const CatalogPage = () => {
         </button>
         <div className="flex items-center gap-1.5 [&_button]:bg-transparent [&_button]:border-transparent [&_button]:text-muted-foreground [&_button:hover]:bg-accent [&_button:hover]:text-primary [&_button:active]:text-primary">
           {/* Cart */}
-          <PointerTooltip label="Mon panier d'ingrédients">
+          <PointerTooltip label="Ma liste de courses">
             <div><CartSheet hotkey="p" /></div>
           </PointerTooltip>
 
