@@ -174,9 +174,6 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
         </div>
         {/* Type badge */}
         <div className="absolute top-2 left-2 flex gap-1.5">
-          <Badge variant="secondary" className="bg-card/95 text-card-foreground font-body text-xs capitalize">
-            {recipe.type}
-          </Badge>
           {recipe.diets.includes('végétarien') && (
             <Badge variant="secondary" className="bg-card/95 text-green-600 font-body text-xs">
               Végé
