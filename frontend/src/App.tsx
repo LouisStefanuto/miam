@@ -14,7 +14,16 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import SwipeBack from "./components/SwipeBack";
 import MobileBottomBar from "./components/MobileBottomBar";
 import CatalogLayout from "./components/CatalogLayout";
-import LoginPage from "./pages/LoginPage";
+import HomePage from "./pages/HomePage";
+import { useAuth } from "./contexts/AuthContext";
+
+/** Shows HomePage for guests, CatalogLayout for authenticated users */
+function RootRoute() {
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return null;
+  if (!isAuthenticated) return <HomePage />;
+  return <CatalogLayout />;
+}
 
 const RecipeDetailPage = lazy(() => import("./pages/RecipeDetailPage"));
 const CreateRecipePage = lazy(() => import("./pages/CreateRecipePage"));
@@ -58,8 +67,7 @@ const App = () => (
           <SwipeBack>
           <Suspense>
           <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/" element={<ProtectedRoute><CatalogLayout /></ProtectedRoute>}>
+            <Route path="/" element={<RootRoute />}>
               <Route index element={null} />
               <Route path="recipes/:id" element={<RecipeDetailPage />} />
               <Route path="recipes/new" element={<CreateRecipePage />} />

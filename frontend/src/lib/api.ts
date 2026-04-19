@@ -34,7 +34,7 @@ async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
 
   if (res.status === 401) {
     localStorage.removeItem('miam-auth-user');
-    window.location.href = '/login';
+    window.location.href = '/';
     throw new Error('Session expired');
   }
   return res;
