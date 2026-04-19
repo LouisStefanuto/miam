@@ -408,7 +408,7 @@ const CatalogPage = () => {
         {/* Results count + reset + sort */}
         <div className="flex items-center justify-between md:justify-start gap-2 py-1 md:py-0">
           <div className="flex items-center gap-2">
-            <p className="text-base text-muted-foreground font-body">
+            <p className="text-sm text-muted-foreground font-body">
               {filtered.length} recette{filtered.length !== 1 ? 's' : ''} trouvée{filtered.length !== 1 ? 's' : ''}
             </p>
             {hasActiveFilters && (
