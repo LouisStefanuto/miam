@@ -226,14 +226,14 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
       )}
 
       {/* Header: image circle + title */}
-      <div className="px-4 md:px-8 pt-6">
+      <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6">
         <input ref={imageRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 md:gap-6">
           {/* Image circle */}
           {data.image ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="relative flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden ring-2 ring-primary/20 hover:ring-primary/40 transition-all cursor-pointer group">
+                <button className="relative flex-shrink-0 w-24 h-24 md:w-48 md:h-48 rounded-full overflow-hidden ring-2 ring-primary/20 hover:ring-primary/40 transition-all cursor-pointer group">
                   {imageSrc ? (
                     <img src={imageSrc} alt={data.title} className="w-full h-full object-cover" />
                   ) : (
@@ -256,7 +256,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
           ) : (
             <button
               onClick={() => imageRef.current?.click()}
-              className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full bg-muted border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors flex items-center justify-center cursor-pointer"
+              className="flex-shrink-0 w-24 h-24 md:w-48 md:h-48 rounded-full bg-muted border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors flex items-center justify-center cursor-pointer"
             >
               <Camera size={24} className="text-muted-foreground/50" />
             </button>

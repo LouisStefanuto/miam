@@ -197,49 +197,51 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         </div>
       </div>
 
-      {/* Image circle + title */}
-      <div className="px-4 md:px-8 pt-6">
-        <div className="flex items-center gap-4">
-          {imageSrc ? (
-            <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden ring-2 ring-primary/20">
-              <img src={imageSrc} alt={recipe.title} className="w-full h-full object-cover" />
-            </div>
-          ) : recipe.image ? (
-            <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full bg-muted animate-pulse" />
-          ) : (
-            <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full bg-muted" />
-          )}
-          <div className="flex-1 min-w-0 space-y-1">
-            <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground">{recipe.title}</h1>
-            <div className="flex gap-0.5" onMouseLeave={() => setHoveredStar(0)}>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => recipe.userRole !== 'reader' && onRatingChange?.(i)}
-                  onMouseEnter={() => setHoveredStar(i)}
-                  className={recipe.userRole === 'reader' ? '' : 'cursor-pointer'}
-                >
-                  <Star
-                    size={20}
-                    className={
-                      (hoveredStar > 0 ? i <= hoveredStar : i <= recipe.rating)
-                        ? 'fill-primary text-primary'
-                        : 'text-muted'
-                    }
-                  />
-                </button>
-              ))}
-            </div>
-            {recipe.description && (
-              <p className="font-body text-sm text-muted-foreground">{recipe.description}</p>
+      <div className="max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-8 md:pb-8 md:grid md:grid-cols-12 md:gap-8">
+        {/* Left: image + title + rating + description */}
+        <aside className="md:col-span-4 lg:col-span-3">
+          <div className="flex items-center md:flex-col md:items-start gap-4 md:gap-4">
+            {imageSrc ? (
+              <div className="flex-shrink-0 w-24 h-24 md:w-full md:h-auto md:aspect-square rounded-full overflow-hidden ring-2 ring-primary/20">
+                <img src={imageSrc} alt={recipe.title} className="w-full h-full object-cover" />
+              </div>
+            ) : recipe.image ? (
+              <div className="flex-shrink-0 w-24 h-24 md:w-full md:h-auto md:aspect-square rounded-full bg-muted animate-pulse" />
+            ) : (
+              <div className="flex-shrink-0 w-24 h-24 md:w-full md:h-auto md:aspect-square rounded-full bg-muted" />
             )}
+            <div className="flex-1 min-w-0 md:flex-none md:w-full space-y-1">
+              <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground">{recipe.title}</h1>
+              <div className="flex gap-0.5" onMouseLeave={() => setHoveredStar(0)}>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => recipe.userRole !== 'reader' && onRatingChange?.(i)}
+                    onMouseEnter={() => setHoveredStar(i)}
+                    className={recipe.userRole === 'reader' ? '' : 'cursor-pointer'}
+                  >
+                    <Star
+                      size={20}
+                      className={
+                        (hoveredStar > 0 ? i <= hoveredStar : i <= recipe.rating)
+                          ? 'fill-primary text-primary'
+                          : 'text-muted'
+                      }
+                    />
+                  </button>
+                ))}
+              </div>
+              {recipe.description && (
+                <p className="font-body text-sm text-muted-foreground">{recipe.description}</p>
+              )}
+            </div>
           </div>
-        </div>
-      </div>
+        </aside>
 
-      <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-8">
-        {/* Shared recipe indicator */}
+        {/* Right: body content */}
+        <div className="md:col-span-8 lg:col-span-9 mt-8 md:mt-0 space-y-8">
+          {/* Shared recipe indicator */}
         {recipe.userRole && recipe.userRole !== 'owner' && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/60 border border-border text-sm font-body">
             <Users size={16} className="text-muted-foreground shrink-0" />
@@ -362,6 +364,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
             ))}
           </ol>
         </FormSection>
+        </div>
       </div>
     </div>
   );
