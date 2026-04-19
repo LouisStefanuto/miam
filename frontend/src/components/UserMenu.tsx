@@ -16,7 +16,7 @@ const UserMenu = forwardRef<HTMLButtonElement, React.ComponentPropsWithoutRef<'b
         variant="outline"
         size="icon"
         onClick={() => navigate('/settings')}
-        className="shrink-0 overflow-hidden p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+        className="shrink-0 overflow-hidden p-0 transition-all ring-offset-2 ring-offset-background hover:ring-2 hover:ring-primary active:ring-2 active:ring-primary focus-visible:ring-2 focus-visible:ring-primary"
       >
         {user?.picture ? (
           <img

@@ -60,7 +60,6 @@
 
     --shadow-card: 0 2px 12px -2px hsl(25 20% 15% / 0.08);
     --shadow-card-hover: 0 8px 30px -4px hsl(27 95% 55% / 0.15);
-    --gradient-hero: linear-gradient(180deg, hsl(25 20% 15% / 0.5), hsl(25 20% 15% / 0.7));
     --gradient-warm: linear-gradient(135deg, hsl(27 95% 55%), hsl(35 85% 55%));
   }
 
@@ -144,9 +143,6 @@
   }
   .shadow-card-hover {
     box-shadow: var(--shadow-card-hover);
-  }
-  .gradient-hero {
-    background: var(--gradient-hero);
   }
   .gradient-warm {
     background: var(--gradient-warm);

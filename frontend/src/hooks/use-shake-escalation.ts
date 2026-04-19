@@ -7,11 +7,11 @@ const TAP_THRESHOLD = 300;
  * Progressive shake on hold: gentle wiggle that escalates over 5 s,
  * then fires onLongPress. Short taps play a quick wiggle and fire onTap.
  */
-export function useShakeEscalation(
+export function useShakeEscalation<T extends HTMLElement = HTMLImageElement>(
   onTap: () => void,
   onLongPress: () => void,
 ) {
-  const elementRef = useRef<HTMLImageElement>(null);
+  const elementRef = useRef<T>(null);
   const startTimeRef = useRef(0);
   const rafRef = useRef(0);
   const activeRef = useRef(false);
@@ -84,32 +84,34 @@ export function useShakeEscalation(
     tapRafRef.current = requestAnimationFrame(animate);
   }, []);
 
-  const onTouchStart = useCallback(() => {
+  const onPointerDown = useCallback((e: React.PointerEvent<T>) => {
     firedRef.current = false;
     activeRef.current = true;
     startTimeRef.current = performance.now();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
     rafRef.current = requestAnimationFrame(tick);
   }, [tick]);
 
-  const onTouchEnd = useCallback(() => {
+  const onPointerUp = useCallback(() => {
     const elapsed = performance.now() - startTimeRef.current;
+    const wasActive = activeRef.current;
     clearHold();
-    if (!firedRef.current) {
+    if (wasActive && !firedRef.current) {
       if (elapsed < TAP_THRESHOLD) playTapWiggle();
       onTap();
     }
   }, [onTap, clearHold, playTapWiggle]);
 
-  const onTouchCancel = useCallback(() => {
+  const onPointerCancel = useCallback(() => {
     clearHold();
   }, [clearHold]);
 
   return {
     ref: elementRef,
     handlers: {
-      onTouchStart,
-      onTouchEnd,
-      onTouchCancel,
+      onPointerDown,
+      onPointerUp,
+      onPointerCancel,
       onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
     },
   };
