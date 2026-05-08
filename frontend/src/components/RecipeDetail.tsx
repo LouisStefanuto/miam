@@ -171,6 +171,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         onAddTag={onAddTag}
         onDeleteTag={onDeleteTag}
         initialFocus={editFocusTarget}
+        initialImageOrientation={imageOrientation}
       />
     );
   }

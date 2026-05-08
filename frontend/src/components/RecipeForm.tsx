@@ -34,6 +34,7 @@ interface RecipeFormProps {
   onAddTag?: (tag: string) => void;
   onDeleteTag?: (tag: string) => void;
   initialFocus?: 'ingredients' | 'steps';
+  initialImageOrientation?: 'landscape' | 'portrait';
 }
 
 const typeOptions: { value: RecipeType; label: string; icon: LucideIcon }[] = [
@@ -55,7 +56,7 @@ const difficulties: Difficulty[] = ['facile', 'moyen', 'difficile'];
 const defaultIngredients = (): Ingredient[] =>
   Array.from({ length: 3 }, () => ({ name: '', quantity: '', unit: '' }));
 
-export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = [], onAddTag, onDeleteTag, initialFocus }: RecipeFormProps) {
+export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = [], onAddTag, onDeleteTag, initialFocus, initialImageOrientation = 'landscape' }: RecipeFormProps) {
   const [data, setData] = useState<Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>>({
     title: initialRecipe?.title ?? '',
     description: initialRecipe?.description ?? '',
@@ -76,6 +77,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
   const [newTag, setNewTag] = useState('');
   const [tagToDelete, setTagToDelete] = useState<string | null>(null);
   const [hoveredRating, setHoveredRating] = useState(0);
+  const [imageOrientation, setImageOrientation] = useState<'landscape' | 'portrait'>(initialImageOrientation);
   const [ingredientIds, setIngredientIds] = useState<string[]>(
     () => data.ingredients.map(() => crypto.randomUUID())
   );
@@ -278,59 +280,81 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
         </div>
       )}
 
-      {/* Header: image circle + title */}
+      {/* Header: image + title */}
       <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6">
         <input ref={imageRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-        <div className="flex items-center gap-4 md:gap-6">
-          {/* Image circle */}
-          {data.image ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="relative flex-shrink-0 w-40 h-40 md:w-48 md:h-48 rounded-full overflow-hidden ring-2 ring-primary/20 hover:ring-primary/40 transition-all cursor-pointer group">
-                  {imageSrc ? (
-                    <img src={imageSrc} alt={data.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-muted animate-pulse" />
-                  )}
-                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Camera size={20} className="text-white" />
-                  </div>
+        {(() => {
+          const aspectClass = imageOrientation === 'portrait' ? 'aspect-[5/6]' : 'aspect-[3/2]';
+          const shape = `w-full ${aspectClass} rounded-2xl md:w-48 md:h-48 md:aspect-auto md:rounded-full`;
+          return (
+            <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+              {/* Image */}
+              {data.image ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className={`relative flex-shrink-0 ${shape} overflow-hidden ring-2 ring-primary/20 hover:ring-primary/40 transition-shadow cursor-pointer group`}>
+                      {imageSrc ? (
+                        <>
+                          <img
+                            src={imageSrc}
+                            alt=""
+                            aria-hidden
+                            className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl md:hidden"
+                          />
+                          <img
+                            src={imageSrc}
+                            alt={data.title}
+                            onLoad={(e) => {
+                              const { naturalWidth, naturalHeight } = e.currentTarget;
+                              setImageOrientation(naturalHeight > naturalWidth ? 'portrait' : 'landscape');
+                            }}
+                            className="relative w-full h-full object-contain md:object-cover"
+                          />
+                        </>
+                      ) : (
+                        <div className="w-full h-full bg-muted animate-pulse" />
+                      )}
+                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Camera size={20} className="text-white" />
+                      </div>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem className="font-body gap-2" onClick={() => imageRef.current?.click()}>
+                      <ImagePlus size={16} /> Modifier l'image
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="font-body gap-2 text-destructive focus:text-destructive" onClick={() => set('image', undefined)}>
+                      <ImageMinus size={16} /> Supprimer l'image
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <button
+                  onClick={() => imageRef.current?.click()}
+                  className={`flex-shrink-0 ${shape} bg-muted border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors flex items-center justify-center cursor-pointer`}
+                >
+                  <Camera size={24} className="text-muted-foreground/50" />
                 </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem className="font-body gap-2" onClick={() => imageRef.current?.click()}>
-                  <ImagePlus size={16} /> Modifier l'image
-                </DropdownMenuItem>
-                <DropdownMenuItem className="font-body gap-2 text-destructive focus:text-destructive" onClick={() => set('image', undefined)}>
-                  <ImageMinus size={16} /> Supprimer l'image
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <button
-              onClick={() => imageRef.current?.click()}
-              className="flex-shrink-0 w-40 h-40 md:w-48 md:h-48 rounded-full bg-muted border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors flex items-center justify-center cursor-pointer"
-            >
-              <Camera size={24} className="text-muted-foreground/50" />
-            </button>
-          )}
+              )}
 
-          {/* Title + description */}
-          <div className="flex-1 min-w-0 space-y-2">
-            <Input
-              value={data.title}
-              onChange={(e) => set('title', e.target.value)}
-              placeholder="Titre de la recette"
-              className="font-display text-2xl md:text-3xl font-bold bg-transparent border-b border-border text-foreground h-auto p-0 rounded-none focus-visible:ring-0 placeholder:text-muted-foreground/40"
-            />
-            <Input
-              value={data.description}
-              onChange={(e) => set('description', e.target.value)}
-              placeholder="Description"
-              className="font-body text-sm md:text-base bg-transparent border-b border-border text-muted-foreground placeholder:text-muted-foreground/40 h-auto p-0 rounded-none focus-visible:ring-0"
-            />
-          </div>
-        </div>
+              {/* Title + description */}
+              <div className="w-full md:flex-1 md:min-w-0 space-y-2">
+                <Input
+                  value={data.title}
+                  onChange={(e) => set('title', e.target.value)}
+                  placeholder="Titre de la recette"
+                  className="font-display text-2xl md:text-3xl font-bold bg-transparent border-b border-border text-foreground h-auto p-0 rounded-none focus-visible:ring-0 placeholder:text-muted-foreground/40"
+                />
+                <Input
+                  value={data.description}
+                  onChange={(e) => set('description', e.target.value)}
+                  placeholder="Description"
+                  className="font-body text-sm md:text-base bg-transparent border-b border-border text-muted-foreground placeholder:text-muted-foreground/40 h-auto p-0 rounded-none focus-visible:ring-0"
+                />
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-8">
