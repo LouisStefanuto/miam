@@ -53,6 +53,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const [hoveredStar, setHoveredStar] = useState(0);
   const [copied, setCopied] = useState(false);
   const [imageOrientation, setImageOrientation] = useState<'landscape' | 'portrait'>('landscape');
+  const [editFocusTarget, setEditFocusTarget] = useState<'ingredients' | 'steps' | undefined>(undefined);
   const { toast } = useToast();
   const imageSrc = useAuthImage(recipe.image);
   const isMobile = useIsMobile();
@@ -163,12 +164,13 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   if (editing) {
     return (
       <RecipeForm
-        onBack={() => setEditing(false)}
+        onBack={() => { setEditing(false); setEditFocusTarget(undefined); }}
         onSave={handleFormSave}
         initialRecipe={recipe}
         allTags={allTags}
         onAddTag={onAddTag}
         onDeleteTag={onDeleteTag}
+        initialFocus={editFocusTarget}
       />
     );
   }
@@ -398,36 +400,60 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         </div>
 
         {/* Ingredients */}
-        <FormSection title="Ingrédients">
-          <div className="bg-card rounded-xl shadow-card p-4">
-            <ul className="space-y-2">
-              {recipe.ingredients.map((ing, i) => (
-                <li key={i} className="flex justify-between items-center py-1.5 border-b border-border last:border-0 font-body text-sm">
-                  <span className="text-card-foreground">{ing.name}</span>
-                  <span className="text-muted-foreground whitespace-nowrap ml-3">
-                    {scaleQuantity(ing.quantity)} {ing.unit}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </FormSection>
+        {(recipe.ingredients.length > 0 || canEdit) && (
+          <FormSection title="Ingrédients">
+            {recipe.ingredients.length > 0 ? (
+              <div className="bg-card rounded-xl shadow-card p-4">
+                <ul className="space-y-2">
+                  {recipe.ingredients.map((ing, i) => (
+                    <li key={i} className="flex justify-between items-center py-1.5 border-b border-border last:border-0 font-body text-sm">
+                      <span className="text-card-foreground">{ing.name}</span>
+                      <span className="text-muted-foreground whitespace-nowrap ml-3">
+                        {scaleQuantity(ing.quantity)} {ing.unit}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { setEditFocusTarget('ingredients'); setEditing(true); }}
+                className="w-full py-6 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
+              >
+                <Plus size={14} /> Ajouter des ingrédients
+              </button>
+            )}
+          </FormSection>
+        )}
 
         {/* Steps */}
-        <FormSection title="Préparation">
-          <ol className="space-y-2.5">
-            {recipe.steps.map((step, i) => (
-              <li key={i}>
-                <div className="flex items-start gap-4 bg-card rounded-xl p-4 shadow-card border border-border/60">
-                  <span className="flex-shrink-0 w-7 h-7 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-xs leading-none">
-                    {i + 1}
-                  </span>
-                  <p className="font-body text-foreground leading-7 whitespace-pre-line flex-1">{step.text}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </FormSection>
+        {(recipe.steps.length > 0 || canEdit) && (
+          <FormSection title="Préparation">
+            {recipe.steps.length > 0 ? (
+              <ol className="space-y-2.5">
+                {recipe.steps.map((step, i) => (
+                  <li key={i}>
+                    <div className="flex items-start gap-4 bg-card rounded-xl p-4 shadow-card border border-border/60">
+                      <span className="flex-shrink-0 w-7 h-7 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-xs leading-none">
+                        {i + 1}
+                      </span>
+                      <p className="font-body text-foreground leading-7 whitespace-pre-line flex-1">{step.text}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { setEditFocusTarget('steps'); setEditing(true); }}
+                className="w-full py-6 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
+              >
+                <Plus size={14} /> Ajouter une étape
+              </button>
+            )}
+          </FormSection>
+        )}
         </div>
       </div>
     </div>

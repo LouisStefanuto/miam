@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { ArrowLeft, Plus, Star, Save, Camera, X, Check, Minus, ImagePlus, ImageMinus, Flower, Sun, Grape, Snowflake, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, Timer, Flame, Users, LucideIcon } from 'lucide-react';
@@ -33,6 +33,7 @@ interface RecipeFormProps {
   allTags?: string[];
   onAddTag?: (tag: string) => void;
   onDeleteTag?: (tag: string) => void;
+  initialFocus?: 'ingredients' | 'steps';
 }
 
 const typeOptions: { value: RecipeType; label: string; icon: LucideIcon }[] = [
@@ -52,9 +53,9 @@ const seasonOptions: { value: Season; label: string; icon: LucideIcon }[] = [
 const difficulties: Difficulty[] = ['facile', 'moyen', 'difficile'];
 
 const defaultIngredients = (): Ingredient[] =>
-  Array.from({ length: 5 }, () => ({ name: '', quantity: '', unit: '' }));
+  Array.from({ length: 3 }, () => ({ name: '', quantity: '', unit: '' }));
 
-export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = [], onAddTag, onDeleteTag }: RecipeFormProps) {
+export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = [], onAddTag, onDeleteTag, initialFocus }: RecipeFormProps) {
   const [data, setData] = useState<Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>>({
     title: initialRecipe?.title ?? '',
     description: initialRecipe?.description ?? '',
@@ -69,7 +70,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     diets: initialRecipe?.diets ?? [],
     tags: initialRecipe?.tags ?? [],
     ingredients: initialRecipe?.ingredients?.length ? initialRecipe.ingredients : defaultIngredients(),
-    steps: initialRecipe?.steps?.length ? initialRecipe.steps : [{ text: '' }],
+    steps: initialRecipe?.steps ?? [],
     tested: initialRecipe?.tested ?? false,
   });
   const [newTag, setNewTag] = useState('');
@@ -83,6 +84,17 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
   );
   const imageRef = useRef<HTMLInputElement>(null);
   const imageSrc = useAuthImage(data.image);
+
+  useEffect(() => {
+    if (!initialFocus) return;
+    const itemSelector = initialFocus === 'ingredients' ? '[data-ingredient-name]' : '[data-step-textarea]';
+    const fallbackSelector = initialFocus === 'ingredients' ? '[data-add-ingredient]' : '[data-add-step]';
+    const id = window.setTimeout(() => {
+      const el = document.querySelector<HTMLElement>(itemSelector) ?? document.querySelector<HTMLElement>(fallbackSelector);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 80);
+    return () => window.clearTimeout(id);
+  }, [initialFocus]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -580,6 +592,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             <button
               type="button"
               onClick={addIngredient}
+              data-add-ingredient
               className="w-full mt-2 py-2 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
             >
               <Plus size={14} /> Ajouter
@@ -600,7 +613,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                       onUpdate={updateStep}
                       onRemove={removeStep}
                       onKeyDown={handleStepKeyDown}
-                      canRemove={data.steps.length > 1}
+                      canRemove={data.steps.length > 0}
                     />
                   ))}
                 </ol>
@@ -609,6 +622,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             <button
               type="button"
               onClick={addStep}
+              data-add-step
               className="w-full mt-2 py-2 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
             >
               <Plus size={14} /> Ajouter une étape
