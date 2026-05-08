@@ -42,7 +42,7 @@ export function SortableIngredientItem({
     <li
       ref={setNodeRef}
       style={style}
-      className="group flex items-center gap-2 bg-secondary/40 rounded-xl px-3 py-2.5"
+      className="group flex items-center gap-2 bg-card border border-border/60 rounded-xl px-3 py-2.5"
     >
       <button
         type="button"
@@ -69,14 +69,14 @@ export function SortableIngredientItem({
           onChange={(e) => onUpdate(index, 'quantity', e.target.value)}
           onKeyDown={(e) => onKeyDown(e, index)}
           placeholder="Qté"
-          className="w-14 text-center bg-card/80 text-base font-body font-medium rounded-lg py-1.5 outline-none placeholder:text-muted-foreground/40 border border-transparent focus:border-primary/30"
+          className="w-14 text-center bg-secondary text-base font-body font-medium rounded-lg py-1.5 outline-none placeholder:text-muted-foreground/40 border border-transparent focus:border-primary/30"
         />
         <input
           value={ingredient.unit}
           onChange={(e) => onUpdate(index, 'unit', e.target.value)}
           onKeyDown={(e) => onKeyDown(e, index)}
           placeholder="Unité"
-          className="w-16 text-center bg-card/80 text-base font-body rounded-lg py-1.5 outline-none placeholder:text-muted-foreground/40 border border-transparent focus:border-primary/30"
+          className="w-16 text-center bg-secondary text-base font-body rounded-lg py-1.5 outline-none placeholder:text-muted-foreground/40 border border-transparent focus:border-primary/30"
         />
       </div>
       {canRemove && (

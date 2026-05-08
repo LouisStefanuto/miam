@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 import { SortableIngredientItem } from './SortableIngredientItem';
+import { SortableStepItem } from './SortableStepItem';
 import { useAuthImage } from '@/hooks/use-auth-image';
 
 const DifficultyBars = ({ level }: { level: number }) => (
@@ -73,8 +74,12 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
   });
   const [newTag, setNewTag] = useState('');
   const [tagToDelete, setTagToDelete] = useState<string | null>(null);
+  const [hoveredRating, setHoveredRating] = useState(0);
   const [ingredientIds, setIngredientIds] = useState<string[]>(
     () => data.ingredients.map(() => crypto.randomUUID())
+  );
+  const [stepIds, setStepIds] = useState<string[]>(
+    () => data.steps.map(() => crypto.randomUUID())
   );
   const imageRef = useRef<HTMLInputElement>(null);
   const imageSrc = useAuthImage(data.image);
@@ -117,8 +122,26 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     updated[i] = { text };
     set('steps', updated);
   };
-  const addStep = () => set('steps', [...data.steps, { text: '' }]);
-  const removeStep = (i: number) => set('steps', data.steps.filter((_, idx) => idx !== i));
+  const addStep = () => {
+    set('steps', [...data.steps, { text: '' }]);
+    setStepIds((ids) => [...ids, crypto.randomUUID()]);
+  };
+  const removeStep = (i: number) => {
+    set('steps', data.steps.filter((_, idx) => idx !== i));
+    setStepIds((ids) => ids.filter((_, idx) => idx !== i));
+  };
+  const moveStep = (from: number, to: number) => {
+    set('steps', arrayMove(data.steps, from, to));
+    setStepIds((ids) => arrayMove(ids, from, to));
+  };
+  const handleStepDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = stepIds.indexOf(active.id as string);
+      const newIndex = stepIds.indexOf(over.id as string);
+      moveStep(oldIndex, newIndex);
+    }
+  };
 
   const toggleDiet = (diet: Diet) => set('diets', data.diets.includes(diet) ? data.diets.filter((d) => d !== diet) : [...data.diets, diet]);
   const toggleTag = (tag: string) => set('tags', data.tags.includes(tag) ? data.tags.filter((t) => t !== tag) : [...data.tags, tag]);
@@ -170,6 +193,24 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
   };
 
   const handleStepKeyDown = (e: React.KeyboardEvent, i: number) => {
+    if (e.altKey && e.key === 'ArrowUp' && i > 0) {
+      e.preventDefault();
+      moveStep(i, i - 1);
+      setTimeout(() => {
+        const areas = document.querySelectorAll<HTMLTextAreaElement>('[data-step-textarea]');
+        areas[i - 1]?.focus();
+      }, 50);
+      return;
+    }
+    if (e.altKey && e.key === 'ArrowDown' && i < data.steps.length - 1) {
+      e.preventDefault();
+      moveStep(i, i + 1);
+      setTimeout(() => {
+        const areas = document.querySelectorAll<HTMLTextAreaElement>('[data-step-textarea]');
+        areas[i + 1]?.focus();
+      }, 50);
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (i === data.steps.length - 1) addStep();
@@ -341,14 +382,34 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             </button>
             {/* Rating */}
             <div className="col-span-2 flex flex-col items-center gap-1 py-3 px-2">
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <button key={i} type="button" onClick={() => set('rating', data.rating === i ? 0 : i)}>
-                    <Star size={20} className={i <= data.rating ? 'fill-primary text-primary' : 'text-muted'} />
-                  </button>
-                ))}
+              <div className="flex gap-1" onMouseLeave={() => setHoveredRating(0)}>
+                {[1, 2, 3, 4, 5].map((i) => {
+                  const displayRating = hoveredRating || data.rating;
+                  const filled = i <= displayRating;
+                  const isPreview = hoveredRating > 0 && i > data.rating;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => set('rating', data.rating === i ? 0 : i)}
+                      onMouseEnter={() => setHoveredRating(i)}
+                      className="transition-transform [@media(hover:hover)_and_(pointer:fine)]:hover:scale-110"
+                    >
+                      <Star
+                        size={20}
+                        className={`transition-colors ${
+                          filled
+                            ? isPreview
+                              ? 'fill-primary/40 text-primary/40'
+                              : 'fill-primary text-primary'
+                            : 'text-muted-foreground/40'
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
               </div>
-              <span className="text-[11px] font-body text-muted-foreground">{['Pas noté', 'Ça se laisse manger', 'Plutôt pas mal !', 'Je reprendrais du rab', 'Un vrai régal !', 'Une recette qui met tout le monde d\'accord'][data.rating]}</span>
+              <span className="text-[11px] font-body text-muted-foreground">{['Pas noté', 'Ça se laisse manger', 'Plutôt pas mal !', 'Je reprendrais du rab', 'Un vrai régal !', 'Une recette qui met tout le monde d\'accord'][hoveredRating || data.rating]}</span>
             </div>
           </div>
         </div>
@@ -369,7 +430,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                     className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
                       active
                         ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
-                        : 'bg-card border-border text-muted-foreground active:bg-secondary'
+                        : 'bg-card border-border text-muted-foreground active:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
                     }`}
                   >
                     <Icon size={18} className={active ? 'text-primary' : ''} />
@@ -394,7 +455,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                     className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
                       active
                         ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
-                        : 'bg-card border-border text-muted-foreground active:bg-secondary'
+                        : 'bg-card border-border text-muted-foreground active:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
                     }`}
                   >
                     <Icon size={18} className={active ? 'text-primary' : ''} />
@@ -414,7 +475,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                 className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
                   data.tested
                     ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
-                    : 'bg-card border-border text-muted-foreground active:bg-secondary'
+                    : 'bg-card border-border text-muted-foreground active:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
                 }`}
               >
                 <Check size={18} className={data.tested ? 'text-primary' : ''} />
@@ -425,11 +486,11 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                 style={{ WebkitTapHighlightColor: 'transparent' }}
                 className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
                   data.diets.includes('végétarien')
-                    ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
-                    : 'bg-card border-border text-muted-foreground active:bg-secondary'
+                    ? 'bg-success/12 border-success/40 text-foreground shadow-sm'
+                    : 'bg-card border-border text-muted-foreground active:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
                 }`}
               >
-                <Leaf size={18} className={data.diets.includes('végétarien') ? 'text-primary' : ''} />
+                <Leaf size={18} className={data.diets.includes('végétarien') ? 'text-success' : ''} />
                 <span className="text-[10px] font-body font-medium">Végé</span>
               </button>
             </div>
@@ -446,7 +507,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                   className={`text-[13px] pl-3 pr-2 py-1.5 rounded-full border font-body font-medium capitalize transition-all duration-150 active:scale-95 inline-flex items-center gap-1 ${
                     data.tags.includes(tag)
                       ? 'bg-primary/15 border-primary/40 text-primary'
-                      : 'bg-transparent border-border text-muted-foreground active:border-foreground/30 active:text-foreground'
+                      : 'bg-transparent border-border text-muted-foreground active:border-foreground/30 active:text-foreground [@media(hover:hover)_and_(pointer:fine)]:hover:border-foreground/30 [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
                   }`}
                 >
                   {tag}
@@ -527,33 +588,24 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
 
           {/* Steps */}
           <FormSection title="Préparation">
-            <ol className="space-y-2">
-              {data.steps.map((step, i) => (
-                <li key={i} className="group relative">
-                  <div className="flex items-start gap-3 bg-secondary/40 rounded-xl p-3.5">
-                    <span className="flex-shrink-0 w-7 h-7 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-xs mt-1">
-                      {i + 1}
-                    </span>
-                    <textarea
-                      data-step-textarea
-                      value={step.text}
-                      onChange={(e) => updateStep(i, e.target.value)}
-                      onKeyDown={(e) => handleStepKeyDown(e, i)}
-                      placeholder={`Décrivez l'étape ${i + 1}…`}
-                      className="flex-1 bg-transparent font-body text-base outline-none resize-none placeholder:text-muted-foreground/40 min-h-[3rem] [field-sizing:content]"
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleStepDragEnd}>
+              <SortableContext items={stepIds} strategy={verticalListSortingStrategy}>
+                <ol className="space-y-2.5">
+                  {data.steps.map((step, i) => (
+                    <SortableStepItem
+                      key={stepIds[i]}
+                      id={stepIds[i]}
+                      step={step}
+                      index={i}
+                      onUpdate={updateStep}
+                      onRemove={removeStep}
+                      onKeyDown={handleStepKeyDown}
+                      canRemove={data.steps.length > 1}
                     />
-                    {data.steps.length > 1 && (
-                      <button
-                        onClick={() => removeStep(i)}
-                        className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-destructive/10 text-destructive hover:bg-destructive/20 active:scale-90 transition-colors mt-0.5"
-                      >
-                        <Minus size={12} strokeWidth={2.5} />
-                      </button>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ol>
+                  ))}
+                </ol>
+              </SortableContext>
+            </DndContext>
             <button
               type="button"
               onClick={addStep}
