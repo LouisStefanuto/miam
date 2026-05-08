@@ -341,10 +341,14 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         )}
 
         {/* Stat cards */}
-        <div className="bg-card rounded-2xl shadow-card grid grid-cols-3 divide-x divide-border overflow-hidden">
-          <Stat icon={Timer} label="Préparation" value={recipe.prepTime} unit="min" />
-          <Stat icon={Flame} label="Cuisson" value={recipe.cookTime} unit="min" />
-          <div className="flex flex-col items-center justify-center gap-1 py-4 px-3">
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-card rounded-2xl shadow-card">
+            <Stat icon={Timer} label="Préparation" value={recipe.prepTime} unit="min" />
+          </div>
+          <div className="bg-card rounded-2xl shadow-card">
+            <Stat icon={Flame} label="Cuisson" value={recipe.cookTime} unit="min" />
+          </div>
+          <div className="bg-card rounded-2xl shadow-card flex flex-col items-center justify-center gap-1 py-4 px-3">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Users size={14} />
               <span className="text-[10px] font-body font-semibold uppercase tracking-wider">Portions</span>

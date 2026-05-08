@@ -324,9 +324,9 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
       <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-8">
         {/* Quick info bars */}
         <div className="space-y-1.5">
-          <div className="bg-card rounded-xl shadow-card grid grid-cols-3">
+          <div className="grid grid-cols-3 gap-1.5">
             {/* Prep time */}
-            <label className="flex items-center justify-center gap-1.5 py-3 px-2 cursor-text border-r border-border">
+            <label className="bg-card rounded-xl shadow-card flex items-center justify-center gap-1.5 py-3 px-2 cursor-text">
               <Timer size={16} className="text-muted-foreground" />
               <input
                 type="text"
@@ -340,7 +340,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
               <span className="text-[10px] text-muted-foreground font-body">min</span>
             </label>
             {/* Cook time */}
-            <label className="flex items-center justify-center gap-1.5 py-3 px-2 cursor-text border-r border-border">
+            <label className="bg-card rounded-xl shadow-card flex items-center justify-center gap-1.5 py-3 px-2 cursor-text">
               <Flame size={16} className="text-muted-foreground" />
               <input
                 type="text"
@@ -354,7 +354,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
               <span className="text-[10px] text-muted-foreground font-body">min</span>
             </label>
             {/* Servings */}
-            <div className="flex items-center justify-center py-1 px-2">
+            <div className="bg-card rounded-xl shadow-card flex items-center justify-center py-1 px-2">
               <button type="button" onClick={() => set('servings', Math.max(1, data.servings - 1))} className="relative w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors before:absolute before:-inset-2 before:content-['']">
                 <Minus size={12} />
               </button>
@@ -367,7 +367,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
               </button>
             </div>
           </div>
-          <div className="bg-card rounded-xl shadow-card grid grid-cols-3">
+          <div className="grid grid-cols-3 gap-1.5">
             {/* Difficulty */}
             <button
               type="button"
@@ -375,13 +375,13 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                 const idx = difficulties.indexOf(data.difficulty);
                 set('difficulty', difficulties[(idx + 1) % difficulties.length] as Difficulty);
               }}
-              className="flex items-center justify-center gap-1.5 py-3 px-2 hover:bg-secondary/50 transition-colors cursor-pointer rounded-l-xl border-r border-border"
+              className="bg-card rounded-xl shadow-card flex items-center justify-center gap-1.5 py-3 px-2 hover:bg-secondary/50 transition-colors cursor-pointer"
             >
               <DifficultyBars level={difficultyLevels[data.difficulty].bars} />
               <span className="text-xs capitalize font-body font-medium">{data.difficulty}</span>
             </button>
             {/* Rating */}
-            <div className="col-span-2 flex flex-col items-center gap-1 py-3 px-2">
+            <div className="col-span-2 bg-card rounded-xl shadow-card flex flex-col items-center gap-1 py-3 px-2">
               <div className="flex gap-1" onMouseLeave={() => setHoveredRating(0)}>
                 {[1, 2, 3, 4, 5].map((i) => {
                   const displayRating = hoveredRating || data.rating;
