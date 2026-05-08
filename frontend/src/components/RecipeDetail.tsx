@@ -52,6 +52,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const [displayServings, setDisplayServings] = useState(recipe.servings);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [imageOrientation, setImageOrientation] = useState<'landscape' | 'portrait'>('landscape');
   const { toast } = useToast();
   const imageSrc = useAuthImage(recipe.image);
   const isMobile = useIsMobile();
@@ -264,9 +265,10 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
       <div className="max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-8 md:pb-8 md:grid md:grid-cols-12 md:gap-12 lg:gap-16">
         {/* Left: image + title + rating + description */}
         <aside className="md:col-span-4">
-          <div className="flex items-center md:flex-col md:items-start gap-4 md:gap-4">
+          <div className="flex flex-col gap-4">
             {(() => {
-              const wrapperBase = 'flex-shrink-0 w-24 h-24 md:w-full md:h-auto md:aspect-square rounded-full';
+              const aspectClass = imageOrientation === 'portrait' ? 'aspect-[5/6]' : 'aspect-[3/2]';
+              const wrapperBase = `w-full ${aspectClass} rounded-2xl md:aspect-square md:rounded-full`;
               const ringClass = 'ring-1 ring-border';
               const clickableClass = imageClickable ? 'md:cursor-pointer' : '';
               const tooltip = imageClickable ? (
@@ -275,24 +277,38 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 </span>
               ) : null;
               const imageEl = imageSrc ? (
-                <div className={`${wrapperBase} overflow-hidden ${ringClass} ${clickableClass}`}>
-                  <img src={imageSrc} alt={recipe.title} className="w-full h-full object-cover" />
+                <div className={`${wrapperBase} relative overflow-hidden ${ringClass} ${clickableClass}`}>
+                  <img
+                    src={imageSrc}
+                    alt=""
+                    aria-hidden
+                    className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl md:hidden"
+                  />
+                  <img
+                    src={imageSrc}
+                    alt={recipe.title}
+                    onLoad={(e) => {
+                      const { naturalWidth, naturalHeight } = e.currentTarget;
+                      setImageOrientation(naturalHeight > naturalWidth ? 'portrait' : 'landscape');
+                    }}
+                    className="relative w-full h-full object-contain md:object-cover"
+                  />
                 </div>
               ) : recipe.image ? (
                 <div className={`${wrapperBase} bg-muted animate-pulse`} />
               ) : (
                 <div className={`${wrapperBase} bg-muted flex items-center justify-center ${ringClass} ${clickableClass}`}>
-                  <img src={beaverIcon} alt="Pas d'image" className="w-1/3 h-1/3 opacity-50 grayscale" />
+                  <img src={beaverIcon} alt="Pas d'image" className="w-16 h-16 md:w-1/3 md:h-1/3 opacity-50 grayscale" />
                 </div>
               );
               return imageClickable ? (
-                <button type="button" onClick={() => setEditing(true)} aria-label="Modifier la recette" className="group contents md:block md:relative md:w-full">
+                <button type="button" onClick={() => setEditing(true)} aria-label="Modifier la recette" className="group block relative w-full">
                   {imageEl}
                   {tooltip}
                 </button>
               ) : imageEl;
             })()}
-            <div className="flex-1 min-w-0 md:flex-none md:w-full space-y-1">
+            <div className="w-full space-y-1">
               <h1 className="font-display text-xl md:text-2xl font-bold text-foreground">{recipe.title}</h1>
               <div className="flex gap-0.5" onMouseLeave={() => setHoveredStar(0)}>
                 {[1, 2, 3, 4, 5].map((i) => (
