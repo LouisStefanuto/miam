@@ -99,7 +99,7 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
                 tabIndex={0}
                 onClick={(e) => { e.stopPropagation(); cart.toggle(recipe.id); }}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); cart.toggle(recipe.id); } }}
-                className={`w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm transition-colors ${inCart ? 'text-primary fill-primary' : 'text-gray-600 dark:text-gray-300'}`}
+                className={`w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm transition-colors ${inCart ? 'text-primary fill-primary' : 'text-muted-foreground'}`}
                 title={inCart ? 'Retirer du panier' : 'Ajouter au panier'}
               >
                 <ShoppingCart size={16} className={inCart ? 'fill-primary' : ''} />

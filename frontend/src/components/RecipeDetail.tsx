@@ -395,14 +395,14 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
 
         {/* Steps */}
         <FormSection title="Préparation">
-          <ol className="space-y-2">
+          <ol className="space-y-2.5">
             {recipe.steps.map((step, i) => (
               <li key={i}>
-                <div className="flex items-start gap-3 bg-secondary/40 rounded-xl p-3.5">
-                  <span className="flex-shrink-0 w-7 h-7 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-xs mt-1">
+                <div className="flex items-start gap-4 bg-card rounded-xl p-4 shadow-card border border-border/60">
+                  <span className="flex-shrink-0 w-7 h-7 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-xs leading-none">
                     {i + 1}
                   </span>
-                  <p className="font-body text-foreground leading-relaxed whitespace-pre-line">{step.text}</p>
+                  <p className="font-body text-foreground leading-7 whitespace-pre-line flex-1">{step.text}</p>
                 </div>
               </li>
             ))}
