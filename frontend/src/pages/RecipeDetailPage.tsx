@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRecipe, useRecipes, useUpdateRecipe, useDeleteRecipe, useCreateRecipe } from '@/hooks/use-recipes';
@@ -25,10 +25,6 @@ const RecipeDetailPage = () => {
   const initialEditing = !!(location.state as { edit?: boolean })?.edit;
   const { requestClose } = useOverlayClose();
   const handleBack = useCallback(() => requestClose('/'), [requestClose]);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [id]);
 
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
