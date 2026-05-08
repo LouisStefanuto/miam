@@ -265,7 +265,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-8 md:pb-8 md:grid md:grid-cols-12 md:gap-12 lg:gap-16">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-8 pb-6 md:pb-8 md:grid md:grid-cols-12 md:gap-12 lg:gap-16">
         {/* Left: image + title + rating + description */}
         <aside className="md:col-span-4">
           <div className="flex flex-col gap-4">
