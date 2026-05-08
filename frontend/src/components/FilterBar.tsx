@@ -96,7 +96,7 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
         {/* Sort */}
         <div className="flex-1 lg:flex-none flex justify-end lg:ml-auto">
           <Select value={filters.sort} onValueChange={(v) => set('sort', v)}>
-            <SelectTrigger className="w-auto lg:min-w-[140px] h-8 md:h-9 px-2 md:px-3 text-xs font-body bg-secondary border-0 gap-1.5 focus:ring-0 focus:ring-offset-0">
+            <SelectTrigger className="w-auto lg:min-w-[140px] h-8 md:h-9 px-2 md:px-3 text-xs font-body bg-secondary border-0 gap-1.5 focus:ring-0 focus:ring-offset-0 md:transition-colors [@media(hover:hover)_and_(pointer:fine)]:hover:bg-muted dark:[@media(hover:hover)_and_(pointer:fine)]:hover:bg-border">
               <ArrowUpDown size={13} className="text-muted-foreground" />
               {!isMobile && <SelectValue />}
             </SelectTrigger>
@@ -168,7 +168,7 @@ function FilterSelect({
 
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className="w-auto lg:min-w-[120px] h-8 md:h-9 px-2 md:px-3 text-xs font-body capitalize bg-card focus:ring-0 focus:ring-offset-0">
+      <SelectTrigger className="w-auto lg:min-w-[120px] h-8 md:h-9 px-2 md:px-3 text-xs font-body capitalize bg-card focus:ring-0 focus:ring-offset-0 md:transition-colors [@media(hover:hover)_and_(pointer:fine)]:hover:bg-secondary">
         {icon && <span className="text-muted-foreground shrink-0 md:hidden lg:inline">{icon}</span>}
         {!isMobile && (
           <SelectValue placeholder={placeholder}>
