@@ -284,7 +284,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
       <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6">
         <input ref={imageRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
         {(() => {
-          const aspectClass = imageOrientation === 'portrait' ? 'aspect-[5/6]' : 'aspect-[3/2]';
+          const aspectClass = imageOrientation === 'portrait' ? 'aspect-square' : 'aspect-[16/9]';
           const shape = `w-full ${aspectClass} rounded-2xl md:w-48 md:h-48 md:aspect-auto md:rounded-full`;
           return (
             <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">

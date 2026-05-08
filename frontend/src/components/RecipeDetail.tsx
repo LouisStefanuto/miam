@@ -270,7 +270,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         <aside className="md:col-span-4">
           <div className="flex flex-col gap-4">
             {(() => {
-              const aspectClass = imageOrientation === 'portrait' ? 'aspect-[5/6]' : 'aspect-[3/2]';
+              const aspectClass = imageOrientation === 'portrait' ? 'aspect-square' : 'aspect-[16/9]';
               const wrapperBase = `w-full ${aspectClass} rounded-2xl md:aspect-square md:rounded-full`;
               const ringClass = 'ring-1 ring-border';
               const clickableClass = imageClickable ? 'md:cursor-pointer' : '';
