@@ -20,12 +20,12 @@ interface User {
 interface AuthContextValue {
   /** Whether the user is authenticated (has a valid session cookie) */
   isAuthenticated: boolean;
-  /** User profile returned by the backend on login */
+  /** Decoded user info from Google credential */
   user: User | null;
   /** True while checking for a stored session */
   isLoading: boolean;
-  /** Exchange a Google authorization code for a backend session */
-  loginWithGoogle: (code: string) => Promise<void>;
+  /** Exchange a Google credential for a backend JWT */
+  loginWithGoogle: (credential: string) => Promise<void>;
   /** Clear session */
   logout: () => Promise<void>;
 }
@@ -33,6 +33,20 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const USER_KEY = 'miam-auth-user';
+
+/** Decode the payload of a Google ID token (JWT) to extract display info. */
+function parseGoogleCredential(credential: string): User {
+  try {
+    const payload = JSON.parse(atob(credential.split('.')[1]));
+    return {
+      name: payload.name ?? payload.email ?? 'User',
+      email: payload.email ?? '',
+      picture: payload.picture,
+    };
+  } catch {
+    return { name: 'User', email: '' };
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
@@ -66,27 +80,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const loginWithGoogle = useCallback(async (code: string) => {
+  const loginWithGoogle = useCallback(async (credential: string) => {
     const res = await fetch(`${API_BASE}/auth/google`, {
       method: 'POST',
       credentials: 'same-origin',
       redirect: 'manual',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ id_token: credential }),
     });
     if (handleCfRedirect(res)) return;
     if (!res.ok) {
       const detail = await res.text();
       throw new Error(`Login failed: ${detail}`);
     }
-    // The JWT is set as an HttpOnly cookie; the response also carries
-    // non-sensitive display info we mirror into localStorage for restore.
-    const body = await res.json();
-    const userInfo: User = {
-      name: body.user?.name ?? 'User',
-      email: body.user?.email ?? '',
-      picture: body.user?.picture,
-    };
+    // The JWT is now set as an HttpOnly cookie by the backend.
+    // We only store non-sensitive display info in localStorage.
+    const userInfo = parseGoogleCredential(credential);
     localStorage.setItem(USER_KEY, JSON.stringify(userInfo));
     setIsAuthenticated(true);
     setUser(userInfo);
