@@ -1,5 +1,5 @@
 import { KeyboardEvent, useRef, useEffect, useState } from 'react';
-import { ArrowLeft, Search, X, Check, Leaf, Zap, Users, UtensilsCrossed, Sun, Gauge, RotateCcw, Grid2X2, Wine, Salad, Beef, CupSoda, Cake, Flower, Snowflake, Grape, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Search, Check, Leaf, Zap, Users, UtensilsCrossed, Sun, Gauge, RotateCcw, Grid2X2, Wine, Salad, Beef, CupSoda, Cake, Flower, Snowflake, Grape, LucideIcon } from 'lucide-react';
 import { Filters, defaultFilters } from '@/components/FilterBar';
 
 interface MobileSearchOverlayProps {
@@ -54,6 +54,7 @@ export default function MobileSearchOverlay({
 }: MobileSearchOverlayProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [visible, setVisible] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   // Animate in/out
   useEffect(() => {
@@ -82,6 +83,12 @@ export default function MobileSearchOverlay({
       onSearchTagsChange([...searchTags, tag]);
     }
     onSearchQueryChange('');
+    setSelectedTag(null);
+  };
+
+  const removeTag = (tag: string) => {
+    onSearchTagsChange(searchTags.filter((t) => t !== tag));
+    setSelectedTag(null);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -90,7 +97,7 @@ export default function MobileSearchOverlay({
       addTag();
     }
     if (e.key === 'Backspace' && !searchQuery && searchTags.length > 0) {
-      onSearchTagsChange(searchTags.slice(0, -1));
+      removeTag(selectedTag ?? searchTags[searchTags.length - 1]);
     }
   };
 
@@ -143,20 +150,27 @@ export default function MobileSearchOverlay({
         <div className="flex-1 flex items-center gap-2 flex-wrap min-h-12 px-3 bg-secondary/50 rounded-xl">
 
           <Search className="text-muted-foreground shrink-0" size={18} />
-          {searchTags.map((tag) => (
-            <span
-              key={tag}
-              className="flex items-center gap-1 text-sm font-body font-medium px-2.5 py-1 rounded-full bg-primary/15 text-primary capitalize"
-            >
-              {tag}
+          {searchTags.map((tag) => {
+            const isSelected = selectedTag === tag;
+            return (
               <button
-                onClick={() => onSearchTagsChange(searchTags.filter((t) => t !== tag))}
-                className="active:text-primary/60"
+                key={tag}
+                type="button"
+                onClick={() => {
+                  setSelectedTag(isSelected ? null : tag);
+                  inputRef.current?.focus();
+                }}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+                className={`flex items-center text-sm font-body font-medium px-2.5 py-1 rounded-full capitalize transition-colors ${
+                  isSelected
+                    ? 'bg-primary text-primary-foreground ring-2 ring-primary/40'
+                    : 'bg-primary/15 text-primary'
+                }`}
               >
-                <X size={14} />
+                {tag}
               </button>
-            </span>
-          ))}
+            );
+          })}
           <input
             ref={inputRef}
             value={searchQuery}
