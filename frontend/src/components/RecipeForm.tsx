@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ArrowLeft, Plus, Star, Save, Camera, X, Check, Minus, ImagePlus, ImageMinus, Flower, Sun, Grape, Snowflake, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, Timer, Flame, Users, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Star, Save, Camera, X, Check, Circle, Minus, ImagePlus, ImageMinus, Flower, Sun, Grape, Snowflake, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, Timer, Flame, Users, LucideIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -343,19 +344,75 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                 </button>
               )}
 
-              {/* Title + description */}
+              {/* Title + description + rating */}
               <div className="w-full md:flex-1 md:min-w-0 space-y-2">
                 <Input
                   value={data.title}
                   onChange={(e) => set('title', e.target.value)}
                   placeholder="Titre de la recette"
-                  className="font-display text-2xl md:text-3xl font-bold bg-transparent border-b border-border text-foreground h-auto p-0 rounded-none focus-visible:ring-0 placeholder:text-muted-foreground/40"
+                  className="font-display text-xl md:text-2xl font-bold text-foreground h-auto py-3 px-4 rounded-lg placeholder:text-muted-foreground/40"
                 />
-                <Input
+                <div className="rounded-lg border border-input bg-background px-4 py-3 space-y-1.5">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex gap-0.5" onMouseLeave={() => setHoveredRating(0)}>
+                      {[1, 2, 3, 4, 5].map((i) => {
+                        const displayRating = hoveredRating || data.rating;
+                        const filled = i <= displayRating;
+                        const isPreview = hoveredRating > 0 && i > data.rating;
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => {
+                              setData((d) => {
+                                const next = d.rating === i ? 0 : i;
+                                return {
+                                  ...d,
+                                  rating: next,
+                                  tested: d.rating === 0 && next > 0 ? true : d.tested,
+                                };
+                              });
+                            }}
+                            onMouseEnter={() => setHoveredRating(i)}
+                            className="transition-transform [@media(hover:hover)_and_(pointer:fine)]:hover:scale-110"
+                          >
+                            <Star
+                              size={22}
+                              className={`transition-colors ${
+                                filled
+                                  ? isPreview
+                                    ? 'fill-primary/40 text-primary/40'
+                                    : 'fill-primary text-primary'
+                                  : 'text-muted-foreground/40'
+                              }`}
+                            />
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => set('tested', !data.tested)}
+                      className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-body transition-colors ${
+                        data.tested
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {data.tested ? <Check size={12} className="shrink-0" /> : <Circle size={12} className="shrink-0" />}
+                      {data.tested ? 'Testé' : 'À tester'}
+                    </button>
+                  </div>
+                  <span className="hidden md:block text-[11px] font-body text-muted-foreground">
+                    {['Pas noté', 'Ça se laisse manger', 'Plutôt pas mal !', 'Je reprendrais du rab', 'Un vrai régal !', 'Une recette qui met tout le monde d\'accord'][hoveredRating || data.rating]}
+                  </span>
+                </div>
+                <Textarea
                   value={data.description}
                   onChange={(e) => set('description', e.target.value)}
-                  placeholder="Description"
-                  className="font-body text-sm md:text-base bg-transparent border-b border-border text-muted-foreground placeholder:text-muted-foreground/40 h-auto p-0 rounded-none focus-visible:ring-0"
+                  placeholder="Une note, une anecdote, l'origine de la recette…"
+                  rows={2}
+                  className="font-body text-sm text-foreground placeholder:text-muted-foreground/50 py-3 px-4 rounded-lg min-h-0 resize-none"
                 />
               </div>
             </div>
@@ -432,51 +489,17 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-1.5">
-            {/* Difficulty */}
-            <button
-              type="button"
-              onClick={() => {
-                const idx = difficulties.indexOf(data.difficulty);
-                set('difficulty', difficulties[(idx + 1) % difficulties.length] as Difficulty);
-              }}
-              className="bg-card rounded-xl shadow-card flex items-center justify-center gap-1.5 py-3 px-2 hover:bg-secondary/50 transition-colors cursor-pointer"
-            >
-              <DifficultyBars level={difficultyLevels[data.difficulty].bars} />
-              <span className="text-xs capitalize font-body font-medium">{data.difficulty}</span>
-            </button>
-            {/* Rating */}
-            <div className="col-span-2 bg-card rounded-xl shadow-card flex flex-col items-center gap-1 py-3 px-2">
-              <div className="flex gap-1" onMouseLeave={() => setHoveredRating(0)}>
-                {[1, 2, 3, 4, 5].map((i) => {
-                  const displayRating = hoveredRating || data.rating;
-                  const filled = i <= displayRating;
-                  const isPreview = hoveredRating > 0 && i > data.rating;
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => set('rating', data.rating === i ? 0 : i)}
-                      onMouseEnter={() => setHoveredRating(i)}
-                      className="transition-transform [@media(hover:hover)_and_(pointer:fine)]:hover:scale-110"
-                    >
-                      <Star
-                        size={20}
-                        className={`transition-colors ${
-                          filled
-                            ? isPreview
-                              ? 'fill-primary/40 text-primary/40'
-                              : 'fill-primary text-primary'
-                            : 'text-muted-foreground/40'
-                        }`}
-                      />
-                    </button>
-                  );
-                })}
-              </div>
-              <span className="text-[11px] font-body text-muted-foreground">{['Pas noté', 'Ça se laisse manger', 'Plutôt pas mal !', 'Je reprendrais du rab', 'Un vrai régal !', 'Une recette qui met tout le monde d\'accord'][hoveredRating || data.rating]}</span>
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const idx = difficulties.indexOf(data.difficulty);
+              set('difficulty', difficulties[(idx + 1) % difficulties.length] as Difficulty);
+            }}
+            className="w-full bg-card rounded-xl shadow-card flex items-center justify-center gap-1.5 py-3 px-2 hover:bg-secondary/50 transition-colors cursor-pointer"
+          >
+            <DifficultyBars level={difficultyLevels[data.difficulty].bars} />
+            <span className="text-xs capitalize font-body font-medium">{data.difficulty}</span>
+          </button>
         </div>
 
         {/* Tags & categories — mirrors MobileSearchOverlay design, packed */}
@@ -497,43 +520,26 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
               value={data.season}
               onChange={(v) => set('season', v)}
               allowDeselect
-              placeholder="Aucune saison"
+              placeholder="Toutes saisons"
             />
           </FormSection>
 
-          {/* Preferences — icon grid like seasons */}
-          <FormSection title="Préférences">
-            <div className="grid grid-cols-6 gap-1.5">
-              <button
-                onClick={() => set('tested', !data.tested)}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-                className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
-                  data.tested
-                    ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
-                    : 'bg-card border-border text-muted-foreground active:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
-                }`}
-              >
-                <Check size={18} className={data.tested ? 'text-primary' : ''} />
-                <span className="text-[10px] font-body font-medium">Testé</span>
-              </button>
-              <button
-                onClick={() => toggleDiet('végétarien')}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-                className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
-                  data.diets.includes('végétarien')
-                    ? 'bg-success/12 border-success/40 text-foreground shadow-sm'
-                    : 'bg-card border-border text-muted-foreground active:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
-                }`}
-              >
-                <Leaf size={18} className={data.diets.includes('végétarien') ? 'text-success' : ''} />
-                <span className="text-[10px] font-body font-medium">Végé</span>
-              </button>
-            </div>
-          </FormSection>
-
-          {/* Tags — outline ghost pills */}
+          {/* Tags — outline ghost pills, Végé pinned first */}
           <FormSection title="Tags">
             <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => toggleDiet('végétarien')}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+                className={`text-[13px] px-3 py-1.5 rounded-full border font-body font-medium transition-all duration-150 active:scale-95 inline-flex items-center gap-1 ${
+                  data.diets.includes('végétarien')
+                    ? 'bg-success/15 border-success/40 text-success'
+                    : 'bg-transparent border-border text-muted-foreground active:border-foreground/30 active:text-foreground [@media(hover:hover)_and_(pointer:fine)]:hover:border-foreground/30 [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
+                }`}
+              >
+                <Leaf size={12} />
+                Végé
+              </button>
               {combinedTags.map((tag) => (
                 <button
                   key={tag}

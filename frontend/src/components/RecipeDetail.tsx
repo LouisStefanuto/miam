@@ -371,9 +371,9 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 </button>
               ) : imageEl;
             })()}
-            <div className="w-full space-y-1">
+            <div className="w-full space-y-0.5">
               <h1 className="font-display text-xl md:text-2xl font-bold text-foreground">{recipe.title}</h1>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 pt-1">
                 <div className="flex gap-0.5" onMouseLeave={() => setHoveredStar(0)}>
                   {[1, 2, 3, 4, 5].map((i) => (
                     <button
