@@ -165,6 +165,64 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
     </div>
   ) : null;
 
+  const chipClass = 'inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground font-body capitalize';
+  const chipIconSize = 12;
+  const difficultyLevel = difficultyLevels[recipe.difficulty].bars;
+
+  const metadataChips = (
+    <div className="flex flex-wrap gap-1.5">
+      <span className={chipClass}>
+        <Utensils size={chipIconSize} className="shrink-0" />
+        {recipe.type}
+      </span>
+      {recipe.season && SeasonIcon && (
+        <span className={chipClass}>
+          <SeasonIcon size={chipIconSize} className="shrink-0" />
+          {recipe.season}
+        </span>
+      )}
+      <span className={chipClass}>
+        <span className="flex gap-0.5 items-end h-3 shrink-0">
+          {[1, 2, 3].map((i) => (
+            <span
+              key={i}
+              className={`w-0.5 rounded-sm ${i <= difficultyLevel ? 'bg-primary' : 'bg-foreground/15'}`}
+              style={{ height: `${3 + i * 2}px` }}
+            />
+          ))}
+        </span>
+        {recipe.difficulty}
+      </span>
+      {recipe.diets.includes('végétarien') && (
+        <span className={chipClass}>
+          <Vegan size={chipIconSize} className="text-green-600 shrink-0" />
+          Végétarien
+        </span>
+      )}
+      {recipe.tags.map((tag) => (
+        <span key={tag} className={chipClass}>
+          {tag}
+        </span>
+      ))}
+    </div>
+  );
+
+  const mobileTestedPill = (
+    <button
+      type="button"
+      onClick={() => canToggleTested && onTestedToggle?.(!recipe.tested)}
+      disabled={!canToggleTested}
+      className={`md:hidden inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded font-body transition-colors ${
+        recipe.tested
+          ? 'bg-primary/10 text-primary'
+          : 'bg-muted text-muted-foreground'
+      } ${canToggleTested ? 'cursor-pointer' : 'cursor-default opacity-70'}`}
+    >
+      {recipe.tested ? <Check size={chipIconSize} className="shrink-0" /> : <Circle size={chipIconSize} className="shrink-0" />}
+      {recipe.tested ? 'Testé' : 'À tester'}
+    </button>
+  );
+
   // Edit mode — delegate to RecipeForm
   if (editing) {
     return (
@@ -318,25 +376,28 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
             })()}
             <div className="w-full space-y-1">
               <h1 className="font-display text-xl md:text-2xl font-bold text-foreground">{recipe.title}</h1>
-              <div className="flex gap-0.5" onMouseLeave={() => setHoveredStar(0)}>
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => recipe.userRole !== 'reader' && onRatingChange?.(i)}
-                    onMouseEnter={() => setHoveredStar(i)}
-                    className={recipe.userRole === 'reader' ? '' : 'cursor-pointer'}
-                  >
-                    <Star
-                      size={20}
-                      className={
-                        (hoveredStar > 0 ? i <= hoveredStar : i <= recipe.rating)
-                          ? 'fill-primary text-primary'
-                          : 'text-muted'
-                      }
-                    />
-                  </button>
-                ))}
+              <div className="flex items-center gap-3">
+                <div className="flex gap-0.5" onMouseLeave={() => setHoveredStar(0)}>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => recipe.userRole !== 'reader' && onRatingChange?.(i)}
+                      onMouseEnter={() => setHoveredStar(i)}
+                      className={recipe.userRole === 'reader' ? '' : 'cursor-pointer'}
+                    >
+                      <Star
+                        size={20}
+                        className={
+                          (hoveredStar > 0 ? i <= hoveredStar : i <= recipe.rating)
+                            ? 'fill-primary text-primary'
+                            : 'text-muted'
+                        }
+                      />
+                    </button>
+                  ))}
+                </div>
+                {mobileTestedPill}
               </div>
               {recipe.description && (
                 <p className="font-body text-sm text-muted-foreground">{recipe.description}</p>
@@ -400,9 +461,8 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         </div>
 
         {/* Metadata + tags — mobile only (desktop renders them under the title) */}
-        <div className="md:hidden space-y-4">
-          {metadataRail}
-          {tagsRail}
+        <div className="md:hidden">
+          {metadataChips}
         </div>
 
         {/* Ingredients & Steps — tabs on mobile, stacked on desktop */}
