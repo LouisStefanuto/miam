@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Star, Pencil, Trash2, Minus, Plus, Check, Copy, ClipboardCheck, Users, CopyPlus, LogOut, Vegan, Timer, Flame, Sun, Snowflake, Flower, LeafyGreen, Utensils, Circle, LucideIcon } from 'lucide-react';
 import { Recipe } from '@/data/recipes';
 import { Button } from '@/components/ui/button';
@@ -54,6 +54,11 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const [copied, setCopied] = useState(false);
   const [imageOrientation, setImageOrientation] = useState<'landscape' | 'portrait'>('landscape');
   const [editFocusTarget, setEditFocusTarget] = useState<'ingredients' | 'steps' | undefined>(undefined);
+  const [activeTab, setActiveTab] = useState<'ingredients' | 'steps'>('ingredients');
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const tabSwipeRef = useRef<{ x: number; y: number; dragging: boolean } | null>(null);
+  const swipeAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const imageSrc = useAuthImage(recipe.image);
   const isMobile = useIsMobile();
@@ -400,61 +405,182 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           {tagsRail}
         </div>
 
-        {/* Ingredients */}
-        {(recipe.ingredients.length > 0 || canEdit) && (
-          <FormSection title="Ingrédients">
-            {recipe.ingredients.length > 0 ? (
-              <div className="bg-card rounded-xl shadow-card p-4">
-                <ul className="space-y-2">
-                  {recipe.ingredients.map((ing, i) => (
-                    <li key={i} className="flex justify-between items-center py-1.5 border-b border-border last:border-0 font-body text-sm">
-                      <span className="text-card-foreground">{ing.name}</span>
-                      <span className="text-muted-foreground whitespace-nowrap ml-3">
-                        {scaleQuantity(ing.quantity)} {ing.unit}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => { setEditFocusTarget('ingredients'); setEditing(true); }}
-                className="w-full py-6 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
-              >
-                <Plus size={14} /> Ajouter des ingrédients
-              </button>
-            )}
-          </FormSection>
-        )}
-
-        {/* Steps */}
-        {(recipe.steps.length > 0 || canEdit) && (
-          <FormSection title="Préparation">
-            {recipe.steps.length > 0 ? (
-              <ol className="space-y-2.5">
-                {recipe.steps.map((step, i) => (
-                  <li key={i}>
-                    <div className="flex items-start gap-4 bg-card rounded-xl p-4 shadow-card border border-border/60">
-                      <span className="flex-shrink-0 w-7 h-7 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-xs leading-none">
-                        {i + 1}
-                      </span>
-                      <p className="font-body text-foreground leading-7 whitespace-pre-line flex-1">{step.text}</p>
-                    </div>
+        {/* Ingredients & Steps — tabs on mobile, stacked on desktop */}
+        {(() => {
+          const ingredientsContent = recipe.ingredients.length > 0 ? (
+            <div className="bg-card rounded-xl shadow-card p-4">
+              <ul className="space-y-2">
+                {recipe.ingredients.map((ing, i) => (
+                  <li key={i} className="flex justify-between items-center py-1.5 border-b border-border last:border-0 font-body text-sm">
+                    <span className="text-card-foreground">{ing.name}</span>
+                    <span className="text-muted-foreground whitespace-nowrap ml-3">
+                      {scaleQuantity(ing.quantity)} {ing.unit}
+                    </span>
                   </li>
                 ))}
-              </ol>
-            ) : (
-              <button
-                type="button"
-                onClick={() => { setEditFocusTarget('steps'); setEditing(true); }}
-                className="w-full py-6 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
-              >
-                <Plus size={14} /> Ajouter une étape
-              </button>
-            )}
-          </FormSection>
-        )}
+              </ul>
+            </div>
+          ) : canEdit ? (
+            <button
+              type="button"
+              onClick={() => { setEditFocusTarget('ingredients'); setEditing(true); }}
+              className="w-full py-6 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
+            >
+              <Plus size={14} /> Ajouter des ingrédients
+            </button>
+          ) : null;
+
+          const stepsContent = recipe.steps.length > 0 ? (
+            <ol className="space-y-2.5">
+              {recipe.steps.map((step, i) => (
+                <li key={i}>
+                  <div className="flex items-start gap-4 bg-card rounded-xl p-4 shadow-card border border-border/60">
+                    <span className="flex-shrink-0 w-7 h-7 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-xs leading-none">
+                      {i + 1}
+                    </span>
+                    <p className="font-body text-foreground leading-7 whitespace-pre-line flex-1">{step.text}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ) : canEdit ? (
+            <button
+              type="button"
+              onClick={() => { setEditFocusTarget('steps'); setEditing(true); }}
+              className="w-full py-6 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
+            >
+              <Plus size={14} /> Ajouter une étape
+            </button>
+          ) : null;
+
+          if (!ingredientsContent && !stepsContent) return null;
+
+          if (!isMobile) {
+            return (
+              <>
+                {ingredientsContent && <FormSection title="Ingrédients">{ingredientsContent}</FormSection>}
+                {stepsContent && <FormSection title="Préparation">{stepsContent}</FormSection>}
+              </>
+            );
+          }
+
+          const tabs = [
+            { id: 'ingredients' as const, label: 'Ingrédients' },
+            { id: 'steps' as const, label: 'Préparation' },
+          ];
+          const activeIndex = activeTab === 'ingredients' ? 0 : 1;
+          const indicatorPos = activeIndex + swipeOffset;
+
+          const onTabsTouchStart = (e: React.TouchEvent) => {
+            const t = e.touches[0];
+            // Avoid conflict with SwipeBack edge gesture
+            if (t.clientX <= 30) return;
+            tabSwipeRef.current = { x: t.clientX, y: t.clientY, dragging: false };
+          };
+          const onTabsTouchMove = (e: React.TouchEvent) => {
+            const state = tabSwipeRef.current;
+            if (!state) return;
+            const t = e.touches[0];
+            const dx = t.clientX - state.x;
+            const dy = t.clientY - state.y;
+            if (!state.dragging) {
+              if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+                state.dragging = true;
+                setIsDragging(true);
+              } else if (Math.abs(dy) > 10) {
+                tabSwipeRef.current = null;
+                return;
+              } else {
+                return;
+              }
+            }
+            const width = swipeAreaRef.current?.offsetWidth ?? window.innerWidth;
+            const raw = -dx / width;
+            const clamped = Math.max(-activeIndex, Math.min(1 - activeIndex, raw));
+            setSwipeOffset(clamped);
+          };
+          const onTabsTouchEnd = (e: React.TouchEvent) => {
+            const state = tabSwipeRef.current;
+            tabSwipeRef.current = null;
+            setIsDragging(false);
+            setSwipeOffset(0);
+            if (!state || !state.dragging) return;
+            const t = e.changedTouches[0];
+            const dx = t.clientX - state.x;
+            const dy = Math.abs(t.clientY - state.y);
+            if (Math.abs(dx) < 60 || dy > 60) return;
+            if (dx < 0 && activeTab === 'ingredients') setActiveTab('steps');
+            else if (dx > 0 && activeTab === 'steps') setActiveTab('ingredients');
+          };
+
+          const panels = [
+            ingredientsContent ?? (
+              <p className="text-sm font-body text-muted-foreground text-center py-6">Aucun ingrédient.</p>
+            ),
+            stepsContent ?? (
+              <p className="text-sm font-body text-muted-foreground text-center py-6">Aucune étape.</p>
+            ),
+          ];
+          const slideTransition = isDragging ? 'none' : 'transform 250ms ease-out';
+
+          return (
+            <div
+              ref={swipeAreaRef}
+              onTouchStart={onTabsTouchStart}
+              onTouchMove={onTabsTouchMove}
+              onTouchEnd={onTabsTouchEnd}
+              role="tablist"
+            >
+              <div className="sticky top-[64px] z-40 -mx-4 px-4 bg-card/95 backdrop-blur-sm border-b border-border">
+                <div className="relative">
+                  <div className="grid grid-cols-2">
+                    {tabs.map((t, i) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={i === activeIndex}
+                        onClick={() => setActiveTab(t.id)}
+                        className={`py-3 text-sm font-body transition-colors ${
+                          i === activeIndex ? 'text-foreground font-medium' : 'text-muted-foreground'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div
+                    className="absolute -bottom-px left-0 h-0.5 w-1/2 bg-primary rounded-full"
+                    style={{
+                      transform: `translateX(${indicatorPos * 100}%)`,
+                      transition: slideTransition,
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="mt-4" style={{ overflowX: 'clip' }}>
+                <div
+                  className="flex"
+                  style={{
+                    transform: `translateX(${-indicatorPos * 100}%)`,
+                    transition: slideTransition,
+                  }}
+                >
+                  {panels.map((panel, i) => (
+                    <div
+                      key={i}
+                      role="tabpanel"
+                      aria-hidden={i !== activeIndex}
+                      className="w-full flex-shrink-0 px-1"
+                    >
+                      {panel}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
         </div>
       </div>
     </div>
