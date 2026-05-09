@@ -362,45 +362,68 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
         <div className="space-y-1.5">
           <div className="grid grid-cols-3 gap-1.5">
             {/* Prep time */}
-            <label className="bg-card rounded-xl shadow-card flex items-center justify-center gap-1.5 py-3 px-2 cursor-text">
-              <Timer size={16} className="text-muted-foreground" />
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={data.prepTime || ''}
-                onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); set('prepTime', v ? +v : 0); }}
-                placeholder="0"
-                className="w-8 text-center text-sm font-body font-semibold bg-transparent outline-none"
-              />
-              <span className="text-[10px] text-muted-foreground font-body">min</span>
+            <label className="bg-card rounded-2xl shadow-card flex flex-col items-center justify-center gap-1 py-4 px-3 cursor-text">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Timer size={14} />
+                <span className="text-[10px] font-body font-semibold uppercase tracking-wider">Préparation</span>
+              </div>
+              <div className="flex items-baseline gap-1">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={data.prepTime || ''}
+                  onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); set('prepTime', v ? +v : 0); }}
+                  placeholder="0"
+                  className="w-10 text-center font-display text-xl font-bold text-foreground tabular-nums bg-transparent outline-none"
+                />
+                <span className="text-xs text-muted-foreground font-body">min</span>
+              </div>
             </label>
             {/* Cook time */}
-            <label className="bg-card rounded-xl shadow-card flex items-center justify-center gap-1.5 py-3 px-2 cursor-text">
-              <Flame size={16} className="text-muted-foreground" />
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={data.cookTime || ''}
-                onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); set('cookTime', v ? +v : 0); }}
-                placeholder="0"
-                className="w-8 text-center text-sm font-body font-semibold bg-transparent outline-none"
-              />
-              <span className="text-[10px] text-muted-foreground font-body">min</span>
+            <label className="bg-card rounded-2xl shadow-card flex flex-col items-center justify-center gap-1 py-4 px-3 cursor-text">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Flame size={14} />
+                <span className="text-[10px] font-body font-semibold uppercase tracking-wider">Cuisson</span>
+              </div>
+              <div className="flex items-baseline gap-1">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={data.cookTime || ''}
+                  onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); set('cookTime', v ? +v : 0); }}
+                  placeholder="0"
+                  className="w-10 text-center font-display text-xl font-bold text-foreground tabular-nums bg-transparent outline-none"
+                />
+                <span className="text-xs text-muted-foreground font-body">min</span>
+              </div>
             </label>
             {/* Servings */}
-            <div className="bg-card rounded-xl shadow-card flex items-center justify-center py-1 px-2">
-              <button type="button" onClick={() => set('servings', Math.max(1, data.servings - 1))} className="relative w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors before:absolute before:-inset-2 before:content-['']">
-                <Minus size={12} />
-              </button>
-              <div className="flex items-center gap-1 mx-2">
-                <Users size={16} className="text-muted-foreground" />
-                <span className="text-sm font-body font-semibold min-w-[1rem] text-center">{data.servings}</span>
+            <div className="bg-card rounded-2xl shadow-card flex flex-col items-center justify-center gap-1 py-4 px-3">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Users size={14} />
+                <span className="text-[10px] font-body font-semibold uppercase tracking-wider">Portions</span>
               </div>
-              <button type="button" onClick={() => set('servings', data.servings + 1)} className="relative w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors before:absolute before:-inset-2 before:content-['']">
-                <Plus size={12} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label="Diminuer les portions"
+                  onClick={() => set('servings', Math.max(1, data.servings - 1))}
+                  className="relative w-6 h-6 rounded-full bg-muted text-muted-foreground flex items-center justify-center hover:bg-primary/20 hover:text-foreground transition-colors before:absolute before:-inset-2 before:content-['']"
+                >
+                  <Minus size={12} />
+                </button>
+                <span className="font-display text-xl font-bold text-foreground min-w-[1.5rem] text-center tabular-nums">{data.servings}</span>
+                <button
+                  type="button"
+                  aria-label="Augmenter les portions"
+                  onClick={() => set('servings', data.servings + 1)}
+                  className="relative w-6 h-6 rounded-full bg-muted text-muted-foreground flex items-center justify-center hover:bg-primary/20 hover:text-foreground transition-colors before:absolute before:-inset-2 before:content-['']"
+                >
+                  <Plus size={12} />
+                </button>
+              </div>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-1.5">
