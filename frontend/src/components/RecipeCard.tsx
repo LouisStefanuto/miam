@@ -107,19 +107,17 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
             )}
           </div>
 
+          {/* Top left: Végé badge */}
+          {recipe.diets.includes('végétarien') && (
+            <div className="absolute top-2 left-2">
+              <Badge variant="secondary" className="bg-card/95 text-green-600 font-body text-xs">
+                Végé
+              </Badge>
+            </div>
+          )}
+
           {/* Overlaid content at bottom */}
           <div className="absolute bottom-3 left-3 right-3">
-            {/* Badges */}
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <Badge className="bg-primary text-primary-foreground capitalize font-body text-xs">
-                {recipe.type}
-              </Badge>
-              {recipe.diets.includes('végétarien') && (
-                <Badge variant="secondary" className="bg-card/95 text-green-600 font-body text-xs">
-                  Végé
-                </Badge>
-              )}
-            </div>
             {/* Title */}
             <h3 className="font-display text-lg font-bold text-primary-foreground drop-shadow-lg leading-tight line-clamp-2">
               {recipe.title}
