@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Minus } from 'lucide-react';
+import { GripVertical, X } from 'lucide-react';
 import { Step } from '@/data/recipes';
 
 interface SortableStepItemProps {
@@ -64,9 +64,9 @@ export function SortableStepItem({
           <button
             type="button"
             onClick={() => onRemove(index)}
-            className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-destructive/10 text-destructive hover:bg-destructive/20 active:scale-90 transition-colors"
+            className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground active:scale-90 transition-colors"
           >
-            <Minus size={12} strokeWidth={2.5} />
+            <X size={12} strokeWidth={2.5} />
           </button>
         )}
       </div>
