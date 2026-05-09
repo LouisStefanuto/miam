@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
+import { Delete } from 'lucide-react';
 import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
-import { UNIT_CATEGORIES, isCuratedUnit } from '@/lib/units';
+import { UNIT_CATEGORIES, displayUnit, isCuratedUnit } from '@/lib/units';
+
+const KEYPAD_KEYS = [
+  '1', '2', '3',
+  '4', '5', '6',
+  '7', '8', '9',
+  '.', '0', 'backspace',
+] as const;
 
 interface QuantityPickerProps {
   quantity: number | string;
@@ -26,8 +34,12 @@ export function QuantityPicker({ quantity, unit, onConfirm, trigger }: QuantityP
   const customActive = customUnit !== '' && draftUnit === customUnit;
 
   const pickCurated = (value: string) => {
-    onConfirm(draftQty.trim(), value);
-    setOpen(false);
+    if (draftUnit === value && customUnit === '') {
+      setDraftUnit('');
+      return;
+    }
+    setDraftUnit(value);
+    setCustomUnit('');
   };
 
   const onCustomChange = (value: string) => {
@@ -40,28 +52,62 @@ export function QuantityPicker({ quantity, unit, onConfirm, trigger }: QuantityP
     setOpen(false);
   };
 
+  const handleKey = (key: typeof KEYPAD_KEYS[number]) => {
+    if (key === 'backspace') {
+      setDraftQty((prev) => prev.slice(0, -1));
+      return;
+    }
+    if (key === '.') {
+      if (draftQty.includes('.')) return;
+      setDraftQty((prev) => (prev === '' ? '0.' : prev + '.'));
+      return;
+    }
+    setDraftQty((prev) => prev + key);
+  };
+
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{trigger}</DrawerTrigger>
-      <DrawerContent>
-        <div className="mx-auto w-full max-w-md">
-          <DrawerHeader>
+      <DrawerContent className="h-[97dvh] mt-[3dvh]">
+        <div className="mx-auto w-full max-w-md flex-1 flex flex-col min-h-0">
+          <DrawerHeader className="py-2">
             <DrawerTitle className="font-display">Quantité</DrawerTitle>
           </DrawerHeader>
-          <div className="px-4 pb-4 space-y-5 max-h-[60vh] overflow-y-auto">
-            <input
-              type="text"
-              inputMode="decimal"
-              value={draftQty}
-              onChange={(e) => setDraftQty(e.target.value)}
-              placeholder="0"
-              autoFocus
-              className="w-full text-center font-body text-2xl font-semibold tabular-nums bg-secondary rounded-xl py-3 outline-none focus:bg-secondary/70 placeholder:text-muted-foreground/30 transition-colors"
-            />
+          <div className="flex-1 overflow-y-auto px-3 pb-2 min-h-0 flex flex-col gap-3">
+            <div className="shrink-0 w-full grid grid-cols-[1fr_auto_1fr] items-baseline gap-2 px-4 font-body bg-secondary rounded-xl py-4 select-none">
+              <div />
+              <span className="text-3xl font-bold tabular-nums">
+                {draftQty ? draftQty.replace('.', ',') : <span className="text-muted-foreground/30">0</span>}
+              </span>
+              <span className="justify-self-start text-lg font-medium text-muted-foreground">
+                {draftUnit ? displayUnit(draftUnit, draftQty) : ''}
+              </span>
+            </div>
+
+            <div className="flex-1 min-h-[160px] grid grid-cols-3 grid-rows-4 gap-1.5">
+              {KEYPAD_KEYS.map((key) => {
+                const isBackspace = key === 'backspace';
+                const label = isBackspace ? <Delete size={16} /> : key === '.' ? ',' : key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => handleKey(key)}
+                    className={`rounded-lg text-base font-body font-medium tabular-nums transition-colors flex items-center justify-center select-none ${
+                      isBackspace
+                        ? 'bg-muted text-muted-foreground border border-border/40 hover:bg-muted/70 active:bg-muted/60'
+                        : 'bg-card text-foreground border border-border/60 shadow-sm hover:bg-secondary/40 active:bg-secondary/60'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
 
             {UNIT_CATEGORIES.map((cat) => (
               <div key={cat.id}>
-                <p className="text-xs font-body font-semibold text-muted-foreground uppercase tracking-wider mb-2">{cat.label}</p>
+                <p className="text-xs font-body font-semibold text-muted-foreground uppercase tracking-wider mb-1">{cat.label}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {cat.units.map((u) => {
                     const active = draftUnit === u.value && !customActive;
@@ -70,10 +116,10 @@ export function QuantityPicker({ quantity, unit, onConfirm, trigger }: QuantityP
                         key={u.value}
                         type="button"
                         onClick={() => pickCurated(u.value)}
-                        className={`px-3 py-1.5 rounded-full text-sm font-body transition-colors ${
+                        className={`px-3.5 py-2 rounded-full text-sm font-body font-medium transition-colors ${
                           active
                             ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground hover:bg-muted/70'
+                            : 'bg-secondary text-foreground hover:bg-secondary/70'
                         }`}
                       >
                         {u.label}
@@ -85,7 +131,7 @@ export function QuantityPicker({ quantity, unit, onConfirm, trigger }: QuantityP
             ))}
 
             <div>
-              <p className="text-xs font-body font-semibold text-muted-foreground uppercase tracking-wider mb-2">Personnalisé</p>
+              <p className="text-xs font-body font-semibold text-muted-foreground uppercase tracking-wider mb-1">Personnalisé</p>
               <input
                 type="text"
                 value={customUnit}
@@ -97,11 +143,8 @@ export function QuantityPicker({ quantity, unit, onConfirm, trigger }: QuantityP
               />
             </div>
           </div>
-          <DrawerFooter className="flex-row gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => pickCurated('')}>
-              Retirer l'unité
-            </Button>
-            <Button onClick={handleConfirm} className="flex-1">Confirmer</Button>
+          <DrawerFooter className="p-3">
+            <Button onClick={handleConfirm} className="w-full">Confirmer</Button>
           </DrawerFooter>
         </div>
       </DrawerContent>
