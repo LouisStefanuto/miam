@@ -106,9 +106,11 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
   const set = <K extends keyof typeof data>(key: K, value: (typeof data)[K]) => setData((d) => ({ ...d, [key]: value }));
 
   const updateIngredient = (i: number, field: keyof Ingredient, value: string) => {
-    const updated = [...data.ingredients];
-    (updated[i] as any)[field] = value;
-    set('ingredients', updated);
+    setData((d) => {
+      const updated = [...d.ingredients];
+      updated[i] = { ...updated[i], [field]: value };
+      return { ...d, ingredients: updated };
+    });
   };
   const addIngredient = () => {
     set('ingredients', [...data.ingredients, { name: '', quantity: '', unit: '' }]);

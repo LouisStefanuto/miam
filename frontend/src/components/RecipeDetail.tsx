@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Star, Pencil, Trash2, Minus, Plus, Check, Copy, ClipboardCheck, Users, CopyPlus, LogOut, Vegan, Timer, Flame, Sun, Snowflake, Flower, LeafyGreen, Utensils, Circle, LucideIcon } from 'lucide-react';
 import { Recipe } from '@/data/recipes';
+import { displayUnit } from '@/lib/units';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import RecipeForm from './RecipeForm';
@@ -470,14 +471,17 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           const ingredientsContent = recipe.ingredients.length > 0 ? (
             <div className="bg-card rounded-xl shadow-card p-4">
               <ul className="space-y-2">
-                {recipe.ingredients.map((ing, i) => (
-                  <li key={i} className="flex justify-between items-center py-1.5 border-b border-border last:border-0 font-body text-sm">
-                    <span className="text-card-foreground">{ing.name}</span>
-                    <span className="text-muted-foreground whitespace-nowrap ml-3">
-                      {scaleQuantity(ing.quantity)} {ing.unit}
-                    </span>
-                  </li>
-                ))}
+                {recipe.ingredients.map((ing, i) => {
+                  const scaled = scaleQuantity(ing.quantity);
+                  return (
+                    <li key={i} className="flex justify-between items-center py-1.5 border-b border-border last:border-0 font-body text-sm">
+                      <span className="text-card-foreground">{ing.name}</span>
+                      <span className="text-muted-foreground whitespace-nowrap ml-3">
+                        {scaled} {displayUnit(ing.unit, scaled)}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ) : canEdit ? (

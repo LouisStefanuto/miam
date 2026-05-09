@@ -8,6 +8,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useRecipes } from '@/hooks/use-recipes';
 import { toast } from 'sonner';
 import type { Recipe } from '@/data/recipes';
+import { displayUnit } from '@/lib/units';
 import { SortableCartIngredientItem } from './SortableCartIngredientItem';
 import { AuthImage } from '@/hooks/use-auth-image';
 
@@ -45,7 +46,7 @@ function aggregateIngredients(recipes: Recipe[]): AggregatedIngredient[] {
     const parts: string[] = [];
     for (const [unit, total] of byUnit) {
       if (total != null) {
-        parts.push(unit ? `${total} ${unit}` : `${total}`);
+        parts.push(unit ? `${total} ${displayUnit(unit, total)}` : `${total}`);
       }
     }
 

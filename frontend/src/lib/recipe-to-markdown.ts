@@ -1,4 +1,5 @@
 import type { Recipe } from '@/data/recipes';
+import { displayUnit } from '@/lib/units';
 
 const difficultyMap: Record<string, string> = {
   facile: '●○○',
@@ -50,7 +51,7 @@ export function recipeToMarkdown(recipe: Recipe): string {
   lines.push('## Ingrédients');
   for (const ing of recipe.ingredients) {
     const qty = ing.quantity ? `${ing.quantity} ` : '';
-    const unit = ing.unit ? `${ing.unit} ` : '';
+    const unit = ing.unit ? `${displayUnit(ing.unit, ing.quantity)} ` : '';
     lines.push(`- ${qty}${unit}${ing.name}`);
   }
 
