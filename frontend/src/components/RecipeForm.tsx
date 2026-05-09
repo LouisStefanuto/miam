@@ -619,7 +619,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
               data-add-ingredient
               className="w-full mt-2 py-2 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
             >
-              <Plus size={14} /> Ajouter
+              <Plus size={14} /> Ajouter un ingrédient
             </button>
           </FormSection>
 
