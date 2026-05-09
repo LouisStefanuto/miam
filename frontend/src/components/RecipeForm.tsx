@@ -10,7 +10,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 import { SortableIngredientItem } from './SortableIngredientItem';
 import { SortableStepItem } from './SortableStepItem';
+import { IconPicker } from './IconPicker';
+import { IngredientStepsTabs } from './IngredientStepsTabs';
 import { useAuthImage } from '@/hooks/use-auth-image';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const DifficultyBars = ({ level }: { level: number }) => (
   <div className="flex gap-0.5 items-end">
@@ -86,6 +89,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
   );
   const imageRef = useRef<HTMLInputElement>(null);
   const imageSrc = useAuthImage(data.image);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!initialFocus) return;
@@ -477,54 +481,24 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
 
         {/* Tags & categories — mirrors MobileSearchOverlay design, packed */}
         <div className="space-y-4">
-          {/* Type — icon grid */}
+          {/* Type — single card opens dropdown */}
           <FormSection title="Type" icon={<UtensilsCrossed size={13} />}>
-            <div className="grid grid-cols-6 gap-1.5">
-              {typeOptions.map((opt) => {
-                const active = data.type === opt.value;
-                const Icon = opt.icon;
-                return (
-                  <button
-                    key={opt.value}
-                    onClick={() => set('type', opt.value)}
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
-                    className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
-                      active
-                        ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
-                        : 'bg-card border-border text-muted-foreground active:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
-                    }`}
-                  >
-                    <Icon size={18} className={active ? 'text-primary' : ''} />
-                    <span className="text-[10px] font-body font-medium">{opt.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <IconPicker
+              options={typeOptions}
+              value={data.type}
+              onChange={(v) => v && set('type', v)}
+            />
           </FormSection>
 
-          {/* Season — icon grid like type */}
+          {/* Season — single card opens dropdown */}
           <FormSection title="Saison" icon={<Sun size={13} />}>
-            <div className="grid grid-cols-6 gap-1.5">
-              {seasonOptions.map((opt) => {
-                const active = data.season === opt.value;
-                const Icon = opt.icon;
-                return (
-                  <button
-                    key={opt.value}
-                    onClick={() => set('season', data.season === opt.value ? null : opt.value as Season)}
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
-                    className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
-                      active
-                        ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
-                        : 'bg-card border-border text-muted-foreground active:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
-                    }`}
-                  >
-                    <Icon size={18} className={active ? 'text-primary' : ''} />
-                    <span className="text-[10px] font-body font-medium">{opt.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <IconPicker
+              options={seasonOptions}
+              value={data.season}
+              onChange={(v) => set('season', v)}
+              allowDeselect
+              placeholder="Aucune saison"
+            />
           </FormSection>
 
           {/* Preferences — icon grid like seasons */}
@@ -617,67 +591,80 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
           </AlertDialogContent>
         </AlertDialog>
 
-        <div className="space-y-8">
-          {/* Ingredients */}
-          <FormSection title="Ingrédients">
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={ingredientIds} strategy={verticalListSortingStrategy}>
-                <ul className="space-y-1.5">
-                  {data.ingredients.map((ing, i) => (
-                    <SortableIngredientItem
-                      key={ingredientIds[i]}
-                      id={ingredientIds[i]}
-                      ingredient={ing}
-                      index={i}
-                      onUpdate={updateIngredient}
-                      onRemove={removeIngredient}
-                      onKeyDown={handleIngredientKeyDown}
-                      canRemove={data.ingredients.length > 1}
-                    />
-                  ))}
-                </ul>
-              </SortableContext>
-            </DndContext>
-            <button
-              type="button"
-              onClick={addIngredient}
-              data-add-ingredient
-              className="w-full mt-2 py-2 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
-            >
-              <Plus size={14} /> Ajouter un ingrédient
-            </button>
-          </FormSection>
+        {(() => {
+          const ingredientsBlock = (
+            <>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={ingredientIds} strategy={verticalListSortingStrategy}>
+                  <ul className="space-y-1.5">
+                    {data.ingredients.map((ing, i) => (
+                      <SortableIngredientItem
+                        key={ingredientIds[i]}
+                        id={ingredientIds[i]}
+                        ingredient={ing}
+                        index={i}
+                        onUpdate={updateIngredient}
+                        onRemove={removeIngredient}
+                        onKeyDown={handleIngredientKeyDown}
+                        canRemove={data.ingredients.length > 1}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+              <button
+                type="button"
+                onClick={addIngredient}
+                data-add-ingredient
+                className="w-full mt-2 py-2 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
+              >
+                <Plus size={14} /> Ajouter un ingrédient
+              </button>
+            </>
+          );
 
-          {/* Steps */}
-          <FormSection title="Préparation">
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleStepDragEnd}>
-              <SortableContext items={stepIds} strategy={verticalListSortingStrategy}>
-                <ol className="space-y-2.5">
-                  {data.steps.map((step, i) => (
-                    <SortableStepItem
-                      key={stepIds[i]}
-                      id={stepIds[i]}
-                      step={step}
-                      index={i}
-                      onUpdate={updateStep}
-                      onRemove={removeStep}
-                      onKeyDown={handleStepKeyDown}
-                      canRemove={data.steps.length > 0}
-                    />
-                  ))}
-                </ol>
-              </SortableContext>
-            </DndContext>
-            <button
-              type="button"
-              onClick={addStep}
-              data-add-step
-              className="w-full mt-2 py-2 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
-            >
-              <Plus size={14} /> Ajouter une étape
-            </button>
-          </FormSection>
-        </div>
+          const stepsBlock = (
+            <>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleStepDragEnd}>
+                <SortableContext items={stepIds} strategy={verticalListSortingStrategy}>
+                  <ol className="space-y-2.5">
+                    {data.steps.map((step, i) => (
+                      <SortableStepItem
+                        key={stepIds[i]}
+                        id={stepIds[i]}
+                        step={step}
+                        index={i}
+                        onUpdate={updateStep}
+                        onRemove={removeStep}
+                        onKeyDown={handleStepKeyDown}
+                        canRemove={data.steps.length > 0}
+                      />
+                    ))}
+                  </ol>
+                </SortableContext>
+              </DndContext>
+              <button
+                type="button"
+                onClick={addStep}
+                data-add-step
+                className="w-full mt-2 py-2 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
+              >
+                <Plus size={14} /> Ajouter une étape
+              </button>
+            </>
+          );
+
+          if (isMobile) {
+            return <IngredientStepsTabs ingredients={ingredientsBlock} steps={stepsBlock} />;
+          }
+
+          return (
+            <div className="space-y-8">
+              <FormSection title="Ingrédients">{ingredientsBlock}</FormSection>
+              <FormSection title="Préparation">{stepsBlock}</FormSection>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
