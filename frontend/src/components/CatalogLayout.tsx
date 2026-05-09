@@ -21,6 +21,8 @@ export default function CatalogLayout() {
   const exitTarget = useRef('/');
   const prevPathname = useRef(location.pathname);
 
+  const overlayRef = useRef<HTMLDivElement>(null);
+
   const hasOverlay = location.pathname !== '/';
 
   // Animate in only when navigating from catalog root. Computed during render so
@@ -29,6 +31,9 @@ export default function CatalogLayout() {
   useEffect(() => {
     prevPathname.current = location.pathname;
     setExiting(false);
+    if (overlayRef.current) {
+      overlayRef.current.scrollTop = 0;
+    }
   }, [location.pathname]);
 
   // Lock body scroll when overlay is open
@@ -59,6 +64,7 @@ export default function CatalogLayout() {
       <CatalogPage />
       {(hasOverlay || exiting) && (
         <div
+          ref={overlayRef}
           className={`fixed inset-0 z-40 bg-background overflow-y-auto overscroll-none ${
             isMobile
               ? exiting

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecipes, useCreateRecipe, useUpdateRecipe } from '@/hooks/use-recipes';
 import RecipeForm from '@/components/RecipeForm';
@@ -15,10 +15,6 @@ const CreateRecipePage = () => {
   const updateMutation = useUpdateRecipe();
   const [customTags, setCustomTags] = useState<string[]>([]);
   const handleBack = useCallback(() => navigate(isMobile ? '/add' : '/'), [navigate, isMobile]);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
 
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();

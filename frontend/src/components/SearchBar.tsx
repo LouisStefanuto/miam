@@ -1,5 +1,5 @@
-import { KeyboardEvent, useRef } from 'react';
-import { Search, X } from 'lucide-react';
+import { KeyboardEvent, useRef, useState } from 'react';
+import { Search } from 'lucide-react';
 
 interface SearchBarProps {
   tags: string[];
@@ -10,6 +10,7 @@ interface SearchBarProps {
 
 export default function SearchBar({ tags, onTagsChange, query, onQueryChange }: SearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   const addTag = () => {
     const tag = query.trim().toLowerCase();
@@ -17,6 +18,12 @@ export default function SearchBar({ tags, onTagsChange, query, onQueryChange }: 
       onTagsChange([...tags, tag]);
     }
     onQueryChange('');
+    setSelectedTag(null);
+  };
+
+  const removeTag = (tag: string) => {
+    onTagsChange(tags.filter((t) => t !== tag));
+    setSelectedTag(null);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -25,7 +32,7 @@ export default function SearchBar({ tags, onTagsChange, query, onQueryChange }: 
       addTag();
     }
     if (e.key === 'Backspace' && !query && tags.length > 0) {
-      onTagsChange(tags.slice(0, -1));
+      removeTag(selectedTag ?? tags[tags.length - 1]);
     }
   };
 
@@ -33,26 +40,33 @@ export default function SearchBar({ tags, onTagsChange, query, onQueryChange }: 
     <div className="w-full max-w-xl">
       <div
         className="flex items-center gap-1.5 flex-wrap min-h-11 px-3 bg-card border border-border rounded-lg cursor-text"
-        onClick={() => inputRef.current?.focus()}
+        onClick={() => {
+          setSelectedTag(null);
+          inputRef.current?.focus();
+        }}
       >
         <Search className="text-muted-foreground shrink-0" size={18} />
-        {tags.map((tag) => (
-          <span
-            key={tag}
-            className="flex items-center gap-1 text-xs font-body font-medium px-2 py-0.5 rounded-full bg-primary/15 text-primary capitalize"
-          >
-            {tag}
+        {tags.map((tag) => {
+          const isSelected = selectedTag === tag;
+          return (
             <button
+              key={tag}
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                onTagsChange(tags.filter((t) => t !== tag));
+                setSelectedTag(isSelected ? null : tag);
+                inputRef.current?.focus();
               }}
-              className="hover:text-primary/70"
+              className={`flex items-center text-xs font-body font-medium px-2 py-0.5 rounded-full capitalize transition-colors ${
+                isSelected
+                  ? 'bg-primary text-primary-foreground ring-2 ring-primary/40'
+                  : 'bg-primary/15 text-primary'
+              }`}
             >
-              <X size={12} />
+              {tag}
             </button>
-          </span>
-        ))}
+          );
+        })}
         <input
           ref={inputRef}
           value={query}

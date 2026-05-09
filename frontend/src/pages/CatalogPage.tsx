@@ -49,7 +49,6 @@ const CatalogPage = () => {
   const { data: recipes = [], isLoading } = useRecipes();
   const { searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage } = useCatalogFilters();
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [inlineSearch, setInlineSearch] = useState(false);
   const [showBeaverGame, setShowBeaverGame] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedRecipes, setSelectedRecipes] = useState<Set<string>>(new Set());
@@ -233,8 +232,6 @@ const CatalogPage = () => {
         onSearchQueryChange={setSearchQuery}
         onFiltersTap={() => setShowMobileSearch(true)}
         hasActiveFilters={hasActiveFilters}
-        inlineSearch={inlineSearch}
-        onInlineSearchChange={setInlineSearch}
         onLogoTap={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         onLogoLongPress={openBeaverGame}
       />

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { ArrowLeft, Plus, Star, Save, Camera, X, Check, Minus, ImagePlus, ImageMinus, Flower, Sun, Grape, Snowflake, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, Timer, Flame, Users, LucideIcon } from 'lucide-react';
@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 import { SortableIngredientItem } from './SortableIngredientItem';
+import { SortableStepItem } from './SortableStepItem';
 import { useAuthImage } from '@/hooks/use-auth-image';
 
 const DifficultyBars = ({ level }: { level: number }) => (
@@ -32,6 +33,8 @@ interface RecipeFormProps {
   allTags?: string[];
   onAddTag?: (tag: string) => void;
   onDeleteTag?: (tag: string) => void;
+  initialFocus?: 'ingredients' | 'steps';
+  initialImageOrientation?: 'landscape' | 'portrait';
 }
 
 const typeOptions: { value: RecipeType; label: string; icon: LucideIcon }[] = [
@@ -51,9 +54,9 @@ const seasonOptions: { value: Season; label: string; icon: LucideIcon }[] = [
 const difficulties: Difficulty[] = ['facile', 'moyen', 'difficile'];
 
 const defaultIngredients = (): Ingredient[] =>
-  Array.from({ length: 5 }, () => ({ name: '', quantity: '', unit: '' }));
+  Array.from({ length: 3 }, () => ({ name: '', quantity: '', unit: '' }));
 
-export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = [], onAddTag, onDeleteTag }: RecipeFormProps) {
+export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = [], onAddTag, onDeleteTag, initialFocus, initialImageOrientation = 'landscape' }: RecipeFormProps) {
   const [data, setData] = useState<Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>>({
     title: initialRecipe?.title ?? '',
     description: initialRecipe?.description ?? '',
@@ -68,16 +71,32 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     diets: initialRecipe?.diets ?? [],
     tags: initialRecipe?.tags ?? [],
     ingredients: initialRecipe?.ingredients?.length ? initialRecipe.ingredients : defaultIngredients(),
-    steps: initialRecipe?.steps?.length ? initialRecipe.steps : [{ text: '' }],
+    steps: initialRecipe?.steps ?? [],
     tested: initialRecipe?.tested ?? false,
   });
   const [newTag, setNewTag] = useState('');
   const [tagToDelete, setTagToDelete] = useState<string | null>(null);
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const [imageOrientation, setImageOrientation] = useState<'landscape' | 'portrait'>(initialImageOrientation);
   const [ingredientIds, setIngredientIds] = useState<string[]>(
     () => data.ingredients.map(() => crypto.randomUUID())
   );
+  const [stepIds, setStepIds] = useState<string[]>(
+    () => data.steps.map(() => crypto.randomUUID())
+  );
   const imageRef = useRef<HTMLInputElement>(null);
   const imageSrc = useAuthImage(data.image);
+
+  useEffect(() => {
+    if (!initialFocus) return;
+    const itemSelector = initialFocus === 'ingredients' ? '[data-ingredient-name]' : '[data-step-textarea]';
+    const fallbackSelector = initialFocus === 'ingredients' ? '[data-add-ingredient]' : '[data-add-step]';
+    const id = window.setTimeout(() => {
+      const el = document.querySelector<HTMLElement>(itemSelector) ?? document.querySelector<HTMLElement>(fallbackSelector);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 80);
+    return () => window.clearTimeout(id);
+  }, [initialFocus]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -117,8 +136,26 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     updated[i] = { text };
     set('steps', updated);
   };
-  const addStep = () => set('steps', [...data.steps, { text: '' }]);
-  const removeStep = (i: number) => set('steps', data.steps.filter((_, idx) => idx !== i));
+  const addStep = () => {
+    set('steps', [...data.steps, { text: '' }]);
+    setStepIds((ids) => [...ids, crypto.randomUUID()]);
+  };
+  const removeStep = (i: number) => {
+    set('steps', data.steps.filter((_, idx) => idx !== i));
+    setStepIds((ids) => ids.filter((_, idx) => idx !== i));
+  };
+  const moveStep = (from: number, to: number) => {
+    set('steps', arrayMove(data.steps, from, to));
+    setStepIds((ids) => arrayMove(ids, from, to));
+  };
+  const handleStepDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = stepIds.indexOf(active.id as string);
+      const newIndex = stepIds.indexOf(over.id as string);
+      moveStep(oldIndex, newIndex);
+    }
+  };
 
   const toggleDiet = (diet: Diet) => set('diets', data.diets.includes(diet) ? data.diets.filter((d) => d !== diet) : [...data.diets, diet]);
   const toggleTag = (tag: string) => set('tags', data.tags.includes(tag) ? data.tags.filter((t) => t !== tag) : [...data.tags, tag]);
@@ -170,6 +207,24 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
   };
 
   const handleStepKeyDown = (e: React.KeyboardEvent, i: number) => {
+    if (e.altKey && e.key === 'ArrowUp' && i > 0) {
+      e.preventDefault();
+      moveStep(i, i - 1);
+      setTimeout(() => {
+        const areas = document.querySelectorAll<HTMLTextAreaElement>('[data-step-textarea]');
+        areas[i - 1]?.focus();
+      }, 50);
+      return;
+    }
+    if (e.altKey && e.key === 'ArrowDown' && i < data.steps.length - 1) {
+      e.preventDefault();
+      moveStep(i, i + 1);
+      setTimeout(() => {
+        const areas = document.querySelectorAll<HTMLTextAreaElement>('[data-step-textarea]');
+        areas[i + 1]?.focus();
+      }, 50);
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (i === data.steps.length - 1) addStep();
@@ -225,67 +280,89 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
         </div>
       )}
 
-      {/* Header: image circle + title */}
+      {/* Header: image + title */}
       <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6">
         <input ref={imageRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-        <div className="flex items-center gap-4 md:gap-6">
-          {/* Image circle */}
-          {data.image ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="relative flex-shrink-0 w-24 h-24 md:w-48 md:h-48 rounded-full overflow-hidden ring-2 ring-primary/20 hover:ring-primary/40 transition-all cursor-pointer group">
-                  {imageSrc ? (
-                    <img src={imageSrc} alt={data.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-muted animate-pulse" />
-                  )}
-                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Camera size={20} className="text-white" />
-                  </div>
+        {(() => {
+          const aspectClass = imageOrientation === 'portrait' ? 'aspect-square' : 'aspect-[16/9]';
+          const shape = `w-full ${aspectClass} rounded-2xl md:w-48 md:h-48 md:aspect-auto md:rounded-full`;
+          return (
+            <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+              {/* Image */}
+              {data.image ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className={`relative flex-shrink-0 ${shape} overflow-hidden ring-2 ring-primary/20 hover:ring-primary/40 transition-shadow cursor-pointer group`}>
+                      {imageSrc ? (
+                        <>
+                          <img
+                            src={imageSrc}
+                            alt=""
+                            aria-hidden
+                            className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl md:hidden"
+                          />
+                          <img
+                            src={imageSrc}
+                            alt={data.title}
+                            onLoad={(e) => {
+                              const { naturalWidth, naturalHeight } = e.currentTarget;
+                              setImageOrientation(naturalHeight > naturalWidth ? 'portrait' : 'landscape');
+                            }}
+                            className="relative w-full h-full object-contain md:object-cover"
+                          />
+                        </>
+                      ) : (
+                        <div className="w-full h-full bg-muted animate-pulse" />
+                      )}
+                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Camera size={20} className="text-white" />
+                      </div>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem className="font-body gap-2" onClick={() => imageRef.current?.click()}>
+                      <ImagePlus size={16} /> Modifier l'image
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="font-body gap-2 text-destructive focus:text-destructive" onClick={() => set('image', undefined)}>
+                      <ImageMinus size={16} /> Supprimer l'image
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <button
+                  onClick={() => imageRef.current?.click()}
+                  className={`flex-shrink-0 ${shape} bg-muted border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors flex items-center justify-center cursor-pointer`}
+                >
+                  <Camera size={24} className="text-muted-foreground/50" />
                 </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem className="font-body gap-2" onClick={() => imageRef.current?.click()}>
-                  <ImagePlus size={16} /> Modifier l'image
-                </DropdownMenuItem>
-                <DropdownMenuItem className="font-body gap-2 text-destructive focus:text-destructive" onClick={() => set('image', undefined)}>
-                  <ImageMinus size={16} /> Supprimer l'image
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <button
-              onClick={() => imageRef.current?.click()}
-              className="flex-shrink-0 w-24 h-24 md:w-48 md:h-48 rounded-full bg-muted border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors flex items-center justify-center cursor-pointer"
-            >
-              <Camera size={24} className="text-muted-foreground/50" />
-            </button>
-          )}
+              )}
 
-          {/* Title + description */}
-          <div className="flex-1 min-w-0 space-y-2">
-            <Input
-              value={data.title}
-              onChange={(e) => set('title', e.target.value)}
-              placeholder="Titre de la recette"
-              className="font-display text-2xl md:text-3xl font-bold bg-transparent border-b border-border text-foreground h-auto p-0 rounded-none focus-visible:ring-0 placeholder:text-muted-foreground/40"
-            />
-            <Input
-              value={data.description}
-              onChange={(e) => set('description', e.target.value)}
-              placeholder="Description"
-              className="font-body text-sm md:text-base bg-transparent border-b border-border text-muted-foreground placeholder:text-muted-foreground/40 h-auto p-0 rounded-none focus-visible:ring-0"
-            />
-          </div>
-        </div>
+              {/* Title + description */}
+              <div className="w-full md:flex-1 md:min-w-0 space-y-2">
+                <Input
+                  value={data.title}
+                  onChange={(e) => set('title', e.target.value)}
+                  placeholder="Titre de la recette"
+                  className="font-display text-2xl md:text-3xl font-bold bg-transparent border-b border-border text-foreground h-auto p-0 rounded-none focus-visible:ring-0 placeholder:text-muted-foreground/40"
+                />
+                <Input
+                  value={data.description}
+                  onChange={(e) => set('description', e.target.value)}
+                  placeholder="Description"
+                  className="font-body text-sm md:text-base bg-transparent border-b border-border text-muted-foreground placeholder:text-muted-foreground/40 h-auto p-0 rounded-none focus-visible:ring-0"
+                />
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-8">
         {/* Quick info bars */}
         <div className="space-y-1.5">
-          <div className="bg-card rounded-xl shadow-card grid grid-cols-3">
+          <div className="grid grid-cols-3 gap-1.5">
             {/* Prep time */}
-            <label className="flex items-center justify-center gap-1.5 py-3 px-2 cursor-text border-r border-border">
+            <label className="bg-card rounded-xl shadow-card flex items-center justify-center gap-1.5 py-3 px-2 cursor-text">
               <Timer size={16} className="text-muted-foreground" />
               <input
                 type="text"
@@ -299,7 +376,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
               <span className="text-[10px] text-muted-foreground font-body">min</span>
             </label>
             {/* Cook time */}
-            <label className="flex items-center justify-center gap-1.5 py-3 px-2 cursor-text border-r border-border">
+            <label className="bg-card rounded-xl shadow-card flex items-center justify-center gap-1.5 py-3 px-2 cursor-text">
               <Flame size={16} className="text-muted-foreground" />
               <input
                 type="text"
@@ -313,7 +390,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
               <span className="text-[10px] text-muted-foreground font-body">min</span>
             </label>
             {/* Servings */}
-            <div className="flex items-center justify-center py-1 px-2">
+            <div className="bg-card rounded-xl shadow-card flex items-center justify-center py-1 px-2">
               <button type="button" onClick={() => set('servings', Math.max(1, data.servings - 1))} className="relative w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-primary/20 transition-colors before:absolute before:-inset-2 before:content-['']">
                 <Minus size={12} />
               </button>
@@ -326,7 +403,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
               </button>
             </div>
           </div>
-          <div className="bg-card rounded-xl shadow-card grid grid-cols-3">
+          <div className="grid grid-cols-3 gap-1.5">
             {/* Difficulty */}
             <button
               type="button"
@@ -334,21 +411,41 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                 const idx = difficulties.indexOf(data.difficulty);
                 set('difficulty', difficulties[(idx + 1) % difficulties.length] as Difficulty);
               }}
-              className="flex items-center justify-center gap-1.5 py-3 px-2 hover:bg-secondary/50 transition-colors cursor-pointer rounded-l-xl border-r border-border"
+              className="bg-card rounded-xl shadow-card flex items-center justify-center gap-1.5 py-3 px-2 hover:bg-secondary/50 transition-colors cursor-pointer"
             >
               <DifficultyBars level={difficultyLevels[data.difficulty].bars} />
               <span className="text-xs capitalize font-body font-medium">{data.difficulty}</span>
             </button>
             {/* Rating */}
-            <div className="col-span-2 flex flex-col items-center gap-1 py-3 px-2">
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <button key={i} type="button" onClick={() => set('rating', data.rating === i ? 0 : i)}>
-                    <Star size={20} className={i <= data.rating ? 'fill-primary text-primary' : 'text-muted'} />
-                  </button>
-                ))}
+            <div className="col-span-2 bg-card rounded-xl shadow-card flex flex-col items-center gap-1 py-3 px-2">
+              <div className="flex gap-1" onMouseLeave={() => setHoveredRating(0)}>
+                {[1, 2, 3, 4, 5].map((i) => {
+                  const displayRating = hoveredRating || data.rating;
+                  const filled = i <= displayRating;
+                  const isPreview = hoveredRating > 0 && i > data.rating;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => set('rating', data.rating === i ? 0 : i)}
+                      onMouseEnter={() => setHoveredRating(i)}
+                      className="transition-transform [@media(hover:hover)_and_(pointer:fine)]:hover:scale-110"
+                    >
+                      <Star
+                        size={20}
+                        className={`transition-colors ${
+                          filled
+                            ? isPreview
+                              ? 'fill-primary/40 text-primary/40'
+                              : 'fill-primary text-primary'
+                            : 'text-muted-foreground/40'
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
               </div>
-              <span className="text-[11px] font-body text-muted-foreground">{['Pas noté', 'Ça se laisse manger', 'Plutôt pas mal !', 'Je reprendrais du rab', 'Un vrai régal !', 'Une recette qui met tout le monde d\'accord'][data.rating]}</span>
+              <span className="text-[11px] font-body text-muted-foreground">{['Pas noté', 'Ça se laisse manger', 'Plutôt pas mal !', 'Je reprendrais du rab', 'Un vrai régal !', 'Une recette qui met tout le monde d\'accord'][hoveredRating || data.rating]}</span>
             </div>
           </div>
         </div>
@@ -369,7 +466,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                     className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
                       active
                         ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
-                        : 'bg-card border-border text-muted-foreground active:bg-secondary'
+                        : 'bg-card border-border text-muted-foreground active:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
                     }`}
                   >
                     <Icon size={18} className={active ? 'text-primary' : ''} />
@@ -394,7 +491,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                     className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
                       active
                         ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
-                        : 'bg-card border-border text-muted-foreground active:bg-secondary'
+                        : 'bg-card border-border text-muted-foreground active:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
                     }`}
                   >
                     <Icon size={18} className={active ? 'text-primary' : ''} />
@@ -414,7 +511,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                 className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
                   data.tested
                     ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
-                    : 'bg-card border-border text-muted-foreground active:bg-secondary'
+                    : 'bg-card border-border text-muted-foreground active:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
                 }`}
               >
                 <Check size={18} className={data.tested ? 'text-primary' : ''} />
@@ -425,11 +522,11 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                 style={{ WebkitTapHighlightColor: 'transparent' }}
                 className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-xl border transition-all duration-150 active:scale-95 ${
                   data.diets.includes('végétarien')
-                    ? 'bg-primary/12 border-primary/35 text-foreground shadow-sm'
-                    : 'bg-card border-border text-muted-foreground active:bg-secondary'
+                    ? 'bg-success/12 border-success/40 text-foreground shadow-sm'
+                    : 'bg-card border-border text-muted-foreground active:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:bg-secondary [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
                 }`}
               >
-                <Leaf size={18} className={data.diets.includes('végétarien') ? 'text-primary' : ''} />
+                <Leaf size={18} className={data.diets.includes('végétarien') ? 'text-success' : ''} />
                 <span className="text-[10px] font-body font-medium">Végé</span>
               </button>
             </div>
@@ -446,7 +543,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                   className={`text-[13px] pl-3 pr-2 py-1.5 rounded-full border font-body font-medium capitalize transition-all duration-150 active:scale-95 inline-flex items-center gap-1 ${
                     data.tags.includes(tag)
                       ? 'bg-primary/15 border-primary/40 text-primary'
-                      : 'bg-transparent border-border text-muted-foreground active:border-foreground/30 active:text-foreground'
+                      : 'bg-transparent border-border text-muted-foreground active:border-foreground/30 active:text-foreground [@media(hover:hover)_and_(pointer:fine)]:hover:border-foreground/30 [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
                   }`}
                 >
                   {tag}
@@ -519,6 +616,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             <button
               type="button"
               onClick={addIngredient}
+              data-add-ingredient
               className="w-full mt-2 py-2 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
             >
               <Plus size={14} /> Ajouter
@@ -527,36 +625,28 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
 
           {/* Steps */}
           <FormSection title="Préparation">
-            <ol className="space-y-2">
-              {data.steps.map((step, i) => (
-                <li key={i} className="group relative">
-                  <div className="flex items-start gap-3 bg-secondary/40 rounded-xl p-3.5">
-                    <span className="flex-shrink-0 w-7 h-7 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-xs mt-1">
-                      {i + 1}
-                    </span>
-                    <textarea
-                      data-step-textarea
-                      value={step.text}
-                      onChange={(e) => updateStep(i, e.target.value)}
-                      onKeyDown={(e) => handleStepKeyDown(e, i)}
-                      placeholder={`Décrivez l'étape ${i + 1}…`}
-                      className="flex-1 bg-transparent font-body text-base outline-none resize-none placeholder:text-muted-foreground/40 min-h-[3rem] [field-sizing:content]"
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleStepDragEnd}>
+              <SortableContext items={stepIds} strategy={verticalListSortingStrategy}>
+                <ol className="space-y-2.5">
+                  {data.steps.map((step, i) => (
+                    <SortableStepItem
+                      key={stepIds[i]}
+                      id={stepIds[i]}
+                      step={step}
+                      index={i}
+                      onUpdate={updateStep}
+                      onRemove={removeStep}
+                      onKeyDown={handleStepKeyDown}
+                      canRemove={data.steps.length > 0}
                     />
-                    {data.steps.length > 1 && (
-                      <button
-                        onClick={() => removeStep(i)}
-                        className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-destructive/10 text-destructive hover:bg-destructive/20 active:scale-90 transition-colors mt-0.5"
-                      >
-                        <Minus size={12} strokeWidth={2.5} />
-                      </button>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ol>
+                  ))}
+                </ol>
+              </SortableContext>
+            </DndContext>
             <button
               type="button"
               onClick={addStep}
+              data-add-step
               className="w-full mt-2 py-2 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
             >
               <Plus size={14} /> Ajouter une étape

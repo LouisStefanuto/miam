@@ -53,7 +53,13 @@ export default function MobileBottomBar() {
         <div className="flex items-center justify-around h-16 px-2 pb-[env(safe-area-inset-bottom)]">
           {/* Recipes */}
           <button
-            onClick={() => handleTap('recipes', '/')}
+            onClick={() => {
+              if (isRecipes) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                handleTap('recipes', '/');
+              }
+            }}
             className={`tap-pill ${tappedTab === 'recipes' ? 'tap-pill-active' : ''} relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
               isRecipes ? 'text-primary' : 'text-muted-foreground'
             }`}

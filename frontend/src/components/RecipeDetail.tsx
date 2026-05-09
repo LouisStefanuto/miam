@@ -52,6 +52,8 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const [displayServings, setDisplayServings] = useState(recipe.servings);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [imageOrientation, setImageOrientation] = useState<'landscape' | 'portrait'>('landscape');
+  const [editFocusTarget, setEditFocusTarget] = useState<'ingredients' | 'steps' | undefined>(undefined);
   const { toast } = useToast();
   const imageSrc = useAuthImage(recipe.image);
   const isMobile = useIsMobile();
@@ -162,12 +164,14 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   if (editing) {
     return (
       <RecipeForm
-        onBack={() => setEditing(false)}
+        onBack={() => { setEditing(false); setEditFocusTarget(undefined); }}
         onSave={handleFormSave}
         initialRecipe={recipe}
         allTags={allTags}
         onAddTag={onAddTag}
         onDeleteTag={onDeleteTag}
+        initialFocus={editFocusTarget}
+        initialImageOrientation={imageOrientation}
       />
     );
   }
@@ -261,12 +265,13 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-8 md:pb-8 md:grid md:grid-cols-12 md:gap-12 lg:gap-16">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-8 pb-6 md:pb-8 md:grid md:grid-cols-12 md:gap-12 lg:gap-16">
         {/* Left: image + title + rating + description */}
         <aside className="md:col-span-4">
-          <div className="flex items-center md:flex-col md:items-start gap-4 md:gap-4">
+          <div className="flex flex-col gap-4">
             {(() => {
-              const wrapperBase = 'flex-shrink-0 w-24 h-24 md:w-full md:h-auto md:aspect-square rounded-full';
+              const aspectClass = imageOrientation === 'portrait' ? 'aspect-square' : 'aspect-[16/9]';
+              const wrapperBase = `w-full ${aspectClass} rounded-2xl md:aspect-square md:rounded-full`;
               const ringClass = 'ring-1 ring-border';
               const clickableClass = imageClickable ? 'md:cursor-pointer' : '';
               const tooltip = imageClickable ? (
@@ -275,24 +280,38 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 </span>
               ) : null;
               const imageEl = imageSrc ? (
-                <div className={`${wrapperBase} overflow-hidden ${ringClass} ${clickableClass}`}>
-                  <img src={imageSrc} alt={recipe.title} className="w-full h-full object-cover" />
+                <div className={`${wrapperBase} relative overflow-hidden ${ringClass} ${clickableClass}`}>
+                  <img
+                    src={imageSrc}
+                    alt=""
+                    aria-hidden
+                    className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl md:hidden"
+                  />
+                  <img
+                    src={imageSrc}
+                    alt={recipe.title}
+                    onLoad={(e) => {
+                      const { naturalWidth, naturalHeight } = e.currentTarget;
+                      setImageOrientation(naturalHeight > naturalWidth ? 'portrait' : 'landscape');
+                    }}
+                    className="relative w-full h-full object-contain md:object-cover"
+                  />
                 </div>
               ) : recipe.image ? (
                 <div className={`${wrapperBase} bg-muted animate-pulse`} />
               ) : (
                 <div className={`${wrapperBase} bg-muted flex items-center justify-center ${ringClass} ${clickableClass}`}>
-                  <img src={beaverIcon} alt="Pas d'image" className="w-1/3 h-1/3 opacity-50 grayscale" />
+                  <img src={beaverIcon} alt="Pas d'image" className="w-16 h-16 md:w-1/3 md:h-1/3 opacity-50 grayscale" />
                 </div>
               );
               return imageClickable ? (
-                <button type="button" onClick={() => setEditing(true)} aria-label="Modifier la recette" className="group contents md:block md:relative md:w-full">
+                <button type="button" onClick={() => setEditing(true)} aria-label="Modifier la recette" className="group block relative w-full">
                   {imageEl}
                   {tooltip}
                 </button>
               ) : imageEl;
             })()}
-            <div className="flex-1 min-w-0 md:flex-none md:w-full space-y-1">
+            <div className="w-full space-y-1">
               <h1 className="font-display text-xl md:text-2xl font-bold text-foreground">{recipe.title}</h1>
               <div className="flex gap-0.5" onMouseLeave={() => setHoveredStar(0)}>
                 {[1, 2, 3, 4, 5].map((i) => (
@@ -341,10 +360,14 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         )}
 
         {/* Stat cards */}
-        <div className="bg-card rounded-2xl shadow-card grid grid-cols-3 divide-x divide-border overflow-hidden">
-          <Stat icon={Timer} label="Préparation" value={recipe.prepTime} unit="min" />
-          <Stat icon={Flame} label="Cuisson" value={recipe.cookTime} unit="min" />
-          <div className="flex flex-col items-center justify-center gap-1 py-4 px-3">
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-card rounded-2xl shadow-card">
+            <Stat icon={Timer} label="Préparation" value={recipe.prepTime} unit="min" />
+          </div>
+          <div className="bg-card rounded-2xl shadow-card">
+            <Stat icon={Flame} label="Cuisson" value={recipe.cookTime} unit="min" />
+          </div>
+          <div className="bg-card rounded-2xl shadow-card flex flex-col items-center justify-center gap-1 py-4 px-3">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Users size={14} />
               <span className="text-[10px] font-body font-semibold uppercase tracking-wider">Portions</span>
@@ -378,36 +401,60 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         </div>
 
         {/* Ingredients */}
-        <FormSection title="Ingrédients">
-          <div className="bg-card rounded-xl shadow-card p-4">
-            <ul className="space-y-2">
-              {recipe.ingredients.map((ing, i) => (
-                <li key={i} className="flex justify-between items-center py-1.5 border-b border-border last:border-0 font-body text-sm">
-                  <span className="text-card-foreground">{ing.name}</span>
-                  <span className="text-muted-foreground whitespace-nowrap ml-3">
-                    {scaleQuantity(ing.quantity)} {ing.unit}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </FormSection>
+        {(recipe.ingredients.length > 0 || canEdit) && (
+          <FormSection title="Ingrédients">
+            {recipe.ingredients.length > 0 ? (
+              <div className="bg-card rounded-xl shadow-card p-4">
+                <ul className="space-y-2">
+                  {recipe.ingredients.map((ing, i) => (
+                    <li key={i} className="flex justify-between items-center py-1.5 border-b border-border last:border-0 font-body text-sm">
+                      <span className="text-card-foreground">{ing.name}</span>
+                      <span className="text-muted-foreground whitespace-nowrap ml-3">
+                        {scaleQuantity(ing.quantity)} {ing.unit}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { setEditFocusTarget('ingredients'); setEditing(true); }}
+                className="w-full py-6 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
+              >
+                <Plus size={14} /> Ajouter des ingrédients
+              </button>
+            )}
+          </FormSection>
+        )}
 
         {/* Steps */}
-        <FormSection title="Préparation">
-          <ol className="space-y-2">
-            {recipe.steps.map((step, i) => (
-              <li key={i}>
-                <div className="flex items-start gap-3 bg-secondary/40 rounded-xl p-3.5">
-                  <span className="flex-shrink-0 w-7 h-7 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-xs mt-1">
-                    {i + 1}
-                  </span>
-                  <p className="font-body text-foreground leading-relaxed whitespace-pre-line">{step.text}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </FormSection>
+        {(recipe.steps.length > 0 || canEdit) && (
+          <FormSection title="Préparation">
+            {recipe.steps.length > 0 ? (
+              <ol className="space-y-2.5">
+                {recipe.steps.map((step, i) => (
+                  <li key={i}>
+                    <div className="flex items-start gap-4 bg-card rounded-xl p-4 shadow-card border border-border/60">
+                      <span className="flex-shrink-0 w-7 h-7 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-xs leading-none">
+                        {i + 1}
+                      </span>
+                      <p className="font-body text-foreground leading-7 whitespace-pre-line flex-1">{step.text}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { setEditFocusTarget('steps'); setEditing(true); }}
+                className="w-full py-6 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
+              >
+                <Plus size={14} /> Ajouter une étape
+              </button>
+            )}
+          </FormSection>
+        )}
         </div>
       </div>
     </div>

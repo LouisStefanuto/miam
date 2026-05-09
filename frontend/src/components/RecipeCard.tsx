@@ -99,7 +99,7 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
                 tabIndex={0}
                 onClick={(e) => { e.stopPropagation(); cart.toggle(recipe.id); }}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); cart.toggle(recipe.id); } }}
-                className={`w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm transition-colors ${inCart ? 'text-primary fill-primary' : 'text-gray-600 dark:text-gray-300'}`}
+                className={`w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm transition-colors ${inCart ? 'text-primary fill-primary' : 'text-muted-foreground'}`}
                 title={inCart ? 'Retirer du panier' : 'Ajouter au panier'}
               >
                 <ShoppingCart size={16} className={inCart ? 'fill-primary' : ''} />
@@ -107,19 +107,17 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
             )}
           </div>
 
+          {/* Top left: Végé badge */}
+          {recipe.diets.includes('végétarien') && (
+            <div className="absolute top-2 left-2">
+              <Badge variant="secondary" className="bg-card/95 text-green-600 font-body text-xs">
+                Végé
+              </Badge>
+            </div>
+          )}
+
           {/* Overlaid content at bottom */}
           <div className="absolute bottom-3 left-3 right-3">
-            {/* Badges */}
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <Badge className="bg-primary text-primary-foreground capitalize font-body text-xs">
-                {recipe.type}
-              </Badge>
-              {recipe.diets.includes('végétarien') && (
-                <Badge variant="secondary" className="bg-card/95 text-green-600 font-body text-xs">
-                  Végé
-                </Badge>
-              )}
-            </div>
             {/* Title */}
             <h3 className="font-display text-lg font-bold text-primary-foreground drop-shadow-lg leading-tight line-clamp-2">
               {recipe.title}
