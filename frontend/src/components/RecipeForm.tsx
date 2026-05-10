@@ -39,6 +39,7 @@ interface RecipeFormProps {
   onDeleteTag?: (tag: string) => void;
   initialFocus?: 'ingredients' | 'steps';
   initialImageOrientation?: 'landscape' | 'portrait';
+  autoOpenImagePicker?: boolean;
 }
 
 const typeOptions: { value: RecipeType; label: string; icon: LucideIcon }[] = [
@@ -60,7 +61,7 @@ const difficulties: Difficulty[] = ['facile', 'moyen', 'difficile'];
 const defaultIngredients = (): Ingredient[] =>
   Array.from({ length: 3 }, () => ({ name: '', quantity: '', unit: '' }));
 
-export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = [], onAddTag, onDeleteTag, initialFocus, initialImageOrientation = 'landscape' }: RecipeFormProps) {
+export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = [], onAddTag, onDeleteTag, initialFocus, initialImageOrientation = 'landscape', autoOpenImagePicker }: RecipeFormProps) {
   const [data, setData] = useState<Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'type'> & { type: RecipeType | null }>({
     title: initialRecipe?.title ?? '',
     description: initialRecipe?.description ?? '',
@@ -91,6 +92,12 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
   const imageRef = useRef<HTMLInputElement>(null);
   const imageSrc = useAuthImage(data.image);
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    if (!autoOpenImagePicker) return;
+    const id = window.setTimeout(() => imageRef.current?.click(), 80);
+    return () => window.clearTimeout(id);
+  }, [autoOpenImagePicker]);
 
   useEffect(() => {
     if (!initialFocus) return;

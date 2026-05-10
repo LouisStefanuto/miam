@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Pencil, Trash2, Minus, Plus, CircleCheck, Copy, ClipboardCheck, Users, CopyPlus, LogOut, Vegan, Timer, Flame, Sun, Snowflake, Flower, LeafyGreen, Utensils, Circle, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Star, Pencil, Trash2, Minus, Plus, CircleCheck, Copy, ClipboardCheck, Users, CopyPlus, LogOut, Vegan, Timer, Flame, Sun, Snowflake, Flower, LeafyGreen, Utensils, Circle, Camera, LucideIcon } from 'lucide-react';
 import { Recipe } from '@/data/recipes';
 import { displayUnit } from '@/lib/units';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,6 @@ import { recipeToMarkdown } from '@/lib/recipe-to-markdown';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthImage } from '@/hooks/use-auth-image';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { getDefaultRecipeImage } from '@/lib/recipe-default-image';
 
 const DifficultyBars = ({ level }: { level: number }) => (
   <div className="flex gap-0.5 items-end">
@@ -56,10 +55,9 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const [copied, setCopied] = useState(false);
   const [imageOrientation, setImageOrientation] = useState<'landscape' | 'portrait'>('landscape');
   const [editFocusTarget, setEditFocusTarget] = useState<'ingredients' | 'steps' | undefined>(undefined);
+  const [autoOpenImagePicker, setAutoOpenImagePicker] = useState(false);
   const { toast } = useToast();
-  const fetchedImage = useAuthImage(recipe.image);
-  const imageSrc = recipe.image ? fetchedImage : getDefaultRecipeImage(recipe.type);
-  const isDefault = !recipe.image;
+  const imageSrc = useAuthImage(recipe.image);
   const isMobile = useIsMobile();
   const canEdit = recipe.userRole !== 'reader';
   const imageClickable = !isMobile && canEdit;
@@ -212,7 +210,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   if (editing) {
     return (
       <RecipeForm
-        onBack={() => { setEditing(false); setEditFocusTarget(undefined); }}
+        onBack={() => { setEditing(false); setEditFocusTarget(undefined); setAutoOpenImagePicker(false); }}
         onSave={handleFormSave}
         initialRecipe={recipe}
         allTags={allTags}
@@ -220,6 +218,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         onDeleteTag={onDeleteTag}
         initialFocus={editFocusTarget}
         initialImageOrientation={imageOrientation}
+        autoOpenImagePicker={autoOpenImagePicker}
       />
     );
   }
@@ -327,16 +326,16 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                   Changer l'image
                 </span>
               ) : null;
+              const hasNoImage = !recipe.image;
+              const placeholderClickable = canEdit && hasNoImage;
               const imageEl = imageSrc ? (
-                <div className={`${wrapperBase} relative overflow-hidden ${ringClass} ${clickableClass} ${isDefault ? 'bg-muted' : ''}`}>
-                  {!isDefault && (
-                    <img
-                      src={imageSrc}
-                      alt=""
-                      aria-hidden
-                      className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl md:hidden"
-                    />
-                  )}
+                <div className={`${wrapperBase} relative overflow-hidden ${ringClass} ${clickableClass}`}>
+                  <img
+                    src={imageSrc}
+                    alt=""
+                    aria-hidden
+                    className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl md:hidden"
+                  />
                   <img
                     src={imageSrc}
                     alt={recipe.title}
@@ -344,12 +343,28 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                       const { naturalWidth, naturalHeight } = e.currentTarget;
                       setImageOrientation(naturalHeight > naturalWidth ? 'portrait' : 'landscape');
                     }}
-                    className={`relative w-full h-full ${isDefault ? 'object-contain p-6 md:p-10' : 'object-contain md:object-cover'}`}
+                    className="relative w-full h-full object-contain md:object-cover"
                   />
                 </div>
-              ) : (
+              ) : recipe.image ? (
                 <div className={`${wrapperBase} bg-muted animate-pulse`} />
+              ) : (
+                <div className={`${wrapperBase} bg-muted border-2 border-dashed border-muted-foreground/30 ${placeholderClickable ? 'group-hover:border-primary/50 transition-colors cursor-pointer' : ''} flex items-center justify-center`}>
+                  <Camera size={24} className="text-muted-foreground/50" />
+                </div>
               );
+              if (placeholderClickable) {
+                return (
+                  <button
+                    type="button"
+                    onClick={() => { setAutoOpenImagePicker(true); setEditing(true); }}
+                    aria-label="Ajouter une image"
+                    className="group block relative w-full"
+                  >
+                    {imageEl}
+                  </button>
+                );
+              }
               return imageClickable ? (
                 <button type="button" onClick={() => setEditing(true)} aria-label="Modifier la recette" className="group block relative w-full">
                   {imageEl}
