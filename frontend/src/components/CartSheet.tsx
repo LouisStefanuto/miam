@@ -208,8 +208,17 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
         </SheetHeader>
 
         {cartRecipes.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-muted-foreground font-body">Aucune recette dans le panier</p>
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-6 gap-4">
+            <ShoppingCart size={48} className="text-muted-foreground/40" strokeWidth={1.5} />
+            <div className="space-y-1">
+              <p className="font-display text-lg font-bold text-foreground">Panier vide, ventre creux 😋</p>
+              <p className="text-sm text-muted-foreground font-body">
+                Ajoutez des recettes depuis le catalogue,<br />on vous prépare la liste de courses !
+              </p>
+            </div>
+            <Button onClick={() => setOpen(false)} className="font-body">
+              Parcourir les recettes
+            </Button>
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto space-y-6 pr-2">

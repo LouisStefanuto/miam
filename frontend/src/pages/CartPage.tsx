@@ -158,7 +158,7 @@ const CartPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-20 flex items-center gap-3 px-4 h-14 bg-background border-b border-border md:hidden">
         <Button variant="ghost" size="icon" onClick={() => navigate('/')} aria-label="Retour au catalogue">
           <ArrowLeft size={20} />
@@ -172,10 +172,19 @@ const CartPage = () => {
         <h1 className="font-display text-2xl font-bold text-foreground tracking-tight">Panier ({count})</h1>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-4 pb-24 space-y-6">
+      <main className="max-w-lg w-full mx-auto px-4 py-4 pb-24 space-y-6 flex-1 flex flex-col">
         {cartRecipes.length === 0 ? (
-          <div className="flex items-center justify-center py-20">
-            <p className="text-muted-foreground font-body">Aucune recette dans le panier</p>
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-6 gap-4 md:py-20">
+            <ShoppingCart size={48} className="text-muted-foreground/40" strokeWidth={1.5} />
+            <div className="space-y-1">
+              <p className="font-display text-lg font-bold text-foreground">Panier vide, ventre creux 😋</p>
+              <p className="text-sm text-muted-foreground font-body">
+                Ajoutez des recettes depuis le catalogue,<br />on vous prépare la liste de courses !
+              </p>
+            </div>
+            <Button onClick={() => navigate('/')} className="font-body">
+              Parcourir les recettes
+            </Button>
           </div>
         ) : (
           <>
