@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Pencil, Trash2, Minus, Plus, Check, Copy, ClipboardCheck, Users, CopyPlus, LogOut, Vegan, Timer, Flame, Sun, Snowflake, Flower, LeafyGreen, Utensils, Circle, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Star, Pencil, Trash2, Minus, Plus, CircleCheck, Copy, ClipboardCheck, Users, CopyPlus, LogOut, Vegan, Timer, Flame, Sun, Snowflake, Flower, LeafyGreen, Utensils, Circle, LucideIcon } from 'lucide-react';
 import { Recipe } from '@/data/recipes';
 import { displayUnit } from '@/lib/units';
 import { Button } from '@/components/ui/button';
@@ -129,23 +129,6 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           <span>Végétarien</span>
         </li>
       )}
-      <li>
-        <button
-          type="button"
-          onClick={() => canToggleTested && onTestedToggle?.(!recipe.tested)}
-          disabled={!canToggleTested}
-          className={`${infoRowClass} ${canToggleTested ? 'cursor-pointer hover:text-primary' : 'cursor-default'} transition-colors`}
-        >
-          {recipe.tested ? (
-            <Check size={iconSize} className="text-primary shrink-0" />
-          ) : (
-            <Circle size={iconSize} className={iconClass} />
-          )}
-          <span className={recipe.tested ? '' : 'text-muted-foreground'}>
-            {recipe.tested ? 'Testé' : 'À tester'}
-          </span>
-        </button>
-      </li>
     </ul>
   );
 
@@ -209,14 +192,17 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
       type="button"
       onClick={() => canToggleTested && onTestedToggle?.(!recipe.tested)}
       disabled={!canToggleTested}
-      className={`md:hidden inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded font-body transition-colors ${
+      className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded font-body transition-colors ${
         recipe.tested
           ? 'bg-primary/10 text-primary'
           : 'bg-muted text-muted-foreground'
       } ${canToggleTested ? 'cursor-pointer' : 'cursor-default opacity-70'}`}
     >
-      {recipe.tested ? <Check size={chipIconSize} className="shrink-0" /> : <Circle size={chipIconSize} className="shrink-0" />}
-      {recipe.tested ? 'Testé' : 'À tester'}
+      {recipe.tested ? <CircleCheck size={chipIconSize} className="shrink-0" /> : <Circle size={chipIconSize} className="shrink-0" />}
+      <span className="relative inline-block">
+        <span className="invisible">À tester</span>
+        <span className="absolute inset-0">{recipe.tested ? 'Testé' : 'À tester'}</span>
+      </span>
     </button>
   );
 

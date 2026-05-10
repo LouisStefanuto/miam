@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ArrowLeft, Plus, Star, Save, Camera, X, Check, Circle, Minus, ImagePlus, ImageMinus, Flower, Sun, Grape, Snowflake, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, Timer, Flame, Users, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Star, Save, Camera, X, CircleCheck, Circle, Minus, ImagePlus, ImageMinus, Flower, Sun, Grape, Snowflake, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, Timer, Flame, Users, LucideIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -399,8 +399,11 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
                           : 'bg-muted text-muted-foreground'
                       }`}
                     >
-                      {data.tested ? <Check size={12} className="shrink-0" /> : <Circle size={12} className="shrink-0" />}
-                      {data.tested ? 'Testé' : 'À tester'}
+                      {data.tested ? <CircleCheck size={12} className="shrink-0" /> : <Circle size={12} className="shrink-0" />}
+                      <span className="relative inline-block">
+                        <span className="invisible">À tester</span>
+                        <span className="absolute inset-0">{data.tested ? 'Testé' : 'À tester'}</span>
+                      </span>
                     </button>
                   </div>
                   <span className="hidden md:block text-[11px] font-body text-muted-foreground">
