@@ -195,6 +195,11 @@ class _StubImageStorage(ImageStoragePort):
     def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
         return self.images.get(image_id)
 
+    def get_recipe_image_path(self, image_id: UUID) -> tuple[Path, str] | None:
+        if image_id in self.images:
+            return Path(f"/tmp/{image_id}"), self.images[image_id].media_type
+        return None
+
     def delete_image(self, image_id: UUID) -> bool:
         return image_id in self.images
 

@@ -1,5 +1,6 @@
 """Tests for image API routes."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -7,7 +8,6 @@ import httpx
 from fastapi.testclient import TestClient
 
 from miam.api.routes.images import _is_allowed_image_url
-from miam.domain.schemas import ImageResponse
 
 
 class TestUploadImage:
@@ -57,11 +57,17 @@ class TestUploadImage:
 
 
 class TestGetImage:
-    def test_returns_image_bytes(
-        self, client: TestClient, mock_recipe_service: MagicMock
+    def test_streams_image_from_disk_with_cache_headers(
+        self,
+        client: TestClient,
+        mock_recipe_service: MagicMock,
+        tmp_path: Path,
     ) -> None:
-        mock_recipe_service.get_recipe_image.return_value = ImageResponse(
-            media_type="image/png", content=b"\x89PNG-data"
+        image_path = tmp_path / "fake.png"
+        image_path.write_bytes(b"\x89PNG-data")
+        mock_recipe_service.get_recipe_image_path.return_value = (
+            image_path,
+            "image/png",
         )
 
         response = client.get(f"/api/images/{uuid4()}")
@@ -69,11 +75,15 @@ class TestGetImage:
         assert response.status_code == 200
         assert response.headers["content-type"] == "image/png"
         assert response.content == b"\x89PNG-data"
+        cache_control = response.headers["cache-control"]
+        assert "private" in cache_control
+        assert "max-age=300" in cache_control
+        assert "must-revalidate" in cache_control
 
     def test_returns_404_when_not_found(
         self, client: TestClient, mock_recipe_service: MagicMock
     ) -> None:
-        mock_recipe_service.get_recipe_image.return_value = None
+        mock_recipe_service.get_recipe_image_path.return_value = None
 
         response = client.get(f"/api/images/{uuid4()}")
 

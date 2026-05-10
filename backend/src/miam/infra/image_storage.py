@@ -64,6 +64,15 @@ class LocalImageStorage(ImageStoragePort):
 
     def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
         """Retrieve image bytes from storage by image ID."""
+        resolved = self.get_recipe_image_path(image_id)
+        if resolved is None:
+            return None
+        file, media_type = resolved
+        with open(file, "rb") as f:
+            return ImageResponse(content=f.read(), media_type=media_type)
+
+    def get_recipe_image_path(self, image_id: UUID) -> tuple[Path, str] | None:
+        """Resolve the on-disk path and media type of an image without loading bytes."""
         file = self._find_image(image_id)
         if file is None:
             logger.warning(f"Image with ID {image_id} not found in storage")
@@ -74,8 +83,7 @@ class LocalImageStorage(ImageStoragePort):
                 f"Could not determine media type for image {file.name}, defaulting to application/octet-stream"
             )
             media_type = "application/octet-stream"
-        with open(file, "rb") as f:
-            return ImageResponse(content=f.read(), media_type=media_type)
+        return file, media_type
 
     def delete_image(self, image_id: UUID) -> bool:
         """Delete an image file from local storage by image ID."""

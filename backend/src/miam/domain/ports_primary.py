@@ -1,6 +1,7 @@
 """Define how services can be used by external consumers (e.g., HTTP API, CLI)."""
 
 from abc import ABC, abstractmethod
+from pathlib import Path
 from uuid import UUID
 
 from miam.domain.entities import (
@@ -67,6 +68,12 @@ class RecipeServicePort(ABC):
     @abstractmethod
     def get_recipe_image(self, image_id: UUID, user_id: UUID) -> ImageResponse | None:
         """Retrieve image bytes for a given image ID, scoped to the given user."""
+
+    @abstractmethod
+    def get_recipe_image_path(
+        self, image_id: UUID, user_id: UUID
+    ) -> tuple[Path, str] | None:
+        """Resolve image path and media type for streaming, scoped to the given user."""
 
     @abstractmethod
     def delete_recipe_image(self, image_id: UUID, user_id: UUID) -> bool:
