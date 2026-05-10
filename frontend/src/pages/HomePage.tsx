@@ -15,7 +15,7 @@ const ROTATING_WORDS = [
   'du dimanche',
 ];
 
-function useTypewriter(words: string[], pauseMs = 1800) {
+function useTypewriter(words: string[], pauseMs = 1100) {
   const [displayed, setDisplayed] = useState(words[0]);
   const wordIdx = useRef(0);
   const charIdx = useRef(words[0].length);
