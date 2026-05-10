@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Trash2, ClipboardCopy, X, ArrowLeft } from 'lucide-react';
+import { Trash2, ClipboardCopy, X, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { useRecipes } from '@/hooks/use-recipes';
@@ -10,6 +10,8 @@ import { toast } from 'sonner';
 import type { Recipe } from '@/data/recipes';
 import { SortableCartIngredientItem } from '@/components/SortableCartIngredientItem';
 import { AuthImage } from '@/hooks/use-auth-image';
+import { getDefaultRecipeImage } from '@/lib/recipe-default-image';
+import cartImage from '@/assets/cart.png';
 
 interface AggregatedIngredient {
   id: string;
@@ -158,7 +160,7 @@ const CartPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-20 flex items-center gap-3 px-4 h-14 bg-background border-b border-border md:hidden">
         <Button variant="ghost" size="icon" onClick={() => navigate('/')} aria-label="Retour au catalogue">
           <ArrowLeft size={20} />
@@ -172,10 +174,19 @@ const CartPage = () => {
         <h1 className="font-display text-2xl font-bold text-foreground tracking-tight">Panier ({count})</h1>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-4 pb-24 space-y-6">
+      <main className="max-w-lg w-full mx-auto px-4 py-4 pb-24 space-y-6 flex-1 flex flex-col">
         {cartRecipes.length === 0 ? (
-          <div className="flex items-center justify-center py-20">
-            <p className="text-muted-foreground font-body">Aucune recette dans le panier</p>
+          <div className="flex-1 md:flex-none flex flex-col items-center justify-center text-center px-6 gap-6 md:py-20">
+            <img src={cartImage} alt="Panier vide" className="w-48 h-48 object-contain" />
+            <div className="space-y-4">
+              <p className="font-display text-2xl font-bold text-foreground">Panier vide, ventre creux</p>
+              <p className="font-body text-muted-foreground">
+                Ajoutez des recettes depuis le catalogue,<br />on vous prépare la liste de courses !
+              </p>
+              <Button onClick={() => navigate('/')} className="font-body md:hidden">
+                Parcourir les recettes
+              </Button>
+            </div>
           </div>
         ) : (
           <>
@@ -189,7 +200,11 @@ const CartPage = () => {
                   {recipe.image ? (
                     <AuthImage src={recipe.image} alt={recipe.title} className="w-14 h-14 rounded-md object-cover shrink-0" />
                   ) : (
-                    <div className="w-14 h-14 rounded-md bg-muted shrink-0" />
+                    <img
+                      src={getDefaultRecipeImage(recipe.type)}
+                      alt={recipe.title}
+                      className="w-14 h-14 rounded-md object-contain bg-muted p-1 shrink-0"
+                    />
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="font-body text-base font-medium truncate">{recipe.title}</p>

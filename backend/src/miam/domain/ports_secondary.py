@@ -1,6 +1,7 @@
 """Define how the domain interacts with infrastructure."""
 
 from abc import ABC, abstractmethod
+from pathlib import Path
 from uuid import UUID
 
 from miam.domain.entities import (
@@ -162,6 +163,14 @@ class ImageStoragePort(ABC):
     @abstractmethod
     def get_recipe_image(self, image_id: UUID) -> ImageResponse | None:
         """Retrieve image bytes from storage by image ID."""
+
+    @abstractmethod
+    def get_recipe_image_path(self, image_id: UUID) -> tuple[Path, str] | None:
+        """Resolve the on-disk path and media type of an image without loading bytes.
+
+        Returns ``(path, media_type)`` for streaming the file directly to clients,
+        or ``None`` if the image does not exist.
+        """
 
     @abstractmethod
     def delete_image(self, image_id: UUID) -> bool:

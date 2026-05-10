@@ -1,5 +1,6 @@
 """Orchestrate recipe and authentication operations."""
 
+from pathlib import Path
 from uuid import UUID
 
 from miam.domain.entities import (
@@ -154,6 +155,14 @@ class RecipeManagementService(RecipeServicePort):
         if not self.repository.image_belongs_to_user(image_id, user_id):
             return None
         return self.image_storage.get_recipe_image(image_id)
+
+    def get_recipe_image_path(
+        self, image_id: UUID, user_id: UUID
+    ) -> tuple[Path, str] | None:
+        """Resolve image path and media type for streaming, only if owned by user."""
+        if not self.repository.image_belongs_to_user(image_id, user_id):
+            return None
+        return self.image_storage.get_recipe_image_path(image_id)
 
     def delete_recipe_image(self, image_id: UUID, user_id: UUID) -> bool:
         """Delete an image from storage and database."""

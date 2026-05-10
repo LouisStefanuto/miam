@@ -1,8 +1,10 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Minus } from 'lucide-react';
+import { GripVertical, X } from 'lucide-react';
 import { Ingredient } from '@/data/recipes';
+import { displayUnit } from '@/lib/units';
+import { QuantityPicker } from './QuantityPicker';
 
 interface SortableIngredientItemProps {
   id: string;
@@ -38,6 +40,13 @@ export function SortableIngredientItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const qtyStr = ingredient.quantity == null ? '' : String(ingredient.quantity).trim();
+  const unitStr = (ingredient.unit ?? '').trim();
+  const hasQty = qtyStr !== '';
+  const hasUnit = unitStr !== '';
+  const isEmpty = !hasQty && !hasUnit;
+  const display = isEmpty ? 'Quantité' : [qtyStr, displayUnit(unitStr, qtyStr)].filter(Boolean).join(' ');
+
   return (
     <li
       ref={setNodeRef}
@@ -63,29 +72,33 @@ export function SortableIngredientItem({
         placeholder="Ingrédient"
         className="flex-1 min-w-0 bg-transparent text-base font-body outline-none placeholder:text-muted-foreground/40"
       />
-      <div className="flex items-center gap-1 shrink-0">
-        <input
-          value={String(ingredient.quantity)}
-          onChange={(e) => onUpdate(index, 'quantity', e.target.value)}
-          onKeyDown={(e) => onKeyDown(e, index)}
-          placeholder="Qté"
-          className="w-14 text-center bg-secondary text-base font-body font-medium rounded-lg py-1.5 outline-none placeholder:text-muted-foreground/40 border border-transparent focus:border-primary/30"
-        />
-        <input
-          value={ingredient.unit}
-          onChange={(e) => onUpdate(index, 'unit', e.target.value)}
-          onKeyDown={(e) => onKeyDown(e, index)}
-          placeholder="Unité"
-          className="w-16 text-center bg-secondary text-base font-body rounded-lg py-1.5 outline-none placeholder:text-muted-foreground/40 border border-transparent focus:border-primary/30"
-        />
-      </div>
+      <QuantityPicker
+        quantity={ingredient.quantity}
+        unit={ingredient.unit}
+        onConfirm={(qty, unit) => {
+          onUpdate(index, 'quantity', qty);
+          onUpdate(index, 'unit', unit);
+        }}
+        trigger={
+          <button
+            type="button"
+            className={`shrink-0 px-3 py-1.5 rounded-lg text-sm font-body transition-colors min-w-[68px] text-center ${
+              isEmpty
+                ? 'border border-dashed border-border text-muted-foreground/60 hover:text-muted-foreground hover:border-muted-foreground/40'
+                : 'bg-secondary text-foreground font-medium hover:bg-secondary/70'
+            }`}
+          >
+            {display}
+          </button>
+        }
+      />
       {canRemove && (
         <button
           type="button"
           onClick={() => onRemove(index)}
-          className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-destructive/10 text-destructive hover:bg-destructive/20 active:scale-90 transition-colors"
+          className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground active:scale-90 transition-colors"
         >
-          <Minus size={12} strokeWidth={2.5} />
+          <X size={12} strokeWidth={2.5} />
         </button>
       )}
     </li>

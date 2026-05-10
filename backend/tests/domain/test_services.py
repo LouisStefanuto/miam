@@ -1,5 +1,6 @@
 """Tests for domain services using stub implementations of ports."""
 
+from pathlib import Path
 from uuid import UUID, uuid4
 
 from miam.domain.entities import (
@@ -175,6 +176,11 @@ class StubImageStorage(ImageStoragePort):
         if image_id in self.stored:
             content, _ = self.stored[image_id]
             return ImageResponse(media_type="image/jpeg", content=content)
+        return None
+
+    def get_recipe_image_path(self, image_id: UUID) -> tuple[Path, str] | None:
+        if image_id in self.stored:
+            return Path(f"/tmp/{image_id}.jpg"), "image/jpeg"
         return None
 
     def delete_image(self, image_id: UUID) -> bool:

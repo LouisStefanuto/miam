@@ -8,8 +8,11 @@ import { useCart } from '@/contexts/CartContext';
 import { useRecipes } from '@/hooks/use-recipes';
 import { toast } from 'sonner';
 import type { Recipe } from '@/data/recipes';
+import { displayUnit } from '@/lib/units';
 import { SortableCartIngredientItem } from './SortableCartIngredientItem';
 import { AuthImage } from '@/hooks/use-auth-image';
+import { getDefaultRecipeImage } from '@/lib/recipe-default-image';
+import cartImage from '@/assets/cart.png';
 
 interface AggregatedIngredient {
   id: string;
@@ -45,7 +48,7 @@ function aggregateIngredients(recipes: Recipe[]): AggregatedIngredient[] {
     const parts: string[] = [];
     for (const [unit, total] of byUnit) {
       if (total != null) {
-        parts.push(unit ? `${total} ${unit}` : `${total}`);
+        parts.push(unit ? `${total} ${displayUnit(unit, total)}` : `${total}`);
       }
     }
 
@@ -207,8 +210,17 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
         </SheetHeader>
 
         {cartRecipes.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-muted-foreground font-body">Aucune recette dans le panier</p>
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-6 gap-6">
+            <img src={cartImage} alt="Panier vide" className="w-48 h-48 object-contain" />
+            <div className="space-y-4">
+              <p className="font-display text-2xl font-bold text-foreground">Panier vide, ventre creux</p>
+              <p className="font-body text-muted-foreground">
+                Ajoutez des recettes depuis le catalogue,<br />on vous prépare la liste de courses !
+              </p>
+              <Button onClick={() => setOpen(false)} className="font-body md:hidden">
+                Parcourir les recettes
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto space-y-6 pr-2">
@@ -222,7 +234,11 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
                   {recipe.image ? (
                     <AuthImage src={recipe.image} alt={recipe.title} className="w-14 h-14 rounded-md object-cover shrink-0" />
                   ) : (
-                    <div className="w-14 h-14 rounded-md bg-muted shrink-0" />
+                    <img
+                      src={getDefaultRecipeImage(recipe.type)}
+                      alt={recipe.title}
+                      className="w-14 h-14 rounded-md object-contain bg-muted p-1 shrink-0"
+                    />
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="font-body text-base font-medium truncate">{recipe.title}</p>

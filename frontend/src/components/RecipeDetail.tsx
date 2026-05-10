@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Pencil, Trash2, Minus, Plus, Check, Copy, ClipboardCheck, Users, CopyPlus, LogOut, Vegan, Timer, Flame, Sun, Snowflake, Flower, LeafyGreen, Utensils, Circle, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Star, Pencil, Trash2, Minus, Plus, CircleCheck, Copy, ClipboardCheck, Users, CopyPlus, LogOut, Vegan, Timer, Flame, Sun, Snowflake, Flower, LeafyGreen, Utensils, Circle, Camera, LucideIcon } from 'lucide-react';
 import { Recipe } from '@/data/recipes';
+import { displayUnit } from '@/lib/units';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import RecipeForm from './RecipeForm';
+import { IngredientStepsTabs } from './IngredientStepsTabs';
 import { recipeToMarkdown } from '@/lib/recipe-to-markdown';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthImage } from '@/hooks/use-auth-image';
 import { useIsMobile } from '@/hooks/use-mobile';
-import beaverIcon from '/icon.png';
 
 const DifficultyBars = ({ level }: { level: number }) => (
   <div className="flex gap-0.5 items-end">
@@ -54,6 +55,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const [copied, setCopied] = useState(false);
   const [imageOrientation, setImageOrientation] = useState<'landscape' | 'portrait'>('landscape');
   const [editFocusTarget, setEditFocusTarget] = useState<'ingredients' | 'steps' | undefined>(undefined);
+  const [autoOpenImagePicker, setAutoOpenImagePicker] = useState(false);
   const { toast } = useToast();
   const imageSrc = useAuthImage(recipe.image);
   const isMobile = useIsMobile();
@@ -127,23 +129,6 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           <span>Végétarien</span>
         </li>
       )}
-      <li>
-        <button
-          type="button"
-          onClick={() => canToggleTested && onTestedToggle?.(!recipe.tested)}
-          disabled={!canToggleTested}
-          className={`${infoRowClass} ${canToggleTested ? 'cursor-pointer hover:text-primary' : 'cursor-default'} transition-colors`}
-        >
-          {recipe.tested ? (
-            <Check size={iconSize} className="text-primary shrink-0" />
-          ) : (
-            <Circle size={iconSize} className={iconClass} />
-          )}
-          <span className={recipe.tested ? '' : 'text-muted-foreground'}>
-            {recipe.tested ? 'Testé' : 'À tester'}
-          </span>
-        </button>
-      </li>
     </ul>
   );
 
@@ -160,11 +145,72 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
     </div>
   ) : null;
 
+  const chipClass = 'inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground font-body capitalize';
+  const chipIconSize = 12;
+  const difficultyLevel = difficultyLevels[recipe.difficulty].bars;
+
+  const metadataChips = (
+    <div className="flex flex-wrap gap-1.5">
+      <span className={chipClass}>
+        <Utensils size={chipIconSize} className="shrink-0" />
+        {recipe.type}
+      </span>
+      {recipe.season && SeasonIcon && (
+        <span className={chipClass}>
+          <SeasonIcon size={chipIconSize} className="shrink-0" />
+          {recipe.season}
+        </span>
+      )}
+      <span className={chipClass}>
+        <span className="flex gap-0.5 items-end h-3 shrink-0">
+          {[1, 2, 3].map((i) => (
+            <span
+              key={i}
+              className={`w-0.5 rounded-sm ${i <= difficultyLevel ? 'bg-primary' : 'bg-foreground/15'}`}
+              style={{ height: `${3 + i * 2}px` }}
+            />
+          ))}
+        </span>
+        {recipe.difficulty}
+      </span>
+      {recipe.diets.includes('végétarien') && (
+        <span className={chipClass}>
+          <Vegan size={chipIconSize} className="text-green-600 shrink-0" />
+          Végétarien
+        </span>
+      )}
+      {recipe.tags.map((tag) => (
+        <span key={tag} className={chipClass}>
+          {tag}
+        </span>
+      ))}
+    </div>
+  );
+
+  const mobileTestedPill = (
+    <button
+      type="button"
+      onClick={() => canToggleTested && onTestedToggle?.(!recipe.tested)}
+      disabled={!canToggleTested}
+      className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded font-body transition-colors ${
+        recipe.tested
+          ? 'bg-primary/10 text-primary'
+          : 'bg-muted text-muted-foreground'
+      } ${canToggleTested ? 'cursor-pointer' : 'cursor-default opacity-70'}`}
+    >
+      {recipe.tested ? <CircleCheck size={chipIconSize} className="shrink-0" /> : <Circle size={chipIconSize} className="shrink-0" />}
+      <span className="relative inline-block">
+        <span className="invisible">À tester</span>
+        <span className="absolute inset-0">{recipe.tested ? 'Testé' : 'À tester'}</span>
+      </span>
+    </button>
+  );
+
   // Edit mode — delegate to RecipeForm
   if (editing) {
     return (
       <RecipeForm
-        onBack={() => { setEditing(false); setEditFocusTarget(undefined); }}
+        onBack={() => { setEditing(false); setEditFocusTarget(undefined); setAutoOpenImagePicker(false); }}
         onSave={handleFormSave}
         initialRecipe={recipe}
         allTags={allTags}
@@ -172,6 +218,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         onDeleteTag={onDeleteTag}
         initialFocus={editFocusTarget}
         initialImageOrientation={imageOrientation}
+        autoOpenImagePicker={autoOpenImagePicker}
       />
     );
   }
@@ -279,6 +326,8 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                   Changer l'image
                 </span>
               ) : null;
+              const hasNoImage = !recipe.image;
+              const placeholderClickable = canEdit && hasNoImage;
               const imageEl = imageSrc ? (
                 <div className={`${wrapperBase} relative overflow-hidden ${ringClass} ${clickableClass}`}>
                   <img
@@ -300,10 +349,22 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
               ) : recipe.image ? (
                 <div className={`${wrapperBase} bg-muted animate-pulse`} />
               ) : (
-                <div className={`${wrapperBase} bg-muted flex items-center justify-center ${ringClass} ${clickableClass}`}>
-                  <img src={beaverIcon} alt="Pas d'image" className="w-16 h-16 md:w-1/3 md:h-1/3 opacity-50 grayscale" />
+                <div className={`${wrapperBase} bg-muted border-2 border-dashed border-muted-foreground/30 ${placeholderClickable ? 'group-hover:border-primary/50 transition-colors cursor-pointer' : ''} flex items-center justify-center`}>
+                  <Camera size={24} className="text-muted-foreground/50" />
                 </div>
               );
+              if (placeholderClickable) {
+                return (
+                  <button
+                    type="button"
+                    onClick={() => { setAutoOpenImagePicker(true); setEditing(true); }}
+                    aria-label="Ajouter une image"
+                    className="group block relative w-full"
+                  >
+                    {imageEl}
+                  </button>
+                );
+              }
               return imageClickable ? (
                 <button type="button" onClick={() => setEditing(true)} aria-label="Modifier la recette" className="group block relative w-full">
                   {imageEl}
@@ -311,27 +372,30 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 </button>
               ) : imageEl;
             })()}
-            <div className="w-full space-y-1">
+            <div className="w-full space-y-0.5">
               <h1 className="font-display text-xl md:text-2xl font-bold text-foreground">{recipe.title}</h1>
-              <div className="flex gap-0.5" onMouseLeave={() => setHoveredStar(0)}>
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => recipe.userRole !== 'reader' && onRatingChange?.(i)}
-                    onMouseEnter={() => setHoveredStar(i)}
-                    className={recipe.userRole === 'reader' ? '' : 'cursor-pointer'}
-                  >
-                    <Star
-                      size={20}
-                      className={
-                        (hoveredStar > 0 ? i <= hoveredStar : i <= recipe.rating)
-                          ? 'fill-primary text-primary'
-                          : 'text-muted'
-                      }
-                    />
-                  </button>
-                ))}
+              <div className="flex items-center gap-3 pt-1">
+                <div className="flex gap-0.5" onMouseLeave={() => setHoveredStar(0)}>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => recipe.userRole !== 'reader' && onRatingChange?.(i)}
+                      onMouseEnter={() => setHoveredStar(i)}
+                      className={recipe.userRole === 'reader' ? '' : 'cursor-pointer'}
+                    >
+                      <Star
+                        size={20}
+                        className={
+                          (hoveredStar > 0 ? i <= hoveredStar : i <= recipe.rating)
+                            ? 'fill-primary text-primary'
+                            : 'text-muted'
+                        }
+                      />
+                    </button>
+                  ))}
+                </div>
+                {mobileTestedPill}
               </div>
               {recipe.description && (
                 <p className="font-body text-sm text-muted-foreground">{recipe.description}</p>
@@ -395,66 +459,87 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         </div>
 
         {/* Metadata + tags — mobile only (desktop renders them under the title) */}
-        <div className="md:hidden space-y-4">
-          {metadataRail}
-          {tagsRail}
+        <div className="md:hidden">
+          {metadataChips}
         </div>
 
-        {/* Ingredients */}
-        {(recipe.ingredients.length > 0 || canEdit) && (
-          <FormSection title="Ingrédients">
-            {recipe.ingredients.length > 0 ? (
-              <div className="bg-card rounded-xl shadow-card p-4">
-                <ul className="space-y-2">
-                  {recipe.ingredients.map((ing, i) => (
+        {/* Ingredients & Steps — tabs on mobile, stacked on desktop */}
+        {(() => {
+          const ingredientsContent = recipe.ingredients.length > 0 ? (
+            <div className="bg-card rounded-xl shadow-card p-4">
+              <ul className="space-y-2">
+                {recipe.ingredients.map((ing, i) => {
+                  const scaled = scaleQuantity(ing.quantity);
+                  return (
                     <li key={i} className="flex justify-between items-center py-1.5 border-b border-border last:border-0 font-body text-sm">
                       <span className="text-card-foreground">{ing.name}</span>
                       <span className="text-muted-foreground whitespace-nowrap ml-3">
-                        {scaleQuantity(ing.quantity)} {ing.unit}
+                        {scaled} {displayUnit(ing.unit, scaled)}
                       </span>
                     </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => { setEditFocusTarget('ingredients'); setEditing(true); }}
-                className="w-full py-6 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
-              >
-                <Plus size={14} /> Ajouter des ingrédients
-              </button>
-            )}
-          </FormSection>
-        )}
+                  );
+                })}
+              </ul>
+            </div>
+          ) : canEdit ? (
+            <button
+              type="button"
+              onClick={() => { setEditFocusTarget('ingredients'); setEditing(true); }}
+              className="w-full py-6 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
+            >
+              <Plus size={14} /> Ajouter des ingrédients
+            </button>
+          ) : null;
 
-        {/* Steps */}
-        {(recipe.steps.length > 0 || canEdit) && (
-          <FormSection title="Préparation">
-            {recipe.steps.length > 0 ? (
-              <ol className="space-y-2.5">
-                {recipe.steps.map((step, i) => (
-                  <li key={i}>
-                    <div className="flex items-start gap-4 bg-card rounded-xl p-4 shadow-card border border-border/60">
-                      <span className="flex-shrink-0 w-7 h-7 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-xs leading-none">
-                        {i + 1}
-                      </span>
-                      <p className="font-body text-foreground leading-7 whitespace-pre-line flex-1">{step.text}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <button
-                type="button"
-                onClick={() => { setEditFocusTarget('steps'); setEditing(true); }}
-                className="w-full py-6 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
-              >
-                <Plus size={14} /> Ajouter une étape
-              </button>
-            )}
-          </FormSection>
-        )}
+          const stepsContent = recipe.steps.length > 0 ? (
+            <ol className="space-y-2.5">
+              {recipe.steps.map((step, i) => (
+                <li key={i}>
+                  <div className="flex items-start gap-4 bg-card rounded-xl p-4 shadow-card border border-border/60">
+                    <span className="flex-shrink-0 w-7 h-7 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-xs leading-none">
+                      {i + 1}
+                    </span>
+                    <p className="font-body text-foreground leading-7 whitespace-pre-line flex-1">{step.text}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ) : canEdit ? (
+            <button
+              type="button"
+              onClick={() => { setEditFocusTarget('steps'); setEditing(true); }}
+              className="w-full py-6 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1.5 text-sm font-body active:scale-[0.98]"
+            >
+              <Plus size={14} /> Ajouter une étape
+            </button>
+          ) : null;
+
+          if (!ingredientsContent && !stepsContent) return null;
+
+          if (!isMobile) {
+            return (
+              <>
+                {ingredientsContent && <FormSection title="Ingrédients">{ingredientsContent}</FormSection>}
+                {stepsContent && <FormSection title="Préparation">{stepsContent}</FormSection>}
+              </>
+            );
+          }
+
+          return (
+            <IngredientStepsTabs
+              ingredients={
+                ingredientsContent ?? (
+                  <p className="text-sm font-body text-muted-foreground text-center py-6">Aucun ingrédient.</p>
+                )
+              }
+              steps={
+                stepsContent ?? (
+                  <p className="text-sm font-body text-muted-foreground text-center py-6">Aucune étape.</p>
+                )
+              }
+            />
+          );
+        })()}
         </div>
       </div>
     </div>

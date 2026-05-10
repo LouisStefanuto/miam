@@ -6,7 +6,8 @@ from urllib.parse import urlparse
 from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from miam.api.deps import get_current_user_id, get_recipe_management_service
@@ -144,16 +145,21 @@ async def get_image(
     image_id: UUID,
     service: Annotated[RecipeManagementService, Depends(get_recipe_management_service)],
     user_id: Annotated[UUID, Depends(get_current_user_id)],
-) -> Response:
-    image_response = service.get_recipe_image(image_id, user_id)
-    if not image_response:
+) -> FileResponse:
+    resolved = service.get_recipe_image_path(image_id, user_id)
+    if not resolved:
         raise HTTPException(status_code=404, detail="Image not found")
 
-    return Response(
-        content=image_response.content,
-        media_type=image_response.media_type,
+    path, media_type = resolved
+    return FileResponse(
+        path=path,
+        media_type=media_type,
         headers={
             "Content-Security-Policy": "script-src 'none'",
             "X-Content-Type-Options": "nosniff",
+            # `private` because authorization is per-user. Short max-age caps the
+            # staleness window after a share is revoked; FileResponse's ETag/
+            # Last-Modified make subsequent revalidations cheap 304s.
+            "Cache-Control": "private, max-age=300, must-revalidate",
         },
     )
