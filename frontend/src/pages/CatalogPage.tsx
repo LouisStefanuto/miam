@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, PenLine, Camera, Instagram, Download, FileDown, FileText, FileJson, X, ArrowUpDown, Check, Share2, Inbox } from 'lucide-react';
+import { Plus, PenLine, Camera, Instagram, Download, FileDown, FileText, FileJson, X, ArrowUpDown, Check, Share2, Inbox, BookOpen } from 'lucide-react';
 
 
 const BeaverCatchGame = lazy(() => import('@/components/BeaverCatchGame'));
@@ -223,7 +223,7 @@ const CatalogPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Mobile header */}
       <MobileHeader
         searchTags={searchTags}
@@ -334,7 +334,7 @@ const CatalogPage = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-1 md:py-8 pb-20 md:pb-8 space-y-1.5 md:space-y-6">
+      <main className="max-w-7xl w-full mx-auto px-4 md:px-8 py-1 md:py-8 pb-20 md:pb-8 space-y-1.5 md:space-y-6 flex-1 flex flex-col">
 
         <div className="space-y-2">
           {/* Search + Add button on same line */}
@@ -477,6 +477,22 @@ const CatalogPage = () => {
                 onSelect={toggleSelection}
               />
             ))}
+          </div>
+        ) : recipes.length === 0 && !hasActiveFilters ? (
+          <div className="flex-1 md:flex-none flex flex-col items-center justify-center text-center px-6 gap-6 md:py-20">
+            <BookOpen size={48} className="text-muted-foreground/40" strokeWidth={1.5} />
+            <div className="space-y-4">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-body font-semibold bg-primary/10 text-primary uppercase tracking-wider">
+                Bienvenue
+              </span>
+              <p className="font-display text-2xl font-bold text-foreground">Votre livre de recettes <br className="md:hidden" />est tout neuf</p>
+              <p className="font-body text-muted-foreground">
+                Ajoutez votre première recette pour <br className="md:hidden" />commencer à cuisiner !
+              </p>
+              <Button onClick={() => navigate('/recipes/new')} className="font-body md:hidden">
+                <Plus size={16} className="mr-1.5" /> Ajouter ma première recette
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="text-center py-20">

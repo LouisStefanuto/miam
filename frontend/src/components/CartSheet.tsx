@@ -211,7 +211,7 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
           <div className="flex-1 flex flex-col items-center justify-center text-center px-6 gap-4">
             <ShoppingCart size={48} className="text-muted-foreground/40" strokeWidth={1.5} />
             <div className="space-y-1">
-              <p className="font-display text-lg font-bold text-foreground">Panier vide, ventre creux 😋</p>
+              <p className="font-display text-lg font-bold text-foreground">Panier vide, ventre creux</p>
               <p className="text-sm text-muted-foreground font-body">
                 Ajoutez des recettes depuis le catalogue,<br />on vous prépare la liste de courses !
               </p>
