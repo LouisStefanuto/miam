@@ -1,10 +1,10 @@
 import { Clock, Star, Users, ShoppingCart, Check } from 'lucide-react';
-import beaverIcon from '/icon.png';
 import { Recipe } from '@/data/recipes';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuthImage } from '@/hooks/use-auth-image';
+import { getDefaultRecipeImage } from '@/lib/recipe-default-image';
 
 
 const difficultyLabels: Record<string, { label: string; bars: number }> = {
@@ -51,7 +51,9 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
   const diff = difficultyLabels[recipe.difficulty];
   const cart = useCart();
   const inCart = cart.has(recipe.id);
-  const imageSrc = useAuthImage(recipe.image);
+  const fetchedImage = useAuthImage(recipe.image);
+  const imageSrc = recipe.image ? fetchedImage : getDefaultRecipeImage(recipe.type);
+  const isDefault = !recipe.image;
 
   const handleClick = (e: React.MouseEvent) => {
     if (selectionMode && onSelect) {
@@ -80,13 +82,11 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
             <img
               src={imageSrc}
               alt={recipe.title}
-              className="w-full h-full object-cover"
+              className={`w-full h-full ${isDefault ? 'object-contain bg-muted p-4' : 'object-cover'}`}
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center">
-              <img src={beaverIcon} alt="Pas d'image" className="w-10 h-10 opacity-50 grayscale" />
-            </div>
+            <div className="w-full h-full bg-muted animate-pulse" />
           )}
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -147,13 +147,11 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
           <img
             src={imageSrc}
             alt={recipe.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className={`w-full h-full transition-transform duration-500 group-hover:scale-105 ${isDefault ? 'object-contain bg-muted p-4' : 'object-cover'}`}
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full bg-muted flex items-center justify-center">
-            <img src={beaverIcon} alt="Pas d'image" className="w-10 h-10 opacity-50 grayscale" />
-          </div>
+          <div className="w-full h-full bg-muted animate-pulse" />
         )}
         {/* Top right: selection check or cart button */}
         <div className="absolute top-2 right-2 flex gap-1.5">

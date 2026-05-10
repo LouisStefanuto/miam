@@ -11,6 +11,7 @@ import type { Recipe } from '@/data/recipes';
 import { displayUnit } from '@/lib/units';
 import { SortableCartIngredientItem } from './SortableCartIngredientItem';
 import { AuthImage } from '@/hooks/use-auth-image';
+import { getDefaultRecipeImage } from '@/lib/recipe-default-image';
 import cartImage from '@/assets/cart.png';
 
 interface AggregatedIngredient {
@@ -233,7 +234,11 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
                   {recipe.image ? (
                     <AuthImage src={recipe.image} alt={recipe.title} className="w-14 h-14 rounded-md object-cover shrink-0" />
                   ) : (
-                    <div className="w-14 h-14 rounded-md bg-muted shrink-0" />
+                    <img
+                      src={getDefaultRecipeImage(recipe.type)}
+                      alt={recipe.title}
+                      className="w-14 h-14 rounded-md object-contain bg-muted p-1 shrink-0"
+                    />
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="font-body text-base font-medium truncate">{recipe.title}</p>

@@ -10,7 +10,7 @@ import { recipeToMarkdown } from '@/lib/recipe-to-markdown';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthImage } from '@/hooks/use-auth-image';
 import { useIsMobile } from '@/hooks/use-mobile';
-import beaverIcon from '/icon.png';
+import { getDefaultRecipeImage } from '@/lib/recipe-default-image';
 
 const DifficultyBars = ({ level }: { level: number }) => (
   <div className="flex gap-0.5 items-end">
@@ -57,7 +57,9 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const [imageOrientation, setImageOrientation] = useState<'landscape' | 'portrait'>('landscape');
   const [editFocusTarget, setEditFocusTarget] = useState<'ingredients' | 'steps' | undefined>(undefined);
   const { toast } = useToast();
-  const imageSrc = useAuthImage(recipe.image);
+  const fetchedImage = useAuthImage(recipe.image);
+  const imageSrc = recipe.image ? fetchedImage : getDefaultRecipeImage(recipe.type);
+  const isDefault = !recipe.image;
   const isMobile = useIsMobile();
   const canEdit = recipe.userRole !== 'reader';
   const imageClickable = !isMobile && canEdit;
@@ -326,13 +328,15 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 </span>
               ) : null;
               const imageEl = imageSrc ? (
-                <div className={`${wrapperBase} relative overflow-hidden ${ringClass} ${clickableClass}`}>
-                  <img
-                    src={imageSrc}
-                    alt=""
-                    aria-hidden
-                    className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl md:hidden"
-                  />
+                <div className={`${wrapperBase} relative overflow-hidden ${ringClass} ${clickableClass} ${isDefault ? 'bg-muted' : ''}`}>
+                  {!isDefault && (
+                    <img
+                      src={imageSrc}
+                      alt=""
+                      aria-hidden
+                      className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl md:hidden"
+                    />
+                  )}
                   <img
                     src={imageSrc}
                     alt={recipe.title}
@@ -340,15 +344,11 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                       const { naturalWidth, naturalHeight } = e.currentTarget;
                       setImageOrientation(naturalHeight > naturalWidth ? 'portrait' : 'landscape');
                     }}
-                    className="relative w-full h-full object-contain md:object-cover"
+                    className={`relative w-full h-full ${isDefault ? 'object-contain p-6 md:p-10' : 'object-contain md:object-cover'}`}
                   />
                 </div>
-              ) : recipe.image ? (
-                <div className={`${wrapperBase} bg-muted animate-pulse`} />
               ) : (
-                <div className={`${wrapperBase} bg-muted flex items-center justify-center ${ringClass} ${clickableClass}`}>
-                  <img src={beaverIcon} alt="Pas d'image" className="w-16 h-16 md:w-1/3 md:h-1/3 opacity-50 grayscale" />
-                </div>
+                <div className={`${wrapperBase} bg-muted animate-pulse`} />
               );
               return imageClickable ? (
                 <button type="button" onClick={() => setEditing(true)} aria-label="Modifier la recette" className="group block relative w-full">
