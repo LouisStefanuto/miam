@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ArrowLeft, Plus, Star, Save, Camera, X, CircleCheck, Circle, Minus, ImagePlus, ImageMinus, Flower, Sun, Grape, Snowflake, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, Timer, Flame, Users, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Star, Save, Camera, X, CircleCheck, Circle, Minus, ImagePlus, ImageMinus, Flower, Sun, Grape, Snowflake, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, Timer, Flame, Users, CalendarDays, LucideIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -61,11 +61,11 @@ const defaultIngredients = (): Ingredient[] =>
   Array.from({ length: 3 }, () => ({ name: '', quantity: '', unit: '' }));
 
 export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = [], onAddTag, onDeleteTag, initialFocus, initialImageOrientation = 'landscape' }: RecipeFormProps) {
-  const [data, setData] = useState<Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>>({
+  const [data, setData] = useState<Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'type'> & { type: RecipeType | null }>({
     title: initialRecipe?.title ?? '',
     description: initialRecipe?.description ?? '',
     image: initialRecipe?.image,
-    type: initialRecipe?.type ?? 'plat',
+    type: initialRecipe?.type ?? null,
     season: initialRecipe?.season ?? null,
     difficulty: initialRecipe?.difficulty ?? 'moyen',
     servings: initialRecipe?.servings ?? 4,
@@ -247,14 +247,22 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
   const handleSubmit = () => {
     const missing: string[] = [];
     if (!data.title.trim()) missing.push('Titre');
+    if (!data.type) missing.push('Type');
     if (missing.length > 0) {
       setErrors(missing);
+      window.setTimeout(() => {
+        const el = document.querySelector<HTMLElement>('[data-error]');
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus({ preventScroll: true });
+      }, 0);
       return;
     }
     setErrors([]);
     const now = new Date().toISOString().split('T')[0];
     onSave({
       ...data,
+      type: data.type as RecipeType,
       id: initialRecipe?.id ?? Date.now().toString(),
       ingredients: data.ingredients.filter((i) => i.name.trim()),
       steps: data.steps.filter((s) => s.text.trim()),
@@ -280,8 +288,8 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
 
       {/* Validation errors */}
       {errors.length > 0 && (
-        <div className="bg-destructive/10 border-b border-destructive/30 px-4 py-2 text-center">
-          <p className="text-sm font-body text-destructive font-medium">
+        <div className="bg-primary/10 border-b border-primary/30 px-4 py-2 text-center">
+          <p className="text-sm font-body text-primary font-medium">
             Champs requis : {errors.join(', ')}
           </p>
         </div>
@@ -348,9 +356,16 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
               <div className="w-full md:flex-1 md:min-w-0 space-y-2">
                 <Input
                   value={data.title}
-                  onChange={(e) => set('title', e.target.value)}
+                  onChange={(e) => {
+                    set('title', e.target.value);
+                    if (errors.includes('Titre')) setErrors((errs) => errs.filter((er) => er !== 'Titre'));
+                  }}
                   placeholder="Titre de la recette"
-                  className="font-display text-xl md:text-2xl font-bold text-foreground h-auto py-3 px-4 rounded-lg placeholder:text-muted-foreground/40"
+                  aria-invalid={errors.includes('Titre')}
+                  data-error={errors.includes('Titre') || undefined}
+                  className={`font-display text-xl md:text-2xl font-bold text-foreground h-auto py-3 px-4 rounded-lg placeholder:text-muted-foreground/40 ${
+                    errors.includes('Titre') ? 'border-2 border-primary bg-primary/5' : ''
+                  }`}
                 />
                 <div className="rounded-lg border border-input bg-background px-4 py-3 space-y-1.5">
                   <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -508,24 +523,25 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
         {/* Tags & categories — mirrors MobileSearchOverlay design, packed */}
         <div className="space-y-4">
           {/* Type — single card opens dropdown */}
-          <FormSection title="Type" icon={<UtensilsCrossed size={13} />}>
-            <IconPicker
-              options={typeOptions}
-              value={data.type}
-              onChange={(v) => v && set('type', v)}
-            />
-          </FormSection>
+          <IconPicker
+            options={typeOptions}
+            value={data.type}
+            onChange={(v) => {
+              set('type', v);
+              if (v && errors.includes('Type')) setErrors((errs) => errs.filter((er) => er !== 'Type'));
+            }}
+            placeholder="Type de recette"
+            error={errors.includes('Type')}
+          />
 
           {/* Season — single card opens dropdown */}
-          <FormSection title="Saison" icon={<Sun size={13} />}>
-            <IconPicker
-              options={seasonOptions}
-              value={data.season}
-              onChange={(v) => set('season', v)}
-              allowDeselect
-              placeholder="Toutes saisons"
-            />
-          </FormSection>
+          <IconPicker
+            options={seasonOptions}
+            value={data.season}
+            onChange={(v) => set('season', v)}
+            allowDeselect
+            nullOption={{ label: 'Toutes saisons', icon: CalendarDays }}
+          />
 
           {/* Tags — outline ghost pills, Végé pinned first */}
           <FormSection title="Tags">
