@@ -295,19 +295,19 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
         </div>
       )}
 
-      {/* Header: image + title */}
-      <div className="max-w-4xl mx-auto px-4 md:px-8 pt-6">
-        <input ref={imageRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+      <div className="max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-8 pb-8 md:grid md:grid-cols-12 md:gap-12 lg:gap-16">
+        <aside className="md:col-span-4 space-y-6">
+        <input ref={imageRef} type="file" accept="image/*" hidden onChange={handleImageUpload} />
         {(() => {
           const aspectClass = imageOrientation === 'portrait' ? 'aspect-square' : 'aspect-[16/9]';
-          const shape = `w-full ${aspectClass} rounded-2xl md:w-48 md:h-48 md:aspect-auto md:rounded-full`;
+          const shape = `w-full ${aspectClass} rounded-2xl md:aspect-square md:rounded-full`;
           return (
-            <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+            <div className="flex flex-col gap-4">
               {/* Image */}
               {data.image ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className={`relative flex-shrink-0 ${shape} overflow-hidden ring-2 ring-primary/20 hover:ring-primary/40 transition-shadow cursor-pointer group`}>
+                    <button className={`relative flex-shrink-0 ${shape} overflow-hidden ring-1 ring-border cursor-pointer group`}>
                       {imageSrc ? (
                         <>
                           <img
@@ -353,7 +353,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
               )}
 
               {/* Title + description + rating */}
-              <div className="w-full md:flex-1 md:min-w-0 space-y-2">
+              <div className="w-full space-y-2">
                 <Input
                   value={data.title}
                   onChange={(e) => {
@@ -436,10 +436,86 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             </div>
           );
         })()}
-      </div>
 
-      <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-8">
-        {/* Quick info bars */}
+        {/* Tags & categories — mirrors MobileSearchOverlay design, packed */}
+        <div className="space-y-4">
+          {/* Type — single card opens dropdown */}
+          <IconPicker
+            options={typeOptions}
+            value={data.type}
+            onChange={(v) => {
+              set('type', v);
+              if (v && errors.includes('Type')) setErrors((errs) => errs.filter((er) => er !== 'Type'));
+            }}
+            placeholder="Type de recette"
+            error={errors.includes('Type')}
+          />
+
+          {/* Season — single card opens dropdown */}
+          <IconPicker
+            options={seasonOptions}
+            value={data.season}
+            onChange={(v) => set('season', v)}
+            allowDeselect
+            nullOption={{ label: 'Toutes saisons', icon: CalendarDays }}
+          />
+
+          {/* Tags — outline ghost pills, Végé pinned first */}
+          <FormSection title="Tags">
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => toggleDiet('végétarien')}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+                className={`text-[13px] px-3 py-1.5 rounded-full border font-body font-medium transition-all duration-150 active:scale-95 inline-flex items-center gap-1 ${
+                  data.diets.includes('végétarien')
+                    ? 'bg-success/15 border-success/40 text-success'
+                    : 'bg-transparent border-border text-muted-foreground active:border-foreground/30 active:text-foreground [@media(hover:hover)_and_(pointer:fine)]:hover:border-foreground/30 [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
+                }`}
+              >
+                <Leaf size={12} />
+                Végé
+              </button>
+              {combinedTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  className={`text-[13px] pl-3 pr-2 py-1.5 rounded-full border font-body font-medium capitalize transition-all duration-150 active:scale-95 inline-flex items-center gap-1 ${
+                    data.tags.includes(tag)
+                      ? 'bg-primary/15 border-primary/40 text-primary'
+                      : 'bg-transparent border-border text-muted-foreground active:border-foreground/30 active:text-foreground [@media(hover:hover)_and_(pointer:fine)]:hover:border-foreground/30 [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
+                  }`}
+                >
+                  {tag}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setTagToDelete(tag); }}
+                    className="rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                    title={`Supprimer "${tag}"`}
+                  >
+                    <X size={10} />
+                  </button>
+                </button>
+              ))}
+              <div className="flex items-center gap-1">
+                <Input
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addNewTag())}
+                  placeholder="Nouveau tag…"
+                  className="h-8 w-28 text-xs font-body rounded-full border-dashed"
+                />
+                <Button type="button" size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full" onClick={addNewTag}>
+                  <Plus size={14} />
+                </Button>
+              </div>
+            </div>
+          </FormSection>
+        </div>
+        </aside>
+
+        <div className="md:col-span-8 mt-8 md:mt-0 space-y-8">
+          {/* Quick info bars */}
         <div className="space-y-1.5">
           <div className="grid grid-cols-3 gap-1.5">
             {/* Prep time */}
@@ -518,82 +594,6 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             <DifficultyBars level={difficultyLevels[data.difficulty].bars} />
             <span className="text-xs capitalize font-body font-medium">{data.difficulty}</span>
           </button>
-        </div>
-
-        {/* Tags & categories — mirrors MobileSearchOverlay design, packed */}
-        <div className="space-y-4">
-          {/* Type — single card opens dropdown */}
-          <IconPicker
-            options={typeOptions}
-            value={data.type}
-            onChange={(v) => {
-              set('type', v);
-              if (v && errors.includes('Type')) setErrors((errs) => errs.filter((er) => er !== 'Type'));
-            }}
-            placeholder="Type de recette"
-            error={errors.includes('Type')}
-          />
-
-          {/* Season — single card opens dropdown */}
-          <IconPicker
-            options={seasonOptions}
-            value={data.season}
-            onChange={(v) => set('season', v)}
-            allowDeselect
-            nullOption={{ label: 'Toutes saisons', icon: CalendarDays }}
-          />
-
-          {/* Tags — outline ghost pills, Végé pinned first */}
-          <FormSection title="Tags">
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                onClick={() => toggleDiet('végétarien')}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-                className={`text-[13px] px-3 py-1.5 rounded-full border font-body font-medium transition-all duration-150 active:scale-95 inline-flex items-center gap-1 ${
-                  data.diets.includes('végétarien')
-                    ? 'bg-success/15 border-success/40 text-success'
-                    : 'bg-transparent border-border text-muted-foreground active:border-foreground/30 active:text-foreground [@media(hover:hover)_and_(pointer:fine)]:hover:border-foreground/30 [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
-                }`}
-              >
-                <Leaf size={12} />
-                Végé
-              </button>
-              {combinedTags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => toggleTag(tag)}
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
-                  className={`text-[13px] pl-3 pr-2 py-1.5 rounded-full border font-body font-medium capitalize transition-all duration-150 active:scale-95 inline-flex items-center gap-1 ${
-                    data.tags.includes(tag)
-                      ? 'bg-primary/15 border-primary/40 text-primary'
-                      : 'bg-transparent border-border text-muted-foreground active:border-foreground/30 active:text-foreground [@media(hover:hover)_and_(pointer:fine)]:hover:border-foreground/30 [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground'
-                  }`}
-                >
-                  {tag}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setTagToDelete(tag); }}
-                    className="rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-                    title={`Supprimer "${tag}"`}
-                  >
-                    <X size={10} />
-                  </button>
-                </button>
-              ))}
-              <div className="flex items-center gap-1">
-                <Input
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addNewTag())}
-                  placeholder="Nouveau tag…"
-                  className="h-8 w-28 text-xs font-body rounded-full border-dashed"
-                />
-                <Button type="button" size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full" onClick={addNewTag}>
-                  <Plus size={14} />
-                </Button>
-              </div>
-            </div>
-          </FormSection>
         </div>
 
         <AlertDialog open={!!tagToDelete} onOpenChange={(open) => !open && setTagToDelete(null)}>
@@ -690,6 +690,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
             </div>
           );
         })()}
+        </div>
       </div>
     </div>
   );
