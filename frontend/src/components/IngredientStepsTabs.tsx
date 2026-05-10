@@ -31,10 +31,10 @@ export function IngredientStepsTabs({ ingredients, steps, stickyTop = '64px' }: 
     const dx = t.clientX - state.x;
     const dy = t.clientY - state.y;
     if (!state.dragging) {
-      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+      if (Math.abs(dx) > 8 && Math.abs(dx) >= Math.abs(dy)) {
         state.dragging = true;
         setIsDragging(true);
-      } else if (Math.abs(dy) > 10) {
+      } else if (Math.abs(dy) > 16) {
         swipeRef.current = null;
         return;
       } else {
@@ -56,7 +56,7 @@ export function IngredientStepsTabs({ ingredients, steps, stickyTop = '64px' }: 
     const t = e.changedTouches[0];
     const dx = t.clientX - state.x;
     const dy = Math.abs(t.clientY - state.y);
-    if (Math.abs(dx) < 60 || dy > 60) return;
+    if (Math.abs(dx) < 35 || Math.abs(dx) <= dy) return;
     if (dx < 0 && activeTab === 'ingredients') setActiveTab('steps');
     else if (dx > 0 && activeTab === 'steps') setActiveTab('ingredients');
   };
