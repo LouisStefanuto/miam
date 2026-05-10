@@ -11,6 +11,7 @@ import type { Recipe } from '@/data/recipes';
 import { displayUnit } from '@/lib/units';
 import { SortableCartIngredientItem } from './SortableCartIngredientItem';
 import { AuthImage } from '@/hooks/use-auth-image';
+import cartImage from '@/assets/cart.png';
 
 interface AggregatedIngredient {
   id: string;
@@ -208,17 +209,17 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
         </SheetHeader>
 
         {cartRecipes.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-6 gap-4">
-            <ShoppingCart size={48} className="text-muted-foreground/40" strokeWidth={1.5} />
-            <div className="space-y-1">
-              <p className="font-display text-lg font-bold text-foreground">Panier vide, ventre creux</p>
-              <p className="text-sm text-muted-foreground font-body">
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-6 gap-6">
+            <img src={cartImage} alt="Panier vide" className="w-48 h-48 object-contain" />
+            <div className="space-y-4">
+              <p className="font-display text-2xl font-bold text-foreground">Panier vide, ventre creux</p>
+              <p className="font-body text-muted-foreground">
                 Ajoutez des recettes depuis le catalogue,<br />on vous prépare la liste de courses !
               </p>
+              <Button onClick={() => setOpen(false)} className="font-body md:hidden">
+                Parcourir les recettes
+              </Button>
             </div>
-            <Button onClick={() => setOpen(false)} className="font-body">
-              Parcourir les recettes
-            </Button>
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto space-y-6 pr-2">

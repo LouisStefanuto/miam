@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Trash2, ClipboardCopy, X, ArrowLeft } from 'lucide-react';
+import { Trash2, ClipboardCopy, X, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { useRecipes } from '@/hooks/use-recipes';
@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import type { Recipe } from '@/data/recipes';
 import { SortableCartIngredientItem } from '@/components/SortableCartIngredientItem';
 import { AuthImage } from '@/hooks/use-auth-image';
+import cartImage from '@/assets/cart.png';
 
 interface AggregatedIngredient {
   id: string;
@@ -174,17 +175,17 @@ const CartPage = () => {
 
       <main className="max-w-lg w-full mx-auto px-4 py-4 pb-24 space-y-6 flex-1 flex flex-col">
         {cartRecipes.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-6 gap-4 md:py-20">
-            <ShoppingCart size={48} className="text-muted-foreground/40" strokeWidth={1.5} />
-            <div className="space-y-1">
-              <p className="font-display text-lg font-bold text-foreground">Panier vide, ventre creux</p>
-              <p className="text-sm text-muted-foreground font-body">
+          <div className="flex-1 md:flex-none flex flex-col items-center justify-center text-center px-6 gap-6 md:py-20">
+            <img src={cartImage} alt="Panier vide" className="w-48 h-48 object-contain" />
+            <div className="space-y-4">
+              <p className="font-display text-2xl font-bold text-foreground">Panier vide, ventre creux</p>
+              <p className="font-body text-muted-foreground">
                 Ajoutez des recettes depuis le catalogue,<br />on vous prépare la liste de courses !
               </p>
+              <Button onClick={() => navigate('/')} className="font-body md:hidden">
+                Parcourir les recettes
+              </Button>
             </div>
-            <Button onClick={() => navigate('/')} className="font-body">
-              Parcourir les recettes
-            </Button>
           </div>
         ) : (
           <>
