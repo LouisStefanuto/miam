@@ -61,6 +61,9 @@ const difficulties: Difficulty[] = ['facile', 'moyen', 'difficile'];
 const defaultIngredients = (): Ingredient[] =>
   Array.from({ length: 3 }, () => ({ name: '', quantity: '', unit: '' }));
 
+const defaultSteps = (): Step[] =>
+  Array.from({ length: 3 }, () => ({ text: '' }));
+
 export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = [], onAddTag, onDeleteTag, initialFocus, initialImageOrientation = 'landscape', autoOpenImagePicker }: RecipeFormProps) {
   const [data, setData] = useState<Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'type'> & { type: RecipeType | null }>({
     title: initialRecipe?.title ?? '',
@@ -76,7 +79,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
     diets: initialRecipe?.diets ?? [],
     tags: initialRecipe?.tags ?? [],
     ingredients: initialRecipe?.ingredients?.length ? initialRecipe.ingredients : defaultIngredients(),
-    steps: initialRecipe?.steps ?? [],
+    steps: initialRecipe?.steps?.length ? initialRecipe.steps : defaultSteps(),
     tested: initialRecipe?.tested ?? false,
   });
   const [newTag, setNewTag] = useState('');
@@ -687,7 +690,7 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
           );
 
           if (isMobile) {
-            return <IngredientStepsTabs ingredients={ingredientsBlock} steps={stepsBlock} />;
+            return <IngredientStepsTabs ingredients={ingredientsBlock} steps={stepsBlock} initialTab={initialFocus} />;
           }
 
           return (
