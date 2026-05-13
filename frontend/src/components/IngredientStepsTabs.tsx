@@ -4,10 +4,11 @@ interface Props {
   ingredients: React.ReactNode;
   steps: React.ReactNode;
   stickyTop?: string;
+  initialTab?: 'ingredients' | 'steps';
 }
 
-export function IngredientStepsTabs({ ingredients, steps, stickyTop = '64px' }: Props) {
-  const [activeTab, setActiveTab] = useState<'ingredients' | 'steps'>('ingredients');
+export function IngredientStepsTabs({ ingredients, steps, stickyTop = '64px', initialTab = 'ingredients' }: Props) {
+  const [activeTab, setActiveTab] = useState<'ingredients' | 'steps'>(initialTab);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const swipeRef = useRef<{ x: number; y: number; dragging: boolean } | null>(null);
