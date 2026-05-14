@@ -1,45 +1,78 @@
-# miam { #miam }
+# Miam
 
 <style>
-.md-content .md-typeset h1 { display: none; }
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+.md-content .md-typeset h1:first-of-type {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  text-align: center;
+  font-size: 4.5rem;
+  letter-spacing: -0.02em;
+  margin: 0.5rem 0 1.5rem;
+}
 </style>
+
+
 
 <div style="text-align: center;">
   <img src="./assets/images/logo.png" alt="Logo" width="50%">
 </div>
 
-## Install
+**Miam is an open-source recipe app to write, save, and share recipes with the people you cook with.** Self-hosted, mobile-friendly, and built around the way real kitchens work — from a screenshot on Instagram to a printable shopping list.
 
-Install dependencies and setup virtual environment. Requires [`uv`](https://docs.astral.sh/uv/getting-started/installation/) installed.
+## What's inside?
 
-```bash
-make install
-```
+<div class="grid" markdown>
 
-## Run
+-   :material-pencil-outline: &nbsp; **Write your own** recipes with photos, tags, and steps
+-   :material-import: &nbsp; **Import** from Instagram, scanned images (OCR) or manually
+-   :material-cart-outline: &nbsp; **Plan meals** and build shopping lists in one tap
+-   :material-share-variant: &nbsp; **Share** privately with friends and family
+-   :material-file-export-outline: &nbsp; **Export** recipes to Word
+-   :material-shield-check-outline: &nbsp; **Own your data** — self-hosted, Google sign-in
 
-Launch project using `docker compose`.
+</div>
 
-```bash
-make start
-```
+## Documentation
 
-Stop project.
+<div class="grid cards" markdown>
 
-```bash
-make stop
-```
+-   :material-rocket-launch:{ .lg .middle } &nbsp; __Quick start__
 
-## Dev
+    ---
 
-Run pre-commit checks over the entire repo.
+    Get Miam your own instance of Miam running in 10 minutes.
 
-```bash
-make pre-commit
-```
+    [:octicons-arrow-right-24: Start the tutorial](quickstart.md)
 
-## Architecture
+-   :material-tools:{ .lg .middle } &nbsp; __How-to guides__
 
-- Containerization: Docker Compose
-- Backend: PostgreSQL, FastAPI, SqlAlchemy, Alembic, Python
-- Frontend (vibe-coded): React, TypeScript, Vite, Tailwind CSS, shadcn/ui
+    ---
+
+    Configure your environment, run locally, deploy to production, and handle day-to-day dev tasks.
+
+    [:octicons-arrow-right-24: Browse guides](how-to/local.md)
+
+-   :material-book-open-variant:{ .lg .middle } &nbsp; __Concepts__
+
+    ---
+
+    Understand the architecture of Miam (Google OAuth + JWT cookie flow that powers sign-in).
+
+    [:octicons-arrow-right-24: Learn the design](concepts/architecture.md)
+
+-   :material-api:{ .lg .middle } &nbsp; __API reference__
+
+    ---
+
+    Auto-generated reference for the backend Python modules — services, ports, adapters.
+
+    [:octicons-arrow-right-24: Open the reference](reference/index.md)
+
+</div>
+
+<div style="text-align: center; margin-top: 2rem;" markdown>
+
+[:material-rocket-launch: &nbsp; Get started](quickstart.md){ .md-button .md-button--primary }
+
+</div>
