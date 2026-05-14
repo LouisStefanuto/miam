@@ -13,4 +13,4 @@ done
 echo "Database is ready."
 
 alembic upgrade head
-exec fastapi dev --host 0.0.0.0 src/miam/api/main.py
+exec fastapi run --host 0.0.0.0 src/miam/api/main.py
