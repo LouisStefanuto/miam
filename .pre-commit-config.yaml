@@ -18,12 +18,12 @@ repos:
     - id: check-xml
     - id: check-yaml
       name: Check MkDocs.yml in unsafe mode
-      files: ^mkdocs\.yml$
+      files: ^docs/mkdocs\.yml$
       args: ['--unsafe']
     - id: check-yaml
       name: Check all other YAML files in safe mode
       files: \.ya?ml$
-      exclude: ^mkdocs\.yml$
+      exclude: ^docs/mkdocs\.yml$
     - id: debug-statements
     - id: end-of-file-fixer
       exclude: ^docs/
@@ -66,8 +66,9 @@ repos:
   hooks:
     - id: bandit
       args: ["--skip", "B311"]
-      # Exclude tests bc they contain assert statements, that raise bandit errors
-      exclude: tests/
+      # Exclude tests bc they contain assert statements, that raise bandit errors.
+      # Exclude docs/scripts bc the GIF builder downloads a font via urllib (B310).
+      exclude: ^(backend/tests/|docs/scripts/)
 - repo: https://github.com/commitizen-tools/commitizen
   rev: v4.13.9
   hooks:

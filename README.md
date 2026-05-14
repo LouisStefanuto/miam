@@ -2,14 +2,18 @@
 
 # miam
 
-**A web app to organize cooking recipes and export them in printable formats to share with my family and friends.**
-
 <img src="docs/docs/assets/images/logo.png" alt="Logo" width="25%">
+
+**Write, save, and share recipes with the people you cook with.**
 
 [![Docs](https://img.shields.io/badge/docs-available-brightgreen.svg)](https://louisstefanuto.github.io/miam/)
 [![Coverage](https://codecov.io/gh/LouisStefanuto/miam/branch/main/graph/badge.svg)](https://codecov.io/gh/LouisStefanuto/miam)
 
 [**Install**](#install) • [**Run**](#run) • [**Docs**](https://louisstefanuto.github.io/miam/) • [**Dev**](#dev)
+
+Miam is an open-source recipe app. Self-hosted, mobile-friendly, and built around the way real kitchens work — from a screenshot on Instagram to a printable shopping list.
+
+<img src="./docs/docs/assets/images/tour.gif" alt="Tour of the Miam app on desktop and mobile" width="700">
 
 </div>
 
@@ -41,11 +45,32 @@ make stop
 
 The project's documentation is available on [**GitHub Pages**](https://louisstefanuto.github.io/miam/).
 
-To preview your documentation in real-time while editing, run:
+To preview the documentation locally in real-time while editing, run:
 
 ```bash
 make docs
 ```
+
+## Architecture
+
+### Stack
+
+![high-level](./docs/docs/assets/images/high-level.png)
+
+| Layer | Stack |
+| --- | --- |
+| **User** | Web browser · Google OAuth 2.0 · HttpOnly cookie session · HTTPS |
+| **Frontend** | React 18 · Vite · TypeScript · Tailwind · shadcn/ui · React Router · served by nginx |
+| **Backend** | FastAPI · Python 3.13 (uv) · SQLAlchemy 2 · Pydantic v2 · Hexagonal (ports/adapters) · Markdown & Word exporters |
+| **Database** | PostgreSQL 16 · Alembic migrations · psycopg / asyncpg · Docker named volume |
+| **Ops** | Docker Compose · Dozzle (container monitoring) · Locust (load testing) |
+
+### Authentication flow
+
+Miam uses **Google OAuth** for identity, then issues its own short-lived **JWT** stored as an **HttpOnly cookie**. An `Authorization: Bearer` header is accepted as a fallback for non-browser clients.
+
+See the full [architecture diagram](./docs/docs/assets/images/architecture.html) and the [page about Authentication]() for details.
+
 
 ## Google SSO Setup
 
@@ -83,10 +108,3 @@ make dozzle
 ```
 
 For performance results under load testing, see the [Locust section](./locust/README.md).
-
-## Architecture
-
-- Containerization: Docker Compose, Docker, Dozzle for container resource monitoring
-- Backend: PostgreSQL, FastAPI, SqlAlchemy, Alembic, Python
-- Frontend (vibe-coded): React, TypeScript, Vite, Tailwind CSS, shadcn/ui
-- Load testing: Locust

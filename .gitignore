@@ -142,7 +142,7 @@ venv.bak/
 .ropeproject
 
 # mkdocs documentation
-/site
+docs/site
 
 # mypy
 .mypy_cache/
@@ -169,6 +169,8 @@ cython_debug/
 .DS_Store
 
 images/
+!docs/docs/assets/images
+docs/docs/assets/images/screenshots/
 claude/
 *.dump
 

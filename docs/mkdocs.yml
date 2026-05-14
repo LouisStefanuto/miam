@@ -7,6 +7,8 @@ theme:
   name: 'material'
   logo: assets/images/favicon.png
   favicon: assets/images/favicon.png
+  palette: 
+    primary: indigo
   features:
     - content.code.copy
     # - navigation.sections
@@ -107,12 +109,30 @@ plugins:
 
 markdown_extensions:
   - admonition
+  - attr_list
+  - md_in_html
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - sane_lists
 
 nav:
-  - Introduction: index.md
+  - Home: index.md
+  - Quick start: quickstart.md
+  - How-to guides:
+    - Local development: how-to/local.md
+    - Configure environment: how-to/environment.md
+    - Production deployment: how-to/production.md
+    - Dev tasks: how-to/dev-tasks.md
+  - Concepts:
+    - Architecture: concepts/architecture.md
+    - Authentication: concepts/auth.md
   - API reference: reference/  # note that reference is a folder created by mkdocstrings
