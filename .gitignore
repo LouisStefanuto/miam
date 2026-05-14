@@ -169,6 +169,8 @@ cython_debug/
 .DS_Store
 
 images/
+!docs/docs/assets/images
+docs/docs/assets/images/screenshots/
 claude/
 *.dump
 

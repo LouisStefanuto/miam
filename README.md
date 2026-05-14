@@ -2,15 +2,16 @@
 
 # miam
 
-**A web app to organize cooking recipes and export them in printable formats to share with my family and friends.**
-
-<img src="docs/docs/assets/images/logo.png" alt="Logo" width="25%">
+**An open-source app to write, save and share recipes with my family and friends.**
 
 [![Docs](https://img.shields.io/badge/docs-available-brightgreen.svg)](https://louisstefanuto.github.io/miam/)
 [![Coverage](https://codecov.io/gh/LouisStefanuto/miam/branch/main/graph/badge.svg)](https://codecov.io/gh/LouisStefanuto/miam)
 
-[**Install**](#install) • [**Run**](#run) • [**Docs**](https://louisstefanuto.github.io/miam/) • [**Dev**](#dev)
+<img src="docs/docs/assets/images/logo.png" alt="Logo" width="25%">
+<img src="./docs/docs/assets/images/tour.gif" alt="Tour of the Miam app on desktop and mobile" width="700">
 
+
+[**Install**](#install) • [**Run**](#run) • [**Docs**](https://louisstefanuto.github.io/miam/) • [**Dev**](#dev)
 </div>
 
 ---
