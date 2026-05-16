@@ -65,33 +65,6 @@ make docs
 | **Database** | PostgreSQL 16 · Alembic migrations · psycopg / asyncpg · Docker named volume |
 | **Ops** | Docker Compose · Dozzle (container monitoring) · Locust (load testing) |
 
-### Authentication flow
-
-Miam uses **Google OAuth** for identity, then issues its own short-lived **JWT** stored as an **HttpOnly cookie**. An `Authorization: Bearer` header is accepted as a fallback for non-browser clients.
-
-See the full [architecture diagram](./docs/docs/assets/images/architecture.html) and the [page about Authentication]() for details.
-
-
-## Google SSO Setup
-
-Authentication uses Google Sign-In. To configure it:
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com) and create a project (or use an existing one)
-2. Navigate to **Google Auth Platform > Clients**, click **Create Client**, select **Web application**
-3. Under **Authorized JavaScript origins**, add your frontend URL (e.g. `http://localhost:3000`)
-4. Copy the **Client ID** and set it in both env files:
-
-```env
-# backend/.env
-GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-
-# frontend/.env
-VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-```
-
-5. Go to **Google Auth Platform > Audience** and add your email under **Test users** (required while the app is in Testing mode)
-6. Restart both frontend and backend
-
 ## Dev
 
 Before pushing to this repo, please setup pre-commit.
