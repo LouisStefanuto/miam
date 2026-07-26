@@ -190,7 +190,7 @@ const CartPage = () => {
                 <h3 className="font-body text-base font-semibold text-muted-foreground uppercase tracking-wide">
                   Recettes sélectionnées
                 </h3>
-                <div className="flex gap-3 overflow-x-auto snap-x pb-1 -mx-4 px-4">
+                <div className="flex gap-3 overflow-x-auto snap-x pb-1">
                   {cartRecipes.map((recipe) => (
                     <CartRecipeItem
                       key={recipe.id}
