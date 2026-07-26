@@ -259,7 +259,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           {isOwner && onDelete && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10 dark:text-red-500 dark:hover:text-red-400 dark:hover:bg-red-900/40">
+                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10 active:text-destructive active:bg-destructive/10 dark:text-red-500 dark:hover:text-red-400 dark:hover:bg-red-900/40 dark:active:text-red-400 dark:active:bg-red-900/40">
                   <Trash2 size={18} />
                 </Button>
               </AlertDialogTrigger>
