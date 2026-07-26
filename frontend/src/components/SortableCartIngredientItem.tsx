@@ -46,8 +46,8 @@ export function SortableCartIngredientItem({ id, name, details, checked, onToggl
         onClick={() => onToggle(id)}
         className={`w-6 h-6 shrink-0 rounded border-2 transition-colors flex items-center justify-center ${
           checked
-            ? 'bg-primary border-primary text-primary-foreground'
-            : 'border-muted-foreground/30 hover:border-primary'
+            ? 'bg-muted-foreground border-muted-foreground text-background'
+            : 'border-muted-foreground/30 hover:border-muted-foreground'
         }`}
       >
         {checked && (
