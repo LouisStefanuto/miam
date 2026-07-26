@@ -16,15 +16,13 @@ interface AddCartItemFormProps {
   onAdd: (name: string) => void;
   /** Focus the field as soon as the row appears. */
   autoFocusInput?: boolean;
-  /** Called when the field is left empty. */
-  onCancel?: () => void;
 }
 
 /**
  * Blank row at the bottom of the shopping list, laid out like the items above it.
  * Enter adds the item and keeps the row ready for the next one.
  */
-export function AddCartItemForm({ onAdd, autoFocusInput = false, onCancel }: AddCartItemFormProps) {
+export function AddCartItemForm({ onAdd, autoFocusInput = false }: AddCartItemFormProps) {
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const skipCommitRef = useRef(false);
@@ -70,7 +68,7 @@ export function AddCartItemForm({ onAdd, autoFocusInput = false, onCancel }: Add
           onBlur={() => {
             const cancelled = skipCommitRef.current;
             skipCommitRef.current = false;
-            if (cancelled || !commit()) onCancel?.();
+            if (!cancelled) commit();
           }}
           placeholder="Ajouter un article"
           enterKeyHint="done"

@@ -20,6 +20,9 @@ interface CartContextType {
   /** Servings picked per recipe; recipes absent from the map use their own servings. */
   servingsById: Record<string, number>;
   setServings: (recipeId: string, servings: number) => void;
+  /** Whether the user started a list by hand: keeps the list on screen even while it is empty. */
+  manualListStarted: boolean;
+  startManualList: () => void;
 }
 
 const CartContext = createContext<CartContextType | null>(null);
@@ -73,6 +76,14 @@ function saveServings(servings: Record<string, number>) {
   localStorage.setItem('miam-cart-servings', JSON.stringify(servings));
 }
 
+function loadManualListStarted(): boolean {
+  return localStorage.getItem('miam-cart-list-started') === 'true';
+}
+
+function saveManualListStarted(started: boolean) {
+  localStorage.setItem('miam-cart-list-started', String(started));
+}
+
 function newManualId(): string {
   const rand = typeof crypto !== 'undefined' && 'randomUUID' in crypto
     ? crypto.randomUUID()
@@ -84,6 +95,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<Set<string>>(loadCart);
   const [manualItems, setManualItems] = useState<ManualCartItem[]>(loadManualItems);
   const [servingsById, setServingsById] = useState<Record<string, number>>(loadServings);
+  const [manualListStarted, setManualListStarted] = useState<boolean>(loadManualListStarted);
 
   /** A recipe leaving the cart forgets its servings, so it comes back with its own default. */
   const forgetServings = useCallback((id: string) => {
@@ -148,6 +160,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     saveManualItems([]);
     setServingsById({});
     saveServings({});
+    setManualListStarted(false);
+    saveManualListStarted(false);
+  }, []);
+
+  const startManualList = useCallback(() => {
+    setManualListStarted(true);
+    saveManualListStarted(true);
   }, []);
 
   const addManualItem = useCallback((name: string) => {
@@ -174,7 +193,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     count: items.size,
     manualItems, addManualItem, removeManualItem,
     servingsById, setServings,
-  }), [items, toggle, add, remove, clear, manualItems, addManualItem, removeManualItem, servingsById, setServings]);
+    manualListStarted, startManualList,
+  }), [
+    items, toggle, add, remove, clear,
+    manualItems, addManualItem, removeManualItem,
+    servingsById, setServings, manualListStarted, startManualList,
+  ]);
 
   return (
     <CartContext.Provider value={value}>

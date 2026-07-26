@@ -23,6 +23,7 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
     items, remove, clear, count,
     manualItems, addManualItem, removeManualItem,
     servingsById, setServings,
+    manualListStarted, startManualList,
   } = useCart();
   const { data: allRecipes = [] } = useRecipes();
   const [open, setOpen] = useState(false);
@@ -59,8 +60,8 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
   // Local state for user-reordered / removed ingredients
   const [ingredients, setIngredients] = useState<AggregatedIngredient[]>(rawIngredients);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
-  // Shows the shopping list instead of the empty state while the user builds a list from scratch
-  const [manualMode, setManualMode] = useState(false);
+  // Focuses the new-item field only when the list is started right now, not when coming back to it
+  const [justStarted, setJustStarted] = useState(false);
 
   // Sync when recipes change (new recipe added/removed from cart)
   useEffect(() => {
@@ -132,7 +133,7 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
   };
 
   // Actions stay mounted alongside the list so nothing shifts when the first item lands
-  const showEmptyState = cartRecipes.length === 0 && ingredients.length === 0 && !manualMode;
+  const showEmptyState = cartRecipes.length === 0 && ingredients.length === 0 && !manualListStarted;
 
   const copyShoppingList = () => {
     const text = generateShoppingListText(cartRecipes, ingredients, checkedIds, servingsById);
@@ -173,7 +174,7 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
                 Ajoutez des recettes depuis le catalogue,<br />on vous prépare la liste de courses !
               </p>
               <div className="flex flex-col items-center">
-                <StartManualListButton onClick={() => setManualMode(true)} />
+                <StartManualListButton onClick={() => { startManualList(); setJustStarted(true); }} />
               </div>
             </div>
           </div>
@@ -218,11 +219,7 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
                         onRemove={removeIngredient}
                       />
                     ))}
-                    <AddCartItemForm
-                      onAdd={addManualItem}
-                      autoFocusInput={manualMode}
-                      onCancel={() => setManualMode(false)}
-                    />
+                    <AddCartItemForm onAdd={addManualItem} autoFocusInput={justStarted} />
                   </ul>
                 </SortableContext>
               </DndContext>
@@ -249,7 +246,7 @@ export default function CartSheet({ trigger, hotkey }: { trigger?: React.ReactNo
               className="flex-1 font-body gap-2 hover:text-destructive"
             >
               <Trash2 size={18} />
-              Vider le panier
+              Vider la liste
             </Button>
           </div>
         )}

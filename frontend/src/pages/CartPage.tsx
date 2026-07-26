@@ -25,6 +25,7 @@ const CartPage = () => {
     items, remove, clear, count,
     manualItems, addManualItem, removeManualItem,
     servingsById, setServings,
+    manualListStarted, startManualList,
   } = useCart();
   const { data: allRecipes = [] } = useRecipes();
   const isMobile = useIsMobile();
@@ -45,8 +46,8 @@ const CartPage = () => {
 
   const [ingredients, setIngredients] = useState<AggregatedIngredient[]>(rawIngredients);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
-  // Shows the shopping list instead of the empty state while the user builds a list from scratch
-  const [manualMode, setManualMode] = useState(false);
+  // Focuses the new-item field only when the list is started right now, not when coming back to it
+  const [justStarted, setJustStarted] = useState(false);
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<number>();
 
@@ -146,7 +147,7 @@ const CartPage = () => {
       </header>
 
       <main className="max-w-lg w-full mx-auto px-4 py-4 pb-24 space-y-6 flex-1 flex flex-col">
-        {cartRecipes.length === 0 && ingredients.length === 0 && !manualMode ? (
+        {cartRecipes.length === 0 && ingredients.length === 0 && !manualListStarted ? (
           <div className="flex-1 md:flex-none flex flex-col items-center justify-center text-center px-6 gap-6 md:py-20">
             <img src={cartImage} alt="Panier vide" className="w-48 h-48 object-contain" />
             <div className="space-y-4">
@@ -155,7 +156,7 @@ const CartPage = () => {
                 Ajoutez des recettes depuis le catalogue,<br />on vous prépare la liste de courses !
               </p>
               <div className="flex flex-col items-center">
-                <StartManualListButton onClick={() => setManualMode(true)} />
+                <StartManualListButton onClick={() => { startManualList(); setJustStarted(true); }} />
               </div>
             </div>
           </div>
@@ -179,7 +180,7 @@ const CartPage = () => {
                 className="flex-1 font-body gap-2 hover:text-destructive"
               >
                 <Trash2 size={18} />
-                Vider le panier
+                Vider la liste
               </Button>
             </div>
 
@@ -222,11 +223,7 @@ const CartPage = () => {
                         onRemove={removeIngredient}
                       />
                     ))}
-                    <AddCartItemForm
-                      onAdd={addManualItem}
-                      autoFocusInput={manualMode}
-                      onCancel={() => setManualMode(false)}
-                    />
+                    <AddCartItemForm onAdd={addManualItem} autoFocusInput={justStarted} />
                   </ul>
                 </SortableContext>
               </DndContext>
