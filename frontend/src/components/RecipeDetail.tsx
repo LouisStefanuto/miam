@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Pencil, Trash2, Minus, Plus, CircleCheck, Copy, ClipboardCheck, Users, CopyPlus, LogOut, Vegan, Timer, Flame, Sun, Snowflake, Flower, LeafyGreen, Utensils, Circle, Camera, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Star, Pencil, Trash2, Minus, Plus, CircleCheck, Copy, ClipboardCheck, Users, CopyPlus, LogOut, Vegan, Timer, Flame, Sun, Snowflake, Flower, LeafyGreen, Utensils, Circle, Camera, ShoppingCart, LucideIcon } from 'lucide-react';
 import { Recipe } from '@/data/recipes';
 import { displayUnit } from '@/lib/units';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { recipeToMarkdown } from '@/lib/recipe-to-markdown';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthImage } from '@/hooks/use-auth-image';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useCart } from '@/contexts/CartContext';
 
 const DifficultyBars = ({ level }: { level: number }) => (
   <div className="flex gap-0.5 items-end">
@@ -49,8 +50,19 @@ interface RecipeDetailProps {
 }
 
 export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, onTestedToggle, allTags, onAddTag, onDeleteTag, onDelete, onRemoveFromCollection, onDuplicateAndRemove, shareButton, initialEditing }: RecipeDetailProps) {
+  const {
+    has: cartHas,
+    add: addToCart,
+    remove: removeFromCart,
+    setServings: setCartServings,
+    servingsById,
+  } = useCart();
+  const inCart = cartHas(recipe.id);
   const [editing, setEditing] = useState(!!initialEditing);
-  const [displayServings, setDisplayServings] = useState(recipe.servings);
+  // Picks up the servings chosen in the cart, so both views agree on the portion count
+  const [displayServings, setDisplayServings] = useState(
+    () => servingsById[recipe.id] ?? recipe.servings,
+  );
   const [hoveredStar, setHoveredStar] = useState(0);
   const [copied, setCopied] = useState(false);
   const [imageOrientation, setImageOrientation] = useState<'landscape' | 'portrait'>('landscape');
@@ -82,6 +94,16 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
     setCopied(true);
     toast({ title: 'Recette copiée !', description: 'Collez-la avec Ctrl+V.' });
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  // While the recipe sits in the cart, the portions picked here drive the shopping list
+  useEffect(() => {
+    if (inCart) setCartServings(recipe.id, displayServings);
+  }, [inCart, displayServings, recipe.id, setCartServings]);
+
+  const toggleCart = () => {
+    if (inCart) removeFromCart(recipe.id);
+    else addToCart(recipe.id, displayServings);
   };
 
   const servingsRatio = displayServings / recipe.servings;
@@ -237,7 +259,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           {isOwner && onDelete && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10 dark:text-red-500 dark:hover:text-red-400 dark:hover:bg-red-900/40">
+                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10 active:text-destructive active:bg-destructive/10 dark:text-red-500 dark:hover:text-red-400 dark:hover:bg-red-900/40 dark:active:text-red-400 dark:active:bg-red-900/40">
                   <Trash2 size={18} />
                 </Button>
               </AlertDialogTrigger>
@@ -308,6 +330,17 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
           {/* Copy markdown */}
           <Button variant="ghost" size="icon" onClick={copyAsMarkdown} className="md:text-muted-foreground md:hover:text-primary">
             {copied ? <ClipboardCheck size={18} /> : <Copy size={18} />}
+          </Button>
+          {/* Cart, for the number of portions currently displayed */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleCart}
+            title={inCart ? 'Retirer du panier' : `Ajouter au panier (${displayServings} pers.)`}
+            className={inCart ? 'text-primary hover:text-primary' : 'md:text-muted-foreground md:hover:text-primary'}
+          >
+            <ShoppingCart size={18} className={inCart ? 'fill-primary' : ''} />
+            <span className="sr-only">{inCart ? 'Retirer du panier' : 'Ajouter au panier'}</span>
           </Button>
         </div>
       </div>

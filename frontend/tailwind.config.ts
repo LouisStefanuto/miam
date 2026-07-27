@@ -128,4 +128,9 @@ export default {
     },
   },
   plugins: [require("tailwindcss-animate")],
+  future: {
+    // Touch devices keep :hover latched after a tap, so a tapped button stays
+    // looking pressed. Gate every hover: utility behind @media (hover: hover).
+    hoverOnlyWhenSupported: true,
+  },
 } satisfies Config;

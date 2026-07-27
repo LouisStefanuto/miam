@@ -1,111 +1,72 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, ClipboardCopy, X, ArrowLeft } from 'lucide-react';
+import { Trash2, ClipboardCopy, Check, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { useRecipes } from '@/hooks/use-recipes';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
-import type { Recipe } from '@/data/recipes';
+import {
+  aggregateIngredients,
+  generateShoppingListText,
+  mergeIngredients,
+  servingsFor,
+  type AggregatedIngredient,
+} from '@/lib/shopping-list';
 import { SortableCartIngredientItem } from '@/components/SortableCartIngredientItem';
-import { AuthImage } from '@/hooks/use-auth-image';
-import { getDefaultRecipeImage } from '@/lib/recipe-default-image';
-import cartImage from '@/assets/cart.png';
-
-interface AggregatedIngredient {
-  id: string;
-  name: string;
-  details: string;
-}
-
-function aggregateIngredients(recipes: Recipe[]): AggregatedIngredient[] {
-  const map = new Map<string, { quantities: { qty: number | string; unit: string }[] }>();
-
-  for (const recipe of recipes) {
-    for (const ing of recipe.ingredients) {
-      const key = ing.name.toLowerCase().trim();
-      if (!map.has(key)) map.set(key, { quantities: [] });
-      map.get(key)!.quantities.push({ qty: ing.quantity, unit: ing.unit });
-    }
-  }
-
-  const result: AggregatedIngredient[] = [];
-
-  for (const [name, { quantities }] of map) {
-    const byUnit = new Map<string, number | null>();
-    for (const { qty, unit } of quantities) {
-      const u = unit.toLowerCase().trim();
-      const numQty = typeof qty === 'string' ? parseFloat(qty) : qty;
-      if (!byUnit.has(u)) byUnit.set(u, null);
-      if (numQty && !isNaN(numQty)) {
-        byUnit.set(u, (byUnit.get(u) ?? 0) + numQty);
-      }
-    }
-
-    const parts: string[] = [];
-    for (const [unit, total] of byUnit) {
-      if (total != null) {
-        parts.push(unit ? `${total} ${unit}` : `${total}`);
-      }
-    }
-
-    const displayName = name.charAt(0).toUpperCase() + name.slice(1);
-    result.push({ id: name, name: displayName, details: parts.join(' + ') });
-  }
-
-  return result.sort((a, b) => a.name.localeCompare(b.name));
-}
-
-function generateShoppingListText(recipes: Recipe[], ingredients: AggregatedIngredient[], checkedIds: Set<string>): string {
-  const lines: string[] = ['Liste de courses', ''];
-  lines.push(`Recettes (${recipes.length}) :`);
-  for (const r of recipes) {
-    lines.push(`  - ${r.title} (${r.servings} pers.)`);
-  }
-  lines.push('');
-  lines.push('Ingrédients :');
-  for (const ing of ingredients) {
-    const check = checkedIds.has(ing.id) ? 'x' : ' ';
-    lines.push(`  [${check}] ${ing.details ? `${ing.details} ` : ''}${ing.name}`);
-  }
-  return lines.join('\n');
-}
+import { AddCartItemForm } from '@/components/AddCartItemForm';
+import { CartRecipeItem } from '@/components/CartRecipeItem';
+import { EmptyCartInvite } from '@/components/EmptyCartInvite';
 
 const CartPage = () => {
   const navigate = useNavigate();
-  const { items, remove, clear, count } = useCart();
+  const {
+    items, remove, clear, count,
+    manualItems, addManualItem, removeManualItem,
+    servingsById, setServings,
+  } = useCart();
   const { data: allRecipes = [] } = useRecipes();
+  const isMobile = useIsMobile();
 
   const cartRecipes = useMemo(
     () => allRecipes.filter((r) => items.has(r.id)),
     [allRecipes, items],
   );
 
-  const rawIngredients = useMemo(() => aggregateIngredients(cartRecipes), [cartRecipes]);
+  // Recipe ingredients plus the items the user typed in manually
+  const rawIngredients = useMemo<AggregatedIngredient[]>(
+    () => [
+      ...aggregateIngredients(cartRecipes, servingsById),
+      ...manualItems.map((i) => ({ id: i.id, name: i.name, details: '' })),
+    ],
+    [cartRecipes, manualItems, servingsById],
+  );
 
   const [ingredients, setIngredients] = useState<AggregatedIngredient[]>(rawIngredients);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<number>();
+  // Ingredients the user deleted by hand: they must not come back when the list is recomputed
+  const removedIds = useRef<Set<string>>(new Set());
+
+  useEffect(() => () => {
+    if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
+  }, []);
 
   useEffect(() => {
-    setIngredients((prev) => {
-      const prevIds = new Set(prev.map((i) => i.id));
-      const rawIds = new Set(rawIngredients.map((i) => i.id));
+    const rawIds = new Set(rawIngredients.map((i) => i.id));
 
-      const kept = prev
-        .filter((i) => rawIds.has(i.id))
-        .map((i) => {
-          const updated = rawIngredients.find((r) => r.id === i.id)!;
-          return { ...i, details: updated.details, name: updated.name };
-        });
+    // An ingredient no recipe provides anymore forgets its deletion, so it can come back later
+    for (const id of removedIds.current) {
+      if (!rawIds.has(id)) removedIds.current.delete(id);
+    }
 
-      const added = rawIngredients.filter((i) => !prevIds.has(i.id));
-      return [...kept, ...added];
-    });
+    setIngredients((prev) => mergeIngredients(prev, rawIngredients, removedIds.current));
 
     // Clean up checked IDs for ingredients that no longer exist
     setCheckedIds((prev) => {
-      const rawIds = new Set(rawIngredients.map((i) => i.id));
       const next = new Set([...prev].filter((id) => rawIds.has(id)));
       return next.size === prev.size ? prev : next;
     });
@@ -137,6 +98,9 @@ const CartPage = () => {
   };
 
   const removeIngredient = (id: string) => {
+    // A manual item is deleted at the source; a recipe ingredient is only hidden from the list
+    if (id.startsWith('manual:')) removeManualItem(id);
+    else removedIds.current.add(id);
     setIngredients((prev) => prev.filter((i) => i.id !== id));
     setCheckedIds((prev) => {
       const next = new Set(prev);
@@ -145,16 +109,22 @@ const CartPage = () => {
     });
   };
 
-  const sortedIngredients = useMemo(() => {
-    const unchecked = ingredients.filter((i) => !checkedIds.has(i.id));
-    const checked = ingredients.filter((i) => checkedIds.has(i.id));
-    return [...unchecked, ...checked];
-  }, [ingredients, checkedIds]);
+  // Nothing in the cart yet: the list stays on screen, the invitation fills the space below it
+  const isEmpty = cartRecipes.length === 0 && ingredients.length === 0;
 
   const copyShoppingList = () => {
-    const text = generateShoppingListText(cartRecipes, sortedIngredients, checkedIds);
+    const text = generateShoppingListText(cartRecipes, ingredients, checkedIds, servingsById);
     navigator.clipboard.writeText(text).then(
-      () => toast.success('Liste de courses copiée !'),
+      () => {
+        // On mobile the button itself confirms the copy, no toast on top of it
+        if (isMobile) {
+          setCopied(true);
+          if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
+          copiedTimer.current = window.setTimeout(() => setCopied(false), 2000);
+        } else {
+          toast.success('Liste de courses copiée !');
+        }
+      },
       () => toast.error('Impossible de copier dans le presse-papier'),
     );
   };
@@ -175,91 +145,74 @@ const CartPage = () => {
       </header>
 
       <main className="max-w-lg w-full mx-auto px-4 py-4 pb-24 space-y-6 flex-1 flex flex-col">
-        {cartRecipes.length === 0 ? (
-          <div className="flex-1 md:flex-none flex flex-col items-center justify-center text-center px-6 gap-6 md:py-20">
-            <img src={cartImage} alt="Panier vide" className="w-48 h-48 object-contain" />
-            <div className="space-y-4">
-              <p className="font-display text-2xl font-bold text-foreground">Panier vide, ventre creux</p>
-              <p className="font-body text-muted-foreground">
-                Ajoutez des recettes depuis le catalogue,<br />on vous prépare la liste de courses !
-              </p>
-              <Button onClick={() => navigate('/')} className="font-body md:hidden">
-                Parcourir les recettes
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Selected recipes */}
-            <div className="space-y-2">
-              <h3 className="font-body text-base font-semibold text-muted-foreground uppercase tracking-wide">
-                Recettes sélectionnées
-              </h3>
+        {/* Actions — pinned under the header so they stay reachable on long lists */}
+        <div className="sticky top-14 md:top-16 z-10 flex items-center gap-2 bg-background py-2">
+          <Button
+            onClick={copyShoppingList}
+            variant="outline"
+            disabled={ingredients.length === 0}
+            className={`flex-1 font-body gap-2 transition-colors ${copied ? 'border-primary text-primary' : ''}`}
+          >
+            {copied ? <Check size={18} /> : <ClipboardCopy size={18} />}
+            {copied ? 'Copié !' : 'Copier la liste'}
+          </Button>
+          <Button
+            onClick={clear}
+            variant="outline"
+            disabled={isEmpty}
+            className="flex-1 font-body gap-2 hover:text-destructive"
+          >
+            <Trash2 size={18} />
+            Vider la liste
+          </Button>
+        </div>
+
+        {/* Selected recipes */}
+        {cartRecipes.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="font-body text-base font-semibold text-muted-foreground uppercase tracking-wide">
+              Recettes sélectionnées
+            </h3>
+            <div className="flex gap-3 overflow-x-auto snap-x pb-1">
               {cartRecipes.map((recipe) => (
-                <div key={recipe.id} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 group">
-                  {recipe.image ? (
-                    <AuthImage src={recipe.image} alt={recipe.title} className="w-14 h-14 rounded-md object-cover shrink-0" />
-                  ) : (
-                    <img
-                      src={getDefaultRecipeImage(recipe.type)}
-                      alt={recipe.title}
-                      className="w-14 h-14 rounded-md object-contain bg-muted p-1 shrink-0"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-body text-base font-medium truncate">{recipe.title}</p>
-                    <p className="text-sm text-muted-foreground font-body">{recipe.servings} pers. · {recipe.ingredients.length} ingrédients</p>
-                  </div>
-                  <button
-                    onClick={() => remove(recipe.id)}
-                    className="shrink-0 p-2 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                    title="Retirer du panier"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
+                <CartRecipeItem
+                  key={recipe.id}
+                  recipe={recipe}
+                  servings={servingsFor(recipe, servingsById)}
+                  onServingsChange={(n) => setServings(recipe.id, n)}
+                  onRemove={() => remove(recipe.id)}
+                />
               ))}
             </div>
-
-            {/* Shopping list */}
-            {ingredients.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="font-body text-base font-semibold text-muted-foreground uppercase tracking-wide">
-                  Liste de courses
-                </h3>
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={sortedIngredients.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-                    <ul className="space-y-1.5">
-                      {sortedIngredients.map((ing) => (
-                        <SortableCartIngredientItem
-                          key={ing.id}
-                          id={ing.id}
-                          name={ing.name}
-                          details={ing.details}
-                          checked={checkedIds.has(ing.id)}
-                          onToggle={toggleIngredient}
-                          onRemove={removeIngredient}
-                        />
-                      ))}
-                    </ul>
-                  </SortableContext>
-                </DndContext>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="space-y-2">
-              <Button onClick={copyShoppingList} className="w-full gradient-warm text-primary-foreground font-body font-semibold gap-2 h-12 text-base">
-                <ClipboardCopy size={20} />
-                Copier la liste de courses
-              </Button>
-              <Button onClick={clear} variant="ghost" className="w-full font-body text-muted-foreground gap-2 h-12 text-base">
-                <Trash2 size={20} />
-                Vider le panier
-              </Button>
-            </div>
-          </>
+          </div>
         )}
+
+        {/* Shopping list */}
+        <div className="space-y-2">
+          <h3 className="font-body text-base font-semibold text-muted-foreground uppercase tracking-wide">
+            Liste de courses
+          </h3>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={ingredients.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+              <ul className="space-y-1.5">
+                {ingredients.map((ing) => (
+                  <SortableCartIngredientItem
+                    key={ing.id}
+                    id={ing.id}
+                    name={ing.name}
+                    details={ing.details}
+                    checked={checkedIds.has(ing.id)}
+                    onToggle={toggleIngredient}
+                    onRemove={removeIngredient}
+                  />
+                ))}
+                <AddCartItemForm onAdd={addManualItem} />
+              </ul>
+            </SortableContext>
+          </DndContext>
+        </div>
+
+        {isEmpty && <EmptyCartInvite />}
       </main>
     </div>
   );
