@@ -10,9 +10,11 @@ import { CatalogFilterProvider } from "./contexts/CatalogFilterContext";
 import { AccentColorProvider } from "./contexts/ThemeContext";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { TimerProvider } from "./contexts/TimerContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SwipeBack from "./components/SwipeBack";
 import MobileBottomBar from "./components/MobileBottomBar";
+import TimerDock from "./components/TimerDock";
 import CatalogLayout from "./components/CatalogLayout";
 import HomePage from "./pages/HomePage";
 import { useAuth } from "./contexts/AuthContext";
@@ -63,6 +65,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
         <CartProvider>
+        <TimerProvider>
         <CatalogFilterProvider>
           <SwipeBack>
           <Suspense>
@@ -86,8 +89,10 @@ const App = () => (
           </Routes>
           </Suspense>
           <MobileBottomBar />
+          <TimerDock />
           </SwipeBack>
         </CatalogFilterProvider>
+        </TimerProvider>
         </CartProvider>
         </AuthProvider>
       </BrowserRouter>
