@@ -534,7 +534,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                       {i + 1}
                     </span>
                     <p className="font-body text-foreground leading-7 whitespace-pre-line flex-1">
-                      <StepText text={step.text} timerIdPrefix={`${recipe.id}:${i}`} context={`Étape ${i + 1}`} />
+                      <StepText text={step.text} timerIdPrefix={`${recipe.id}:${i}`} />
                     </p>
                   </div>
                 </li>
@@ -578,9 +578,6 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         })()}
         </div>
       </div>
-
-      {/* Keeps the last steps scrollable above the floating timer dock */}
-      <div aria-hidden style={{ height: 'var(--timer-dock-height, 0px)' }} />
     </div>
   );
 }

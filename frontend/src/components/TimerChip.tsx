@@ -9,17 +9,15 @@ interface TimerChipProps {
   seconds: number;
   /** Text as written in the step, e.g. "10 à 15 min". */
   label: string;
-  /** Where the duration comes from, e.g. "Étape 3". */
-  context?: string;
 }
 
 /** Inline pill that turns a duration written in a step into a countdown. */
-export default function TimerChip({ id, seconds, label, context }: TimerChipProps) {
+export default function TimerChip({ id, seconds, label }: TimerChipProps) {
   const { get, start, pause, resume, stop } = useTimers();
   const timer = get(id);
 
   const handleClick = () => {
-    if (!timer) return start(id, seconds, { label, context });
+    if (!timer) return start(id, seconds, label);
     if (timer.status === 'running') return pause(id);
     if (timer.status === 'paused') return resume(id);
     return stop(id);

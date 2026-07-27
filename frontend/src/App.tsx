@@ -14,7 +14,6 @@ import { TimerProvider } from "./contexts/TimerContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SwipeBack from "./components/SwipeBack";
 import MobileBottomBar from "./components/MobileBottomBar";
-import TimerDock from "./components/TimerDock";
 import CatalogLayout from "./components/CatalogLayout";
 import HomePage from "./pages/HomePage";
 import { useAuth } from "./contexts/AuthContext";
@@ -91,7 +90,6 @@ const App = () => (
           </Routes>
           </Suspense>
           <MobileBottomBar />
-          <TimerDock />
           </SwipeBack>
         </CatalogFilterProvider>
         </TimerProvider>

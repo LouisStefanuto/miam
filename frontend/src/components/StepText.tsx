@@ -6,12 +6,10 @@ interface StepTextProps {
   text: string;
   /** Prefix making the timer ids unique across recipes and steps. */
   timerIdPrefix: string;
-  /** Shown in the timer dock, e.g. "Étape 3". */
-  context?: string;
 }
 
 /** Renders a step, with every detected duration turned into a timer chip. */
-export default function StepText({ text, timerIdPrefix, context }: StepTextProps) {
+export default function StepText({ text, timerIdPrefix }: StepTextProps) {
   const segments = useMemo(() => splitDurations(text), [text]);
 
   return (
@@ -25,7 +23,6 @@ export default function StepText({ text, timerIdPrefix, context }: StepTextProps
             id={`${timerIdPrefix}:${segment.match.start}`}
             seconds={segment.match.seconds}
             label={segment.match.text.trim()}
-            context={context}
           />
         ),
       )}

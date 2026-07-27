@@ -7,7 +7,7 @@ function renderStep(text: string) {
   return render(
     <TimerProvider>
       <p>
-        <StepText text={text} timerIdPrefix="recipe-1:0" context="Étape 1" />
+        <StepText text={text} timerIdPrefix="recipe-1:0" />
       </p>
     </TimerProvider>,
   );

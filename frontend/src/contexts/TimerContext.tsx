@@ -8,8 +8,6 @@ export interface KitchenTimer {
   id: string;
   /** Duration label, e.g. "10 min". */
   label: string;
-  /** Where the timer comes from, e.g. "Étape 3". */
-  context?: string;
   totalMs: number;
   remainingMs: number;
   status: TimerStatus;
@@ -19,7 +17,6 @@ export interface KitchenTimer {
 interface TimerSpec {
   id: string;
   label: string;
-  context?: string;
   totalMs: number;
   /** Set while running. */
   endsAt?: number;
@@ -29,9 +26,8 @@ interface TimerSpec {
 }
 
 interface TimerContextValue {
-  timers: KitchenTimer[];
   get: (id: string) => KitchenTimer | undefined;
-  start: (id: string, seconds: number, meta: { label: string; context?: string }) => void;
+  start: (id: string, seconds: number, label: string) => void;
   pause: (id: string) => void;
   resume: (id: string) => void;
   stop: (id: string) => void;
@@ -117,14 +113,13 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const start = useCallback(
-    (id: string, seconds: number, meta: { label: string; context?: string }) => {
+    (id: string, seconds: number, label: string) => {
       cancelBell(id);
       // Called from a click, which is what unlocks audio playback on mobile.
       bellCancels.current.set(id, scheduleAlarmSound(seconds));
       const spec: TimerSpec = {
         id,
-        label: meta.label,
-        context: meta.context,
+        label,
         totalMs: seconds * 1000,
         endsAt: Date.now() + seconds * 1000,
       };
@@ -181,7 +176,6 @@ export function TimerProvider({ children }: { children: ReactNode }) {
         return {
           id: spec.id,
           label: spec.label,
-          context: spec.context,
           totalMs: spec.totalMs,
           remainingMs,
           status,
@@ -193,8 +187,8 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   const get = useCallback((id: string) => timers.find((timer) => timer.id === id), [timers]);
 
   const value = useMemo<TimerContextValue>(
-    () => ({ timers, get, start, pause, resume, stop }),
-    [timers, get, start, pause, resume, stop],
+    () => ({ get, start, pause, resume, stop }),
+    [get, start, pause, resume, stop],
   );
 
   return <TimerContext.Provider value={value}>{children}</TimerContext.Provider>;
@@ -204,9 +198,4 @@ export function useTimers(): TimerContextValue {
   const ctx = useContext(TimerContext);
   if (!ctx) throw new Error('useTimers must be used within a TimerProvider');
   return ctx;
-}
-
-/** The timer for a given id, or undefined when it has never been started. */
-export function useTimer(id: string): KitchenTimer | undefined {
-  return useTimers().get(id);
 }

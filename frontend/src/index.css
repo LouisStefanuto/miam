@@ -124,8 +124,6 @@
     @apply bg-background text-foreground;
     font-family: var(--font-body);
     overflow-x: hidden;
-    /* Published by TimerDock: keeps page content scrollable above the timers. */
-    padding-bottom: var(--timer-dock-height, 0px);
   }
 
   h1, h2, h3, h4, h5, h6 {
