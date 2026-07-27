@@ -107,8 +107,8 @@ describe('alarm sound preference', () => {
     expect(getAlarmSound()).toBe(DEFAULT_ALARM_SOUND);
   });
 
-  it('offers seven sounds, each with a label and a description', () => {
-    expect(ALARM_SOUNDS).toHaveLength(7);
+  it('offers nine sounds, each with a label and a description', () => {
+    expect(ALARM_SOUNDS).toHaveLength(9);
     for (const sound of ALARM_SOUNDS) {
       expect(sound.label).toBeTruthy();
       expect(sound.description).toBeTruthy();
@@ -136,8 +136,8 @@ describe('scheduling', () => {
     }
   });
 
-  it('builds the gnawing and the splash out of filtered noise', () => {
-    for (const id of ['castor', 'plouf'] as const) {
+  it('builds the gnawing and the falling tree out of filtered noise', () => {
+    for (const id of ['castor', 'grignotage', 'arbre'] as const) {
       const { ctx, noises } = installFakeAudio();
       getAlarmSoundById(id).schedule(ctx as unknown as AudioContext, ctx.currentTime);
       expect(noises.length, id).toBeGreaterThan(0);

@@ -20,9 +20,9 @@ describe('AlarmSoundPicker', () => {
   it('lists the sounds and checks the current one', () => {
     render(<AlarmSoundPicker />);
     const options = screen.getAllByRole('radio');
-    expect(options).toHaveLength(7);
+    expect(options).toHaveLength(9);
     expect(screen.getByRole('radio', { name: /Clochette/ })).toBeChecked();
-    expect(screen.getByRole('radio', { name: /Castor/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Castor bavard/ })).toBeInTheDocument();
   });
 
   it('persists the picked sound', () => {
@@ -30,11 +30,11 @@ describe('AlarmSoundPicker', () => {
     expect(getAlarmSound()).toBe(DEFAULT_ALARM_SOUND);
 
     act(() => {
-      screen.getByRole('radio', { name: /Castor/ }).click();
+      screen.getByRole('radio', { name: /Castor bavard/ }).click();
     });
 
     expect(getAlarmSound()).toBe('castor');
-    expect(screen.getByRole('radio', { name: /Castor/ })).toBeChecked();
+    expect(screen.getByRole('radio', { name: /Castor bavard/ })).toBeChecked();
     expect(screen.getByRole('radio', { name: /Clochette/ })).not.toBeChecked();
   });
 });

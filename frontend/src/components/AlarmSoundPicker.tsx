@@ -1,5 +1,17 @@
 import { useEffect, useRef } from 'react';
-import { AlarmClock, Bell, Bird, Check, Droplets, Music2, Spline, Squirrel, type LucideIcon } from 'lucide-react';
+import {
+  AlarmClock,
+  Angry,
+  Bell,
+  Bird,
+  Check,
+  Cookie,
+  Music2,
+  Spline,
+  Squirrel,
+  TreeDeciduous,
+  type LucideIcon,
+} from 'lucide-react';
 import { ALARM_SOUNDS, playAlarmSound, type AlarmSoundId } from '@/lib/alarm';
 import { useAlarmSound } from '@/hooks/use-alarm-sound';
 
@@ -9,7 +21,9 @@ const SOUND_ICONS: Record<AlarmSoundId, LucideIcon> = {
   carillon: Music2,
   coucou: Bird,
   castor: Squirrel,
-  plouf: Droplets,
+  grignotage: Cookie,
+  ronchon: Angry,
+  arbre: TreeDeciduous,
   ressort: Spline,
 };
 
