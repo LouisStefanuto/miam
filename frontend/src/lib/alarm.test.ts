@@ -107,8 +107,8 @@ describe('alarm sound preference', () => {
     expect(getAlarmSound()).toBe(DEFAULT_ALARM_SOUND);
   });
 
-  it('offers nine sounds, each with a label and a description', () => {
-    expect(ALARM_SOUNDS).toHaveLength(9);
+  it('offers eight sounds, each with a label and a description', () => {
+    expect(ALARM_SOUNDS).toHaveLength(8);
     for (const sound of ALARM_SOUNDS) {
       expect(sound.label).toBeTruthy();
       expect(sound.description).toBeTruthy();

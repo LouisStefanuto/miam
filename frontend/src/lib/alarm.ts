@@ -17,8 +17,7 @@ export type AlarmSoundId =
   | 'castor'
   | 'grignotage'
   | 'ronchon'
-  | 'arbre'
-  | 'ressort';
+  | 'arbre';
 
 export interface AlarmSound {
   id: AlarmSoundId;
@@ -338,25 +337,6 @@ export const ALARM_SOUNDS: AlarmSound[] = [
       nodes.push(
         noise(ctx, at + 1.0, { type: 'lowpass', frequency: 420, frequencyTo: 130, duration: 0.3, peak: 0.4 }),
       );
-      return nodes;
-    },
-  },
-  {
-    id: 'ressort',
-    label: 'Ressort',
-    description: 'Boing de dessin animé',
-    schedule: (ctx, at) => {
-      const nodes: OscillatorNode[] = [];
-      for (let boing = 0; boing < 3; boing++) {
-        const start = at + boing * 0.5;
-        nodes.push(
-          voice(ctx, start, { type: 'triangle', frequency: 900, glideTo: 130, glideDuration: 0.32, duration: 0.36, peak: 0.28 }),
-        );
-        // A quieter octave below thickens the boing.
-        nodes.push(
-          voice(ctx, start + 0.04, { type: 'sine', frequency: 450, glideTo: 90, glideDuration: 0.3, duration: 0.34, peak: 0.14 }),
-        );
-      }
       return nodes;
     },
   },

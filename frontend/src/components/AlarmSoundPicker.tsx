@@ -7,7 +7,6 @@ import {
   Check,
   Cookie,
   Music2,
-  Spline,
   Squirrel,
   TreeDeciduous,
   type LucideIcon,
@@ -24,7 +23,6 @@ const SOUND_ICONS: Record<AlarmSoundId, LucideIcon> = {
   grignotage: Cookie,
   ronchon: Angry,
   arbre: TreeDeciduous,
-  ressort: Spline,
 };
 
 /** Picks the timer alarm, playing each sound as it is selected. */
