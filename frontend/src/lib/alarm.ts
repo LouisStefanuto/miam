@@ -9,7 +9,7 @@
  * Vibration can only be triggered live, from a foreground tick.
  */
 
-export type AlarmSoundId = 'cloche' | 'bip' | 'carillon' | 'castor' | 'coucou';
+export type AlarmSoundId = 'cloche' | 'bip' | 'carillon' | 'coucou' | 'castor' | 'plouf' | 'ressort';
 
 export interface AlarmSound {
   id: AlarmSoundId;
@@ -81,6 +81,55 @@ function voice(ctx: AudioContext, at: number, options: VoiceOptions): Oscillator
   return oscillator;
 }
 
+let noiseCache: { ctx: AudioContext; buffer: AudioBuffer } | null = null;
+
+/** Half a second of white noise, reused by every noisy voice of a context. */
+function noiseBuffer(ctx: AudioContext): AudioBuffer {
+  if (noiseCache?.ctx === ctx) return noiseCache.buffer;
+  const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.5), ctx.sampleRate);
+  const samples = buffer.getChannelData(0);
+  for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
+  noiseCache = { ctx, buffer };
+  return buffer;
+}
+
+interface NoiseOptions {
+  duration: number;
+  peak: number;
+  /** bandpass for dry clicks, lowpass for splashes. */
+  type: BiquadFilterType;
+  frequency: number;
+  /** Filter sweep target, reached at the end of the note. */
+  frequencyTo?: number;
+  q?: number;
+  attack?: number;
+}
+
+/**
+ * Schedules a burst of filtered noise. Oscillators alone sound synthetic; noise
+ * is what makes gnawing and splashing read as physical.
+ */
+function noise(ctx: AudioContext, at: number, options: NoiseOptions): AudioBufferSourceNode {
+  const source = ctx.createBufferSource();
+  source.buffer = noiseBuffer(ctx);
+  const filter = ctx.createBiquadFilter();
+  filter.type = options.type;
+  filter.frequency.setValueAtTime(options.frequency, at);
+  if (options.frequencyTo !== undefined) {
+    filter.frequency.exponentialRampToValueAtTime(options.frequencyTo, at + options.duration);
+  }
+  if (options.q !== undefined) filter.Q.value = options.q;
+  const gain = ctx.createGain();
+  const attack = options.attack ?? 0.004;
+  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.exponentialRampToValueAtTime(options.peak, at + attack);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + options.duration);
+  source.connect(filter).connect(gain).connect(ctx.destination);
+  source.start(at);
+  source.stop(at + options.duration + 0.05);
+  return source;
+}
+
 export const ALARM_SOUNDS: AlarmSound[] = [
   {
     id: 'cloche',
@@ -129,45 +178,6 @@ export const ALARM_SOUNDS: AlarmSound[] = [
     },
   },
   {
-    id: 'castor',
-    label: 'Castor',
-    description: 'Petits couinements, grignotage et coup de queue',
-    schedule: (ctx, at) => {
-      const nodes: OscillatorNode[] = [];
-      // Three rising squeaks.
-      for (let squeak = 0; squeak < 3; squeak++) {
-        const start = at + squeak * 0.22;
-        nodes.push(
-          voice(ctx, start, {
-            type: 'sawtooth',
-            frequency: 520,
-            glideTo: 1180,
-            glideDuration: 0.09,
-            duration: 0.17,
-            peak: 0.11,
-          }),
-        );
-      }
-      // Two wooden knocks, then the tail slapping the water.
-      for (let knock = 0; knock < 2; knock++) {
-        nodes.push(
-          voice(ctx, at + 0.85 + knock * 0.17, {
-            type: 'triangle',
-            frequency: 190,
-            glideTo: 120,
-            glideDuration: 0.05,
-            duration: 0.1,
-            peak: 0.32,
-          }),
-        );
-      }
-      nodes.push(
-        voice(ctx, at + 1.32, { type: 'sine', frequency: 130, glideTo: 55, duration: 0.32, peak: 0.4 }),
-      );
-      return nodes;
-    },
-  },
-  {
     id: 'coucou',
     label: 'Coucou',
     description: 'Deux notes de pendule',
@@ -177,6 +187,103 @@ export const ALARM_SOUNDS: AlarmSound[] = [
         const start = at + call * 0.95;
         nodes.push(voice(ctx, start, { type: 'triangle', frequency: 1318.5, duration: 0.3, peak: 0.3, attack: 0.02 }));
         nodes.push(voice(ctx, start + 0.33, { type: 'triangle', frequency: 1046.5, duration: 0.4, peak: 0.3, attack: 0.02 }));
+      }
+      return nodes;
+    },
+  },
+  {
+    id: 'castor',
+    label: 'Castor bavard',
+    description: 'Babillage aigu, puis grignotage de bois',
+    schedule: (ctx, at) => {
+      const nodes: AudioScheduledSourceNode[] = [];
+      // Fast babble: each squeak slides up, from a slightly different pitch.
+      const chatter = [760, 980, 840, 1120, 900, 1240];
+      chatter.forEach((frequency, index) => {
+        nodes.push(
+          voice(ctx, at + index * 0.1, {
+            type: 'sawtooth',
+            frequency,
+            glideTo: frequency * 1.3,
+            glideDuration: 0.05,
+            duration: 0.09,
+            peak: 0.08,
+          }),
+        );
+      });
+      // Teeth on a branch: dry, tight clicks.
+      for (let bite = 0; bite < 5; bite++) {
+        nodes.push(
+          noise(ctx, at + 0.78 + bite * 0.075, {
+            type: 'bandpass',
+            frequency: 2600,
+            q: 9,
+            duration: 0.045,
+            peak: 0.55,
+          }),
+        );
+      }
+      // Two last happy squeaks.
+      for (let squeak = 0; squeak < 2; squeak++) {
+        nodes.push(
+          voice(ctx, at + 1.22 + squeak * 0.22, {
+            type: 'sawtooth',
+            frequency: 700 + squeak * 80,
+            glideTo: 1200 + squeak * 120,
+            glideDuration: 0.1,
+            duration: 0.17,
+            peak: 0.09,
+          }),
+        );
+      }
+      return nodes;
+    },
+  },
+  {
+    id: 'plouf',
+    label: 'Coup de queue',
+    description: "Le castor claque la queue sur l'eau",
+    schedule: (ctx, at) => {
+      const nodes: AudioScheduledSourceNode[] = [];
+      for (let slap = 0; slap < 2; slap++) {
+        const start = at + slap * 1.1;
+        // The slap: a noise splash closing down, over a low thump.
+        nodes.push(
+          noise(ctx, start, { type: 'lowpass', frequency: 2400, frequencyTo: 320, duration: 0.28, peak: 0.5 }),
+        );
+        nodes.push(voice(ctx, start, { type: 'sine', frequency: 120, glideTo: 45, duration: 0.3, peak: 0.45 }));
+        // Bubbles coming back up.
+        [520, 700, 940].forEach((frequency, index) => {
+          nodes.push(
+            voice(ctx, start + 0.3 + index * 0.09, {
+              type: 'sine',
+              frequency,
+              glideTo: frequency * 1.6,
+              glideDuration: 0.06,
+              duration: 0.09,
+              peak: 0.12,
+            }),
+          );
+        });
+      }
+      return nodes;
+    },
+  },
+  {
+    id: 'ressort',
+    label: 'Ressort',
+    description: 'Boing de dessin animé',
+    schedule: (ctx, at) => {
+      const nodes: OscillatorNode[] = [];
+      for (let boing = 0; boing < 3; boing++) {
+        const start = at + boing * 0.5;
+        nodes.push(
+          voice(ctx, start, { type: 'triangle', frequency: 900, glideTo: 130, glideDuration: 0.32, duration: 0.36, peak: 0.28 }),
+        );
+        // A quieter octave below thickens the boing.
+        nodes.push(
+          voice(ctx, start + 0.04, { type: 'sine', frequency: 450, glideTo: 90, glideDuration: 0.3, duration: 0.34, peak: 0.14 }),
+        );
       }
       return nodes;
     },

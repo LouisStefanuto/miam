@@ -1,16 +1,18 @@
 import { useTheme } from 'next-themes';
 import { useNavigate } from 'react-router-dom';
-import { Sun, Moon, Monitor, LogOut, User, ArrowLeft } from 'lucide-react';
+import { Sun, Moon, Monitor, LogOut, User, ArrowLeft, BellRing, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import AlarmSoundPicker from '@/components/AlarmSoundPicker';
+import { getAlarmSoundById } from '@/lib/alarm';
+import { useAlarmSound } from '@/hooks/use-alarm-sound';
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  const [alarmSound] = useAlarmSound();
 
   return (
     <div className="min-h-screen bg-background">
@@ -95,18 +97,28 @@ export default function SettingsPage() {
         <Separator />
 
         {/* Timer section */}
-        <section className="space-y-5">
+        <section className="space-y-4">
           <h2 className="text-sm font-semibold font-body text-muted-foreground uppercase tracking-wide">Minuteur</h2>
 
-          <div className="space-y-3">
-            <div>
-              <h3 className="text-sm font-medium font-body">Sonnerie</h3>
-              <p className="text-xs font-body text-muted-foreground">
-                Jouée quand un minuteur d'étape arrive à zéro. Appuyez pour écouter.
-              </p>
-            </div>
-            <AlarmSoundPicker />
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/settings/alarm')}
+            className="flex w-full items-center gap-3 rounded-xl border border-border bg-card px-3 py-3 text-left transition-colors hover:border-primary/40 hover:bg-accent active:scale-[0.99]"
+          >
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <BellRing size={16} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-body text-sm font-medium text-card-foreground">Sonnerie</span>
+              <span className="block font-body text-xs text-muted-foreground">
+                Jouée quand un minuteur d'étape arrive à zéro
+              </span>
+            </span>
+            <span className="flex flex-shrink-0 items-center gap-1 font-body text-sm text-muted-foreground">
+              {getAlarmSoundById(alarmSound).label}
+              <ChevronRight size={16} />
+            </span>
+          </button>
         </section>
 
         <Separator />

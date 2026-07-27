@@ -6,6 +6,8 @@ function fakeAudioContext() {
   const started: number[] = [];
   const stopped: number[] = [];
   const ramps: { value: number; at: number }[] = [];
+  /** One entry per noise burst scheduled. */
+  const noises: true[] = [];
 
   const param = () => ({
     setValueAtTime: vi.fn(),
@@ -16,6 +18,7 @@ function fakeAudioContext() {
 
   const ctx = {
     currentTime: 100,
+    sampleRate: 48000,
     state: 'running' as const,
     destination: {},
     resume: vi.fn(),
@@ -30,9 +33,27 @@ function fakeAudioContext() {
       gain: param(),
       connect: (node: unknown) => node,
     }),
+    createBuffer: (_channels: number, length: number) => ({
+      getChannelData: () => new Float32Array(length),
+    }),
+    createBufferSource: () => {
+      noises.push(true);
+      return {
+        buffer: null as unknown,
+        connect: (node: unknown) => node,
+        start: (at: number) => started.push(at),
+        stop: (at?: number) => stopped.push(at ?? -1),
+      };
+    },
+    createBiquadFilter: () => ({
+      type: 'lowpass',
+      frequency: param(),
+      Q: { value: 1 },
+      connect: (node: unknown) => node,
+    }),
   };
 
-  return { ctx, started, stopped, ramps };
+  return { ctx, started, stopped, ramps, noises };
 }
 
 function installFakeAudio() {
@@ -86,8 +107,8 @@ describe('alarm sound preference', () => {
     expect(getAlarmSound()).toBe(DEFAULT_ALARM_SOUND);
   });
 
-  it('offers five sounds, each with a label and a description', () => {
-    expect(ALARM_SOUNDS).toHaveLength(5);
+  it('offers seven sounds, each with a label and a description', () => {
+    expect(ALARM_SOUNDS).toHaveLength(7);
     for (const sound of ALARM_SOUNDS) {
       expect(sound.label).toBeTruthy();
       expect(sound.description).toBeTruthy();
@@ -112,6 +133,14 @@ describe('scheduling', () => {
       }
       // Exponential ramps must never target zero, or the browser throws.
       for (const ramp of ramps) expect(ramp.value).toBeGreaterThan(0);
+    }
+  });
+
+  it('builds the gnawing and the splash out of filtered noise', () => {
+    for (const id of ['castor', 'plouf'] as const) {
+      const { ctx, noises } = installFakeAudio();
+      getAlarmSoundById(id).schedule(ctx as unknown as AudioContext, ctx.currentTime);
+      expect(noises.length, id).toBeGreaterThan(0);
     }
   });
 
