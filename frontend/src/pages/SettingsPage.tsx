@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import AlarmSoundPicker from '@/components/AlarmSoundPicker';
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
@@ -88,6 +89,23 @@ export default function SettingsPage() {
                 Sombre
               </ToggleGroupItem>
             </ToggleGroup>
+          </div>
+        </section>
+
+        <Separator />
+
+        {/* Timer section */}
+        <section className="space-y-5">
+          <h2 className="text-sm font-semibold font-body text-muted-foreground uppercase tracking-wide">Minuteur</h2>
+
+          <div className="space-y-3">
+            <div>
+              <h3 className="text-sm font-medium font-body">Sonnerie</h3>
+              <p className="text-xs font-body text-muted-foreground">
+                Jouée quand un minuteur d'étape arrive à zéro. Appuyez pour écouter.
+              </p>
+            </div>
+            <AlarmSoundPicker />
           </div>
         </section>
 
