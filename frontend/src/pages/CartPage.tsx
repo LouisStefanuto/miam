@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import {
   aggregateIngredients,
   generateShoppingListText,
+  mergeIngredients,
   servingsFor,
   type AggregatedIngredient,
 } from '@/lib/shopping-list';
@@ -50,30 +51,25 @@ const CartPage = () => {
   const [justStarted, setJustStarted] = useState(false);
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<number>();
+  // Ingredients the user deleted by hand: they must not come back when the list is recomputed
+  const removedIds = useRef<Set<string>>(new Set());
 
   useEffect(() => () => {
     if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
   }, []);
 
   useEffect(() => {
-    setIngredients((prev) => {
-      const prevIds = new Set(prev.map((i) => i.id));
-      const rawIds = new Set(rawIngredients.map((i) => i.id));
+    const rawIds = new Set(rawIngredients.map((i) => i.id));
 
-      const kept = prev
-        .filter((i) => rawIds.has(i.id))
-        .map((i) => {
-          const updated = rawIngredients.find((r) => r.id === i.id)!;
-          return { ...i, details: updated.details, name: updated.name };
-        });
+    // An ingredient no recipe provides anymore forgets its deletion, so it can come back later
+    for (const id of removedIds.current) {
+      if (!rawIds.has(id)) removedIds.current.delete(id);
+    }
 
-      const added = rawIngredients.filter((i) => !prevIds.has(i.id));
-      return [...kept, ...added];
-    });
+    setIngredients((prev) => mergeIngredients(prev, rawIngredients, removedIds.current));
 
     // Clean up checked IDs for ingredients that no longer exist
     setCheckedIds((prev) => {
-      const rawIds = new Set(rawIngredients.map((i) => i.id));
       const next = new Set([...prev].filter((id) => rawIds.has(id)));
       return next.size === prev.size ? prev : next;
     });
@@ -105,7 +101,9 @@ const CartPage = () => {
   };
 
   const removeIngredient = (id: string) => {
+    // A manual item is deleted at the source; a recipe ingredient is only hidden from the list
     if (id.startsWith('manual:')) removeManualItem(id);
+    else removedIds.current.add(id);
     setIngredients((prev) => prev.filter((i) => i.id !== id));
     setCheckedIds((prev) => {
       const next = new Set(prev);

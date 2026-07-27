@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { aggregateIngredients, generateShoppingListText, servingsFor } from "@/lib/shopping-list";
+import { aggregateIngredients, generateShoppingListText, mergeIngredients, servingsFor } from "@/lib/shopping-list";
 import type { Recipe } from "@/data/recipes";
 
 function makeRecipe(id: string, servings: number, ingredients: Recipe["ingredients"]): Recipe {
@@ -95,5 +95,36 @@ describe("generateShoppingListText", () => {
     const text = generateShoppingListText([], [{ id: "manual:1", name: "Sacs poubelle", details: "" }], new Set());
     expect(text).not.toContain("Recettes");
     expect(text).toContain("[ ] Sacs poubelle");
+  });
+});
+
+describe("mergeIngredients", () => {
+  const ing = (id: string, name = id, details = "") => ({ id, name, details });
+
+  it("keeps the user's order and appends the new ingredients", () => {
+    const previous = [ing("beurre"), ing("farine")];
+    const raw = [ing("farine"), ing("beurre"), ing("oeuf")];
+    expect(mergeIngredients(previous, raw, new Set()).map((i) => i.id)).toEqual([
+      "beurre",
+      "farine",
+      "oeuf",
+    ]);
+  });
+
+  it("refreshes the name and quantities of the ingredients already listed", () => {
+    const previous = [ing("beurre", "Beurre", "200 g")];
+    const raw = [ing("beurre", "Beurre", "300 g")];
+    expect(mergeIngredients(previous, raw, new Set())[0].details).toBe("300 g");
+  });
+
+  it("does not bring back an ingredient the user removed", () => {
+    const raw = [ing("beurre"), ing("farine")];
+    const merged = mergeIngredients([ing("farine")], raw, new Set(["beurre"]));
+    expect(merged.map((i) => i.id)).toEqual(["farine"]);
+  });
+
+  it("drops the ingredients no recipe provides anymore", () => {
+    const merged = mergeIngredients([ing("beurre"), ing("farine")], [ing("farine")], new Set());
+    expect(merged.map((i) => i.id)).toEqual(["farine"]);
   });
 });

@@ -74,6 +74,30 @@ export function aggregateIngredients(
   return result.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/**
+ * Refreshes the displayed list from the recipe ingredients, keeping the order the user chose
+ * and leaving out the ones they removed by hand.
+ */
+export function mergeIngredients(
+  previous: AggregatedIngredient[],
+  raw: AggregatedIngredient[],
+  removedIds: ReadonlySet<string>,
+): AggregatedIngredient[] {
+  const rawById = new Map(raw.map((i) => [i.id, i]));
+  const previousIds = new Set(previous.map((i) => i.id));
+
+  const kept = previous
+    .filter((i) => rawById.has(i.id))
+    .map((i) => {
+      const updated = rawById.get(i.id)!;
+      return { ...i, name: updated.name, details: updated.details };
+    });
+
+  const added = raw.filter((i) => !previousIds.has(i.id) && !removedIds.has(i.id));
+
+  return [...kept, ...added];
+}
+
 export function generateShoppingListText(
   recipes: Recipe[],
   ingredients: AggregatedIngredient[],
