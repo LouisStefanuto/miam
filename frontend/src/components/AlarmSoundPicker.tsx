@@ -39,13 +39,13 @@ export default function AlarmSoundPicker() {
             onClick={() => handleSelect(sound.id)}
             className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors active:scale-[0.99] ${
               isSelected
-                ? 'border-primary bg-primary/10'
-                : 'border-border bg-card hover:border-primary/40 hover:bg-accent'
+                ? 'border-primary/50 bg-accent'
+                : 'border-border bg-card hover:bg-accent'
             }`}
           >
             <span
               className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${
-                isSelected ? 'gradient-warm text-primary-foreground' : 'bg-muted text-muted-foreground'
+                isSelected ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
               }`}
             >
               <Icon size={16} />

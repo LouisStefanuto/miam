@@ -28,15 +28,17 @@ export default function TimerChip({ id, seconds, label }: TimerChipProps) {
   const base =
     'relative inline-flex items-center gap-1 align-baseline rounded-full px-2 py-0.5 mx-px font-body font-semibold text-[0.95em] leading-tight overflow-hidden transition-colors active:scale-[0.97]';
 
+  // Neutral at rest, accent only once it is counting: the colour marks what is
+  // actually happening rather than what could be tapped.
   if (!timer) {
     return (
       <button
         type="button"
         onClick={handleClick}
         aria-label={`Lancer un minuteur de ${label}`}
-        className={`${base} bg-primary/10 text-primary hover:bg-primary/20`}
+        className={`${base} bg-muted text-foreground hover:bg-accent`}
       >
-        <TimerIcon size={12} className="flex-shrink-0" />
+        <TimerIcon size={12} className="flex-shrink-0 text-muted-foreground" />
         {label}
       </button>
     );
