@@ -9,15 +9,7 @@
  * Vibration can only be triggered live, from a foreground tick.
  */
 
-export type AlarmSoundId =
-  | 'cloche'
-  | 'bip'
-  | 'carillon'
-  | 'coucou'
-  | 'castor'
-  | 'grignotage'
-  | 'ronchon'
-  | 'arbre';
+export type AlarmSoundId = 'cloche' | 'bip' | 'carillon' | 'coucou' | 'castor';
 
 export interface AlarmSound {
   id: AlarmSoundId;
@@ -244,99 +236,6 @@ export const ALARM_SOUNDS: AlarmSound[] = [
           }),
         );
       }
-      return nodes;
-    },
-  },
-  {
-    id: 'grignotage',
-    label: 'Grignotage',
-    description: 'Il ronge de plus en plus vite, puis le bois craque',
-    schedule: (ctx, at) => {
-      const nodes: AudioScheduledSourceNode[] = [];
-      // Nibbling that speeds up: the gap between bites shrinks each time.
-      let cursor = at;
-      for (let bite = 0; bite < 9; bite++) {
-        nodes.push(
-          noise(ctx, cursor, {
-            type: 'bandpass',
-            frequency: bite % 2 === 0 ? 2400 : 3000,
-            q: 9,
-            duration: 0.04,
-            peak: 0.55,
-          }),
-        );
-        cursor += 0.115 - bite * 0.008;
-      }
-      // The branch giving way.
-      nodes.push(
-        noise(ctx, cursor + 0.1, { type: 'lowpass', frequency: 3000, frequencyTo: 420, duration: 0.2, peak: 0.45 }),
-      );
-      nodes.push(
-        voice(ctx, cursor + 0.1, { type: 'triangle', frequency: 160, glideTo: 75, duration: 0.24, peak: 0.3 }),
-      );
-      return nodes;
-    },
-  },
-  {
-    id: 'ronchon',
-    label: 'Castor ronchon',
-    description: 'Il grommelle, vexé que ce ne soit pas encore prêt',
-    schedule: (ctx, at) => {
-      const nodes: OscillatorNode[] = [];
-      // Grumbles wobbling around a low pitch.
-      const grumbles = [180, 148, 205, 140];
-      grumbles.forEach((frequency, index) => {
-        const start = at + index * 0.29;
-        nodes.push(
-          voice(ctx, start, {
-            type: 'sawtooth',
-            frequency,
-            glideTo: frequency * 0.78,
-            duration: 0.24,
-            peak: 0.15,
-            attack: 0.03,
-          }),
-        );
-        // A quiet upper voice gives the grumble its nasal edge.
-        nodes.push(
-          voice(ctx, start, {
-            type: 'square',
-            frequency: frequency * 1.5,
-            glideTo: frequency * 1.2,
-            duration: 0.22,
-            peak: 0.04,
-            attack: 0.03,
-          }),
-        );
-      });
-      // One last long sigh.
-      nodes.push(
-        voice(ctx, at + 1.24, { type: 'sawtooth', frequency: 200, glideTo: 88, duration: 0.45, peak: 0.16, attack: 0.05 }),
-      );
-      return nodes;
-    },
-  },
-  {
-    id: 'arbre',
-    label: 'Arbre qui tombe',
-    description: 'Trois craquements, la chute, et le tronc au sol',
-    schedule: (ctx, at) => {
-      const nodes: AudioScheduledSourceNode[] = [];
-      // Trunk cracking.
-      for (let crack = 0; crack < 3; crack++) {
-        nodes.push(
-          noise(ctx, at + crack * 0.16, { type: 'bandpass', frequency: 1800, q: 4, duration: 0.07, peak: 0.5 }),
-        );
-      }
-      // The fall: a whoosh sweeping down through the branches.
-      nodes.push(
-        noise(ctx, at + 0.6, { type: 'lowpass', frequency: 950, frequencyTo: 200, duration: 0.4, peak: 0.32 }),
-      );
-      // Landing: low thud plus debris.
-      nodes.push(voice(ctx, at + 1.0, { type: 'sine', frequency: 95, glideTo: 38, duration: 0.45, peak: 0.5 }));
-      nodes.push(
-        noise(ctx, at + 1.0, { type: 'lowpass', frequency: 420, frequencyTo: 130, duration: 0.3, peak: 0.4 }),
-      );
       return nodes;
     },
   },

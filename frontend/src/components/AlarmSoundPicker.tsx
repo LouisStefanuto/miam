@@ -1,16 +1,5 @@
 import { useEffect, useRef } from 'react';
-import {
-  AlarmClock,
-  Angry,
-  Bell,
-  Bird,
-  Check,
-  Cookie,
-  Music2,
-  Squirrel,
-  TreeDeciduous,
-  type LucideIcon,
-} from 'lucide-react';
+import { AlarmClock, Bell, Bird, Check, Music2, Squirrel, type LucideIcon } from 'lucide-react';
 import { ALARM_SOUNDS, playAlarmSound, type AlarmSoundId } from '@/lib/alarm';
 import { useAlarmSound } from '@/hooks/use-alarm-sound';
 
@@ -20,9 +9,6 @@ const SOUND_ICONS: Record<AlarmSoundId, LucideIcon> = {
   carillon: Music2,
   coucou: Bird,
   castor: Squirrel,
-  grignotage: Cookie,
-  ronchon: Angry,
-  arbre: TreeDeciduous,
 };
 
 /** Picks the timer alarm, playing each sound as it is selected. */

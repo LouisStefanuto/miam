@@ -20,7 +20,7 @@ describe('AlarmSoundPicker', () => {
   it('lists the sounds and checks the current one', () => {
     render(<AlarmSoundPicker />);
     const options = screen.getAllByRole('radio');
-    expect(options).toHaveLength(8);
+    expect(options).toHaveLength(5);
     expect(screen.getByRole('radio', { name: /Clochette/ })).toBeChecked();
     expect(screen.getByRole('radio', { name: /Castor bavard/ })).toBeInTheDocument();
   });
