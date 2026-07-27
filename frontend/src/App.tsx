@@ -10,6 +10,7 @@ import { CatalogFilterProvider } from "./contexts/CatalogFilterContext";
 import { AccentColorProvider } from "./contexts/ThemeContext";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { TimerProvider } from "./contexts/TimerContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SwipeBack from "./components/SwipeBack";
 import MobileBottomBar from "./components/MobileBottomBar";
@@ -37,6 +38,7 @@ const ShareBatchPage = lazy(() => import("./pages/ShareBatchPage"));
 const ShareInboxPage = lazy(() => import("./pages/ShareInboxPage"));
 const ExportPage = lazy(() => import("./pages/ExportPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const AlarmSoundPage = lazy(() => import("./pages/AlarmSoundPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const GOOGLE_CLIENT_ID =
@@ -63,6 +65,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
         <CartProvider>
+        <TimerProvider>
         <CatalogFilterProvider>
           <SwipeBack>
           <Suspense>
@@ -82,12 +85,14 @@ const App = () => (
             <Route path="/shares/inbox" element={<ProtectedRoute><ShareInboxPage /></ProtectedRoute>} />
             <Route path="/export" element={<ProtectedRoute><ExportPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+            <Route path="/settings/alarm" element={<ProtectedRoute><AlarmSoundPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
           <MobileBottomBar />
           </SwipeBack>
         </CatalogFilterProvider>
+        </TimerProvider>
         </CartProvider>
         </AuthProvider>
       </BrowserRouter>

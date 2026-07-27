@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import RecipeForm from './RecipeForm';
 import { IngredientStepsTabs } from './IngredientStepsTabs';
+import StepText from './StepText';
 import { recipeToMarkdown } from '@/lib/recipe-to-markdown';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthImage } from '@/hooks/use-auth-image';
@@ -532,7 +533,9 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                     <span className="flex-shrink-0 w-7 h-7 rounded-full gradient-warm flex items-center justify-center text-primary-foreground font-body font-bold text-xs leading-none">
                       {i + 1}
                     </span>
-                    <p className="font-body text-foreground leading-7 whitespace-pre-line flex-1">{step.text}</p>
+                    <p className="font-body text-foreground leading-7 whitespace-pre-line flex-1">
+                      <StepText text={step.text} timerIdPrefix={`${recipe.id}:${i}`} />
+                    </p>
                   </div>
                 </li>
               ))}

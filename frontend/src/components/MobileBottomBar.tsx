@@ -26,7 +26,7 @@ export default function MobileBottomBar() {
   const isAdd = location.pathname === '/add' || location.pathname === '/recipes/new' || location.pathname.startsWith('/import');
   const isCart = location.pathname === '/cart';
   const isShares = location.pathname === '/shares' || location.pathname.startsWith('/shares/');
-  const isAccount = location.pathname === '/settings';
+  const isAccount = location.pathname === '/settings' || location.pathname.startsWith('/settings/');
 
   return (
     <>
