@@ -128,3 +128,11 @@ describe("mergeIngredients", () => {
     expect(merged.map((i) => i.id)).toEqual(["farine"]);
   });
 });
+
+describe("mergeIngredients referential stability", () => {
+  it("returns the same array when nothing changed", () => {
+    const previous = [{ id: "beurre", name: "Beurre", details: "200 g" }];
+    const raw = [{ id: "beurre", name: "Beurre", details: "200 g" }];
+    expect(mergeIngredients(previous, raw, new Set())).toBe(previous);
+  });
+});

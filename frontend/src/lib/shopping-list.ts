@@ -95,7 +95,12 @@ export function mergeIngredients(
 
   const added = raw.filter((i) => !previousIds.has(i.id) && !removedIds.has(i.id));
 
-  return [...kept, ...added];
+  // Same list as before: hand back the very same array so React can skip the re-render
+  const unchanged = added.length === 0
+    && kept.length === previous.length
+    && kept.every((i, index) => i.name === previous[index].name && i.details === previous[index].details);
+
+  return unchanged ? previous : [...kept, ...added];
 }
 
 export function generateShoppingListText(

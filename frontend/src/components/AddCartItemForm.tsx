@@ -1,28 +1,14 @@
 import { useRef, useState } from 'react';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-
-/** Centered call to action of the empty cart: switches the cart over to the shopping list. */
-export function StartManualListButton({ onClick }: { onClick: () => void }) {
-  return (
-    <Button variant="outline" onClick={onClick} className="font-body gap-2">
-      <Plus size={18} className="shrink-0" />
-      Commencer une liste à la main
-    </Button>
-  );
-}
 
 interface AddCartItemFormProps {
   onAdd: (name: string) => void;
-  /** Focus the field as soon as the row appears. */
-  autoFocusInput?: boolean;
 }
 
 /**
  * Blank row at the bottom of the shopping list, laid out like the items above it.
  * Enter adds the item and keeps the row ready for the next one.
  */
-export function AddCartItemForm({ onAdd, autoFocusInput = false }: AddCartItemFormProps) {
+export function AddCartItemForm({ onAdd }: AddCartItemFormProps) {
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const skipCommitRef = useRef(false);
@@ -55,7 +41,6 @@ export function AddCartItemForm({ onAdd, autoFocusInput = false }: AddCartItemFo
       >
         <input
           ref={inputRef}
-          autoFocus={autoFocusInput}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => {
