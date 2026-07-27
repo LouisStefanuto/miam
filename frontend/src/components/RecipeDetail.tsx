@@ -578,6 +578,9 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
         })()}
         </div>
       </div>
+
+      {/* Keeps the last steps scrollable above the floating timer dock */}
+      <div aria-hidden style={{ height: 'var(--timer-dock-height, 0px)' }} />
     </div>
   );
 }

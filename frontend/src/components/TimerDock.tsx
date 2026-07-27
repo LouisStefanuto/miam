@@ -1,11 +1,46 @@
+import { useEffect, useRef } from 'react';
 import { Bell, Pause, Play, X } from 'lucide-react';
 import { formatClock } from '@/lib/parse-durations';
 import { useTimers } from '@/contexts/TimerContext';
 
-/** Floating panel keeping running timers reachable while scrolling the recipe. */
+/**
+ * Floating panel keeping running timers reachable while scrolling the recipe.
+ *
+ * It publishes the screen space it takes as `--timer-dock-height`, so scrollable
+ * content can reserve room for it instead of disappearing behind it.
+ */
 export default function TimerDock() {
   const { timers, pause, resume, stop } = useTimers();
-  if (timers.length === 0) return null;
+  const dockRef = useRef<HTMLDivElement>(null);
+  const count = timers.length;
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const clear = () => root.style.setProperty('--timer-dock-height', '0px');
+    const dock = dockRef.current;
+    if (!dock) {
+      clear();
+      return;
+    }
+
+    // The dock is bottom-anchored, so everything from its top edge down is hidden.
+    const measure = () => {
+      const obstructed = Math.max(0, window.innerHeight - dock.getBoundingClientRect().top);
+      root.style.setProperty('--timer-dock-height', `${Math.round(obstructed)}px`);
+    };
+    measure();
+
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    observer?.observe(dock);
+    window.addEventListener('resize', measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', measure);
+      clear();
+    };
+  }, [count]);
+
+  if (count === 0) return null;
 
   // Ringing timers first, then the ones about to ring.
   const sorted = [...timers].sort((a, b) => {
@@ -17,7 +52,8 @@ export default function TimerDock() {
 
   return (
     <div
-      className="fixed z-40 right-3 left-3 md:left-auto md:right-4 md:w-72 flex flex-col gap-2 pointer-events-none bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-4"
+      ref={dockRef}
+      className="fixed z-[45] right-3 left-3 md:left-auto md:right-4 md:w-72 flex flex-col gap-2 pointer-events-none bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-4"
       role="region"
       aria-label="Minuteurs"
     >
