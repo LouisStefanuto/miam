@@ -51,17 +51,18 @@ describe('StepText', () => {
     act(() => {
       screen.getByRole('button').click();
     });
-    expect(screen.getByRole('button').textContent).toContain('10:00');
+    // The duration as written stays next to the countdown.
+    expect(screen.getByRole('button').textContent).toBe('10 minutes (10:00)');
 
     act(() => {
       vi.advanceTimersByTime(60_000);
     });
-    expect(screen.getByRole('button').textContent).toContain('09:00');
+    expect(screen.getByRole('button').textContent).toBe('10 minutes (09:00)');
 
     act(() => {
       vi.advanceTimersByTime(9 * 60_000);
     });
-    expect(screen.getByRole('button', { name: /terminé/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /terminé/i }).textContent).toBe('10 minutes (terminé)');
     expect(navigator.vibrate).toHaveBeenCalled();
   });
 

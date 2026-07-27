@@ -51,7 +51,7 @@ export default function TimerChip({ id, seconds, label }: TimerChipProps) {
         className={`${base} gradient-warm text-primary-foreground animate-pulse`}
       >
         <Bell size={12} className="flex-shrink-0" />
-        Terminé
+        {label} (terminé)
       </button>
     );
   }
@@ -61,7 +61,11 @@ export default function TimerChip({ id, seconds, label }: TimerChipProps) {
     <button
       type="button"
       onClick={handleClick}
-      aria-label={running ? `Mettre en pause le minuteur de ${label}` : `Reprendre le minuteur de ${label}`}
+      aria-label={
+        running
+          ? `Mettre en pause le minuteur de ${label}, ${formatClock(timer.remainingMs)} restant`
+          : `Reprendre le minuteur de ${label}, ${formatClock(timer.remainingMs)} restant`
+      }
       className={`${base} bg-primary/10 text-primary hover:bg-primary/20 ${running ? '' : 'opacity-70'}`}
     >
       <span
@@ -69,9 +73,13 @@ export default function TimerChip({ id, seconds, label }: TimerChipProps) {
         className="absolute inset-y-0 left-0 bg-primary/25 transition-[width] duration-500 ease-linear"
         style={{ width: `${Math.min(100, progress * 100)}%` }}
       />
+      {/* The duration as written stays visible, so the step still reads as a sentence
+          and the remaining time can be compared to it. */}
       <span className="relative flex items-center gap-1">
         {running ? <TimerIcon size={12} className="flex-shrink-0" /> : <Pause size={12} className="flex-shrink-0" />}
-        <span className="tabular-nums">{formatClock(timer.remainingMs)}</span>
+        <span>
+          {label} <span className="tabular-nums">({formatClock(timer.remainingMs)})</span>
+        </span>
       </span>
     </button>
   );
