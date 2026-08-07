@@ -177,5 +177,9 @@ claude/
 # Tar files (ex. zipped Docker images)
 *.tar
 
+# Node. frontend/.gitignore covers the app's own; this catches caches written
+# when a tool is run from the repo root by mistake.
+node_modules/
+
 # Claude
 .claude/

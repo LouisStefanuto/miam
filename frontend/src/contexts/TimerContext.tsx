@@ -22,7 +22,8 @@ interface TimerSpec {
   endsAt?: number;
   /** Set while paused. */
   remainingMs?: number;
-  done?: boolean;
+  /** Set when it rang; the timer clears itself DONE_LINGER_MS later. */
+  doneAt?: number;
 }
 
 interface TimerContextValue {
@@ -37,22 +38,32 @@ const TimerContext = createContext<TimerContextValue | null>(null);
 
 const STORAGE_KEY = 'miam-timers';
 const TICK_MS = 500;
+/** How long a finished timer keeps showing its "done" state before clearing itself. */
+const DONE_LINGER_MS = 5000;
 
+/**
+ * Timers live in `sessionStorage`: a reload keeps them counting down, but
+ * closing the app drops them, so a recipe reopened later starts from scratch
+ * instead of showing a countdown nobody remembers starting.
+ */
 function loadTimers(): TimerSpec[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    // Timers used to be kept in localStorage, where they survived forever.
+    localStorage.removeItem(STORAGE_KEY);
+    const raw = sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as TimerSpec[];
     if (!Array.isArray(parsed)) return [];
-    // A timer that expired while the app was closed comes back as "done", but
-    // without ringing: there is no user gesture to unlock audio on load.
-    return parsed
-      .filter((spec) => spec && typeof spec.id === 'string' && typeof spec.totalMs === 'number')
-      .map((spec) =>
-        spec.endsAt !== undefined && spec.endsAt <= Date.now()
-          ? { ...spec, endsAt: undefined, remainingMs: 0, done: true }
-          : spec,
-      );
+    return parsed.filter(
+      (spec) =>
+        spec &&
+        typeof spec.id === 'string' &&
+        typeof spec.totalMs === 'number' &&
+        // A timer that ran out while the app was away has nothing left to show:
+        // its ring is long past, and there is no gesture to unlock audio on load.
+        spec.doneAt === undefined &&
+        (spec.endsAt === undefined || spec.endsAt > Date.now()),
+    );
   } catch {
     return [];
   }
@@ -60,7 +71,7 @@ function loadTimers(): TimerSpec[] {
 
 function saveTimers(specs: TimerSpec[]) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(specs));
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(specs));
   } catch {
     /* storage full or unavailable */
   }
@@ -97,15 +108,35 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     if (expired.length === 0) return;
     const ids = new Set(expired.map((spec) => spec.id));
     for (const id of ids) bellCancels.current.delete(id);
+    const doneAt = Date.now();
     setSpecs((prev) =>
       prev.map((spec) =>
-        ids.has(spec.id) ? { ...spec, endsAt: undefined, remainingMs: 0, done: true } : spec,
+        ids.has(spec.id) ? { ...spec, endsAt: undefined, remainingMs: 0, doneAt } : spec,
       ),
     );
     // The bell was scheduled on the audio clock at start time; only the
     // vibration has to be triggered here.
     vibrateAlarm();
   }, [now, specs]);
+
+  // A finished timer announces itself for a moment, then puts its chip back to
+  // the idle state on its own — dismissing it is not something to remember.
+  const nextClearAt = specs.reduce(
+    (soonest, spec) =>
+      spec.doneAt === undefined ? soonest : Math.min(soonest, spec.doneAt + DONE_LINGER_MS),
+    Number.POSITIVE_INFINITY,
+  );
+
+  useEffect(() => {
+    if (!Number.isFinite(nextClearAt)) return;
+    const timeout = window.setTimeout(() => {
+      const cutoff = Date.now();
+      setSpecs((prev) =>
+        prev.filter((spec) => spec.doneAt === undefined || spec.doneAt + DONE_LINGER_MS > cutoff),
+      );
+    }, Math.max(0, nextClearAt - Date.now()));
+    return () => window.clearTimeout(timeout);
+  }, [nextClearAt]);
 
   const cancelBell = useCallback((id: string) => {
     bellCancels.current.get(id)?.();
@@ -145,7 +176,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   const resume = useCallback(
     (id: string) => {
       const spec = specs.find((candidate) => candidate.id === id);
-      if (!spec || spec.endsAt !== undefined || spec.done) return;
+      if (!spec || spec.endsAt !== undefined || spec.doneAt !== undefined) return;
       const remaining = spec.remainingMs ?? spec.totalMs;
       cancelBell(id);
       bellCancels.current.set(id, scheduleAlarmSound(remaining / 1000));
@@ -170,7 +201,8 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   const timers = useMemo<KitchenTimer[]>(
     () =>
       specs.map((spec) => {
-        const status: TimerStatus = spec.done ? 'done' : spec.endsAt !== undefined ? 'running' : 'paused';
+        const status: TimerStatus =
+          spec.doneAt !== undefined ? 'done' : spec.endsAt !== undefined ? 'running' : 'paused';
         const remainingMs =
           status === 'done' ? 0 : status === 'running' ? Math.max(0, spec.endsAt! - now) : spec.remainingMs ?? spec.totalMs;
         return {
