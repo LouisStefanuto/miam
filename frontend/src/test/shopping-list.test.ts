@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { aggregateIngredients, generateShoppingListText, mergeIngredients, servingsFor } from "@/lib/shopping-list";
+import { aggregateIngredients, generateShoppingListText, mergeIngredients, servingsFor, sortByOrder } from "@/lib/shopping-list";
 import type { Recipe } from "@/data/recipes";
 
 function makeRecipe(id: string, servings: number, ingredients: Recipe["ingredients"]): Recipe {
@@ -126,6 +126,79 @@ describe("mergeIngredients", () => {
   it("drops the ingredients no recipe provides anymore", () => {
     const merged = mergeIngredients([ing("beurre"), ing("farine")], [ing("farine")], new Set());
     expect(merged.map((i) => i.id)).toEqual(["farine"]);
+  });
+
+  it("keeps the label the user rewrote instead of the recipe one", () => {
+    const previous = [ing("beurre", "Beurre demi-sel", "")];
+    const raw = [ing("beurre", "Beurre", "200 g")];
+    const renames = { beurre: { label: "Beurre demi-sel", from: "200 g Beurre" } };
+    const [merged] = mergeIngredients(previous, raw, new Set(), renames);
+    expect(merged.name).toBe("Beurre demi-sel");
+    expect(merged.details).toBe("");
+  });
+
+  it("refreshes the ingredients the user did not rewrite", () => {
+    const previous = [ing("beurre", "Beurre demi-sel", ""), ing("farine", "Farine", "100 g")];
+    const raw = [ing("beurre", "Beurre", "200 g"), ing("farine", "Farine", "200 g")];
+    const renames = { beurre: { label: "Beurre demi-sel", from: "200 g Beurre" } };
+    expect(mergeIngredients(previous, raw, new Set(), renames)[1].details).toBe("200 g");
+  });
+
+  // Leaving the cart and coming back rebuilds the list from nothing
+  it("applies the rewritten labels to a list built from scratch", () => {
+    const raw = [ing("beurre", "Beurre", "200 g")];
+    const renames = { beurre: { label: "Beurre demi-sel", from: "200 g Beurre" } };
+    const [merged] = mergeIngredients([], raw, new Set(), renames);
+    expect(merged.name).toBe("Beurre demi-sel");
+  });
+
+  it("drops a rewritten label once the recipes change the line under it", () => {
+    const raw = [ing("beurre", "Beurre", "300 g")];
+    const renames = { beurre: { label: "200 g Beurre demi-sel", from: "200 g Beurre" } };
+    const [merged] = mergeIngredients([], raw, new Set(), renames);
+    // The servings moved, so the stale quantity the user typed must not stick
+    expect(merged.name).toBe("Beurre");
+    expect(merged.details).toBe("300 g");
+  });
+});
+
+describe("sortByOrder", () => {
+  const ing = (id: string) => ({ id, name: id, details: "" });
+
+  it("puts the list back in the order the user dragged it into", () => {
+    const list = [ing("beurre"), ing("farine"), ing("oeuf")];
+    expect(sortByOrder(list, ["oeuf", "beurre", "farine"]).map((i) => i.id)).toEqual([
+      "oeuf",
+      "beurre",
+      "farine",
+    ]);
+  });
+
+  it("leaves the list alone when no order was ever chosen", () => {
+    const list = [ing("beurre"), ing("farine")];
+    expect(sortByOrder(list, [])).toBe(list);
+  });
+
+  it("keeps the ingredients the order says nothing about at the end", () => {
+    const list = [ing("beurre"), ing("farine"), ing("sucre")];
+    expect(sortByOrder(list, ["farine", "beurre"]).map((i) => i.id)).toEqual([
+      "farine",
+      "beurre",
+      "sucre",
+    ]);
+  });
+
+  it("ignores the ids of ingredients that left the list", () => {
+    const list = [ing("beurre"), ing("farine")];
+    expect(sortByOrder(list, ["oeuf", "farine", "beurre"]).map((i) => i.id)).toEqual([
+      "farine",
+      "beurre",
+    ]);
+  });
+
+  it("returns the same array when the list is already in that order", () => {
+    const list = [ing("beurre"), ing("farine")];
+    expect(sortByOrder(list, ["beurre", "farine"])).toBe(list);
   });
 });
 

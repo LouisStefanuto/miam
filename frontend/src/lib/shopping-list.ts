@@ -7,6 +7,33 @@ export interface AggregatedIngredient {
   details: string;
 }
 
+/**
+ * A label the user rewrote by hand, with the line it replaced.
+ *
+ * `from` is what the recipes were showing when they edited. Once the recipes show something
+ * else — another serving count, another recipe adding to the same ingredient — the rewritten
+ * label is stale and the fresh line wins, so a quantity never freezes on an old value.
+ */
+export interface IngredientRename {
+  label: string;
+  from: string;
+}
+
+/** The one line the user reads, and the one they edit: "200 g Beurre". */
+export function ingredientLabel(ingredient: AggregatedIngredient): string {
+  return ingredient.details ? `${ingredient.details} ${ingredient.name}` : ingredient.name;
+}
+
+/** The rewritten label, when the user wrote one and the recipes have not moved under it. */
+function applyRename(
+  ingredient: AggregatedIngredient,
+  renames: Readonly<Record<string, IngredientRename>>,
+): AggregatedIngredient {
+  const renamed = renames[ingredient.id];
+  if (!renamed || renamed.from !== ingredientLabel(ingredient)) return ingredient;
+  return { ...ingredient, name: renamed.label, details: '' };
+}
+
 /** How many servings the user wants for a recipe, defaulting to the recipe's own. */
 export function servingsFor(recipe: Recipe, servingsById: Record<string, number>): number {
   const chosen = servingsById[recipe.id];
@@ -75,25 +102,26 @@ export function aggregateIngredients(
 }
 
 /**
- * Refreshes the displayed list from the recipe ingredients, keeping the order the user chose
- * and leaving out the ones they removed by hand.
+ * Refreshes the displayed list from the recipe ingredients, keeping the order the user chose,
+ * leaving out the ones they removed by hand and keeping the labels they rewrote.
  */
 export function mergeIngredients(
   previous: AggregatedIngredient[],
   raw: AggregatedIngredient[],
   removedIds: ReadonlySet<string>,
+  renames: Readonly<Record<string, IngredientRename>> = {},
 ): AggregatedIngredient[] {
   const rawById = new Map(raw.map((i) => [i.id, i]));
   const previousIds = new Set(previous.map((i) => i.id));
 
   const kept = previous
     .filter((i) => rawById.has(i.id))
-    .map((i) => {
-      const updated = rawById.get(i.id)!;
-      return { ...i, name: updated.name, details: updated.details };
-    });
+    .map((i) => applyRename(rawById.get(i.id)!, renames));
 
-  const added = raw.filter((i) => !previousIds.has(i.id) && !removedIds.has(i.id));
+  // Rebuilding the list from scratch goes through here too, so it must honour the renames as well
+  const added = raw
+    .filter((i) => !previousIds.has(i.id) && !removedIds.has(i.id))
+    .map((i) => applyRename(i, renames));
 
   // Same list as before: hand back the very same array so React can skip the re-render
   const unchanged = added.length === 0
@@ -101,6 +129,25 @@ export function mergeIngredients(
     && kept.every((i, index) => i.name === previous[index].name && i.details === previous[index].details);
 
   return unchanged ? previous : [...kept, ...added];
+}
+
+/**
+ * Puts the list back in the order the user dragged it into. Ingredients the order says nothing
+ * about — added since the last drag — keep their place at the end.
+ */
+export function sortByOrder(
+  list: AggregatedIngredient[],
+  order: readonly string[],
+): AggregatedIngredient[] {
+  if (order.length === 0) return list;
+
+  const rank = new Map(order.map((id, index) => [id, index]));
+  const placed = list.filter((i) => rank.has(i.id)).sort((a, b) => rank.get(a.id)! - rank.get(b.id)!);
+  const rest = list.filter((i) => !rank.has(i.id));
+  const sorted = [...placed, ...rest];
+
+  // Already in that order: hand back the very same array so React can skip the re-render
+  return sorted.every((i, index) => i === list[index]) ? list : sorted;
 }
 
 export function generateShoppingListText(
