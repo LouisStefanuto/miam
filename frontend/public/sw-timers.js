@@ -14,7 +14,16 @@
 
 const MIAM_TAG_PREFIX = 'miam-timer-';
 const MIAM_ICON = '/icon-192x192.png';
+const MIAM_BADGE = '/badge-timer.png';
 const MIAM_VIBRATION = [500, 250, 500, 250, 500];
+const MIAM_RUNNING_ACTIONS = [
+  { action: 'pause', title: 'Pause' },
+  { action: 'stop', title: 'Annuler' },
+];
+const MIAM_PAUSED_ACTIONS = [
+  { action: 'resume', title: 'Reprendre' },
+  { action: 'stop', title: 'Annuler' },
+];
 
 /** Timer id -> pending `setTimeout` handle. */
 const miamTimeouts = new Map();
@@ -73,15 +82,29 @@ function miamTick(timer) {
     tag: MIAM_TAG_PREFIX + timer.id,
     body: 'Minuteur ' + (timer.label || ''),
     icon: MIAM_ICON,
-    badge: MIAM_ICON,
+    badge: MIAM_BADGE,
     silent: true,
     requireInteraction: true,
-    data: { url: timer.url },
+    actions: MIAM_RUNNING_ACTIONS,
+    data: { url: timer.url, label: timer.label, endsAt: timer.endsAt },
   });
   miamTimeouts.set(
     timer.id,
     setTimeout(() => miamTick(timer), miamNextRefresh(remaining)),
   );
+}
+
+function miamShowPaused(timer) {
+  self.registration.showNotification(miamRemainingLabel(timer.remainingMs), {
+    tag: MIAM_TAG_PREFIX + timer.id,
+    body: 'Minuteur ' + (timer.label || '') + ', en pause',
+    icon: MIAM_ICON,
+    badge: MIAM_BADGE,
+    silent: true,
+    requireInteraction: true,
+    actions: MIAM_PAUSED_ACTIONS,
+    data: { url: timer.url, label: timer.label, remainingMs: timer.remainingMs },
+  });
 }
 
 function miamSchedule(timer) {
@@ -97,12 +120,49 @@ self.addEventListener('message', (event) => {
   else if (data.type === 'miam-timer-cancel') miamCancel(data.id);
 });
 
+/**
+ * A button on the card. The worker answers it on the spot — the shade must not
+ * sit there unchanged while the app boots — and then tells the page, where the
+ * timers actually live, to do the same. Everything needed comes from the card's
+ * own `data`, so a press works even on a worker that just woke up.
+ */
+async function miamHandleAction(action, id, data, notification) {
+  miamCancel(id);
+  if (action === 'stop') {
+    notification.close();
+  } else if (action === 'pause') {
+    miamShowPaused({
+      id,
+      label: data.label,
+      url: data.url,
+      remainingMs: Math.max(0, (data.endsAt || Date.now()) - Date.now()),
+    });
+  } else {
+    miamTick({
+      id,
+      label: data.label,
+      url: data.url,
+      endsAt: Date.now() + (data.remainingMs || 0),
+    });
+  }
+  const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  for (const client of clients) client.postMessage({ type: 'miam-timer-action', action, id });
+}
+
 /** Tapping a timer card brings the app back, on the recipe it came from. */
 self.addEventListener('notificationclick', (event) => {
   const notification = event.notification;
   if (!notification.tag || !notification.tag.startsWith(MIAM_TAG_PREFIX)) return;
+  const data = notification.data || {};
+  const id = notification.tag.slice(MIAM_TAG_PREFIX.length);
+
+  if (event.action === 'pause' || event.action === 'resume' || event.action === 'stop') {
+    event.waitUntil(miamHandleAction(event.action, id, data, notification));
+    return;
+  }
+
   notification.close();
-  const url = (notification.data && notification.data.url) || '/';
+  const url = data.url || '/';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {

@@ -304,6 +304,22 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     [cancelBell],
   );
 
+  // The buttons on the card are pressed against the service worker, which has
+  // already redrawn the card by the time this arrives; here the timer itself
+  // catches up, so the chip and the alarm agree with what the shade shows.
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data;
+      if (!data || data.type !== 'miam-timer-action' || typeof data.id !== 'string') return;
+      if (data.action === 'pause') pause(data.id);
+      else if (data.action === 'resume') resume(data.id);
+      else if (data.action === 'stop') stop(data.id);
+    };
+    navigator.serviceWorker.addEventListener('message', onMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage);
+  }, [pause, resume, stop]);
+
   const timers = useMemo<KitchenTimer[]>(
     () =>
       specs.map((spec) => {

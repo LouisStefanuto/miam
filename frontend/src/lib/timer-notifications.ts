@@ -22,7 +22,30 @@ import { formatClock } from '@/lib/parse-durations';
 const TAG_PREFIX = 'miam-timer-';
 const PREF_KEY = 'miam-timer-notifications';
 const ICON = '/icon-192x192.png';
+/** Flat white glyph: Android draws the badge as a silhouette in the status bar. */
+const BADGE = '/badge-timer.png';
 const VIBRATION_PATTERN = [500, 250, 500, 250, 500];
+
+/**
+ * What a card is allowed to carry. `NotificationOptions` in the DOM types stops
+ * at the fields a page can use; buttons and vibration only exist on the service
+ * worker side, which is where these cards are posted from.
+ */
+type CardOptions = NotificationOptions & {
+  tag: string;
+  actions?: { action: string; title: string }[];
+  vibrate?: number[];
+};
+
+/** Buttons under the card, in the order Android lays them out. */
+const RUNNING_ACTIONS = [
+  { action: 'pause', title: 'Pause' },
+  { action: 'stop', title: 'Annuler' },
+];
+const PAUSED_ACTIONS = [
+  { action: 'resume', title: 'Reprendre' },
+  { action: 'stop', title: 'Annuler' },
+];
 
 export interface TimerNotification {
   id: string;
@@ -96,7 +119,7 @@ function tagOf(id: string): string {
   return `${TAG_PREFIX}${id}`;
 }
 
-async function show(title: string, options: NotificationOptions & { tag: string }) {
+async function show(title: string, options: CardOptions) {
   if (!notificationsEnabled()) return;
   const reg = await registration();
   if (reg) {
@@ -104,7 +127,7 @@ async function show(title: string, options: NotificationOptions & { tag: string 
     return;
   }
   // Desktop browsers without a worker can still post a plain notification;
-  // mobile ones cannot, and simply get nothing.
+  // mobile ones cannot, and simply get nothing. The buttons go with the worker.
   try {
     new Notification(title, options);
   } catch {
@@ -137,7 +160,11 @@ export function formatRemainingLabel(remainingMs: number): string {
 
 /**
  * Ongoing card for a running timer: the clock in the title, where it is read at
- * a glance, and just enough under it to tell two timers apart.
+ * a glance, just enough under it to tell two timers apart, and the two buttons
+ * that spare a trip back into the app.
+ *
+ * Everything the buttons need travels in `data` — the worker handling the press
+ * has no state of its own, and the page that does may be frozen.
  */
 export function showRunningNotification(timer: TimerNotification) {
   if (timer.endsAt === undefined) return;
@@ -145,22 +172,25 @@ export function showRunningNotification(timer: TimerNotification) {
     tag: tagOf(timer.id),
     body: `Minuteur ${timer.label}`,
     icon: ICON,
-    badge: ICON,
+    badge: BADGE,
     silent: true,
     requireInteraction: true,
-    data: { url: timer.url },
+    actions: RUNNING_ACTIONS,
+    data: { url: timer.url, label: timer.label, endsAt: timer.endsAt },
   });
 }
 
 export function showPausedNotification(timer: TimerNotification) {
-  void show(formatRemainingLabel(timer.remainingMs ?? 0), {
+  const remainingMs = timer.remainingMs ?? 0;
+  void show(formatRemainingLabel(remainingMs), {
     tag: tagOf(timer.id),
     body: `Minuteur ${timer.label}, en pause`,
     icon: ICON,
-    badge: ICON,
+    badge: BADGE,
     silent: true,
     requireInteraction: true,
-    data: { url: timer.url },
+    actions: PAUSED_ACTIONS,
+    data: { url: timer.url, label: timer.label, remainingMs },
   });
 }
 
@@ -175,12 +205,12 @@ export function showDoneNotification(timer: TimerNotification) {
     tag: tagOf(timer.id),
     body: `Minuteur ${timer.label}`,
     icon: ICON,
-    badge: ICON,
+    badge: BADGE,
     silent: inForeground,
     requireInteraction: true,
     vibrate: inForeground ? undefined : VIBRATION_PATTERN,
     data: { url: timer.url, done: true },
-  } as NotificationOptions & { tag: string });
+  });
 }
 
 export function clearNotification(id: string) {

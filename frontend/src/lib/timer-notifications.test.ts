@@ -109,6 +109,32 @@ describe('cards', () => {
     expect(options.data.url).toBe('/recipe/1');
   });
 
+  it('carries the buttons, and what they need to act on', async () => {
+    const endsAt = Date.now() + 600_000;
+    showRunningNotification({ id: 'step-1', label: '10 min', endsAt });
+    await flush();
+
+    const running = showNotification.mock.calls[0][1];
+    expect(running.actions).toEqual([
+      { action: 'pause', title: 'Pause' },
+      { action: 'stop', title: 'Annuler' },
+    ]);
+    // The worker handling the press has no state of its own to work from.
+    expect(running.data.endsAt).toBe(endsAt);
+    expect(running.data.label).toBe('10 min');
+
+    showNotification.mockClear();
+    showPausedNotification({ id: 'step-1', label: '10 min', remainingMs: 272_000 });
+    await flush();
+
+    const paused = showNotification.mock.calls[0][1];
+    expect(paused.actions).toEqual([
+      { action: 'resume', title: 'Reprendre' },
+      { action: 'stop', title: 'Annuler' },
+    ]);
+    expect(paused.data.remainingMs).toBe(272_000);
+  });
+
   it('freezes the clock of a paused timer', async () => {
     showPausedNotification({ id: 'step-1', label: '10 min', remainingMs: 272_000 });
     await flush();
