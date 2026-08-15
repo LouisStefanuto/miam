@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuthImage } from '@/hooks/use-auth-image';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useCart } from '@/contexts/CartContext';
+import { useWakeLock } from '@/hooks/use-wake-lock';
 
 const DifficultyBars = ({ level }: { level: number }) => (
   <div className="flex gap-0.5 items-end">
@@ -74,6 +75,9 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const isMobile = useIsMobile();
   const canEdit = recipe.userRole !== 'reader';
   const imageClickable = !isMobile && canEdit;
+
+  // Hands are busy while cooking: keep the phone screen on while the recipe is open
+  useWakeLock(isMobile && !editing);
 
   useEffect(() => {
     if (initialEditing && !editing) setEditing(true);
