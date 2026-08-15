@@ -1,18 +1,21 @@
 import { useTheme } from 'next-themes';
 import { useNavigate } from 'react-router-dom';
-import { Sun, Moon, Monitor, LogOut, User, ArrowLeft, BellRing, ChevronRight } from 'lucide-react';
+import { Sun, Moon, Monitor, LogOut, User, ArrowLeft, BellRing, ChevronRight, Smartphone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { getAlarmSoundById } from '@/lib/alarm';
 import { useAlarmSound } from '@/hooks/use-alarm-sound';
+import { useTimerNotifications } from '@/hooks/use-timer-notifications';
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [alarmSound] = useAlarmSound();
+  const notifications = useTimerNotifications();
 
   return (
     <div className="min-h-screen bg-background">
@@ -119,6 +122,36 @@ export default function SettingsPage() {
               <ChevronRight size={16} />
             </span>
           </button>
+
+          {notifications.supported && (
+            <div className="rounded-xl border border-border bg-card px-3 py-3">
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                  <Smartphone size={16} />
+                </span>
+                <label htmlFor="timer-notifications" className="min-w-0 flex-1 cursor-pointer">
+                  <span className="block font-body text-sm font-medium text-card-foreground">
+                    Notifications
+                  </span>
+                  <span className="block font-body text-xs text-muted-foreground">
+                    Affiche les minuteurs en cours sur l'écran verrouillé
+                  </span>
+                </label>
+                <Switch
+                  id="timer-notifications"
+                  checked={notifications.enabled}
+                  onCheckedChange={notifications.toggle}
+                  disabled={notifications.blocked}
+                />
+              </div>
+              {notifications.blocked && (
+                <p className="mt-2 font-body text-xs text-muted-foreground">
+                  Les notifications sont bloquées pour ce site. Autorisez-les dans les réglages du
+                  navigateur pour les réactiver.
+                </p>
+              )}
+            </div>
+          )}
         </section>
 
         <Separator />

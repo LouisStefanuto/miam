@@ -29,6 +29,9 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["icon.png"],
       workbox: {
+        // Timer notifications: the worker rings even when the page is frozen
+        // behind a locked screen (see public/sw-timers.js).
+        importScripts: ["/sw-timers.js"],
         // Disable SPA navigation fallback so Cloudflare Access can intercept
         // expired sessions and redirect to its login page.
         // Nginx already handles SPA routing via try_files.

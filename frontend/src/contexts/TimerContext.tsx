@@ -1,5 +1,18 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { scheduleAlarmSound, vibrateAlarm } from '@/lib/alarm';
+import {
+  cancelDoneNotification,
+  clearDoneNotifications,
+  clearNotification,
+  formatRemainingLabel,
+  notificationsAllowed,
+  notificationsEnabled,
+  requestNotificationPermission,
+  scheduleDoneNotification,
+  showDoneNotification,
+  showPausedNotification,
+  showRunningNotification,
+} from '@/lib/timer-notifications';
 
 export type TimerStatus = 'running' | 'paused' | 'done';
 
@@ -77,6 +90,23 @@ function saveTimers(specs: TimerSpec[]) {
   }
 }
 
+/** Where the timer was started from, so tapping its card comes back here. */
+function currentPath(): string {
+  return `${window.location.pathname}${window.location.search}`;
+}
+
+/**
+ * Hands the ring of a starting timer to the service worker. Permission is asked
+ * the first time a timer is started, which is a tap — the only moment browsers
+ * accept the prompt. The card itself is posted by the refresh effect below.
+ */
+function armNotifications(id: string, label: string, endsAt: number) {
+  if (!notificationsAllowed()) return;
+  void requestNotificationPermission().then(() => {
+    scheduleDoneNotification({ id, label, endsAt, url: currentPath() });
+  });
+}
+
 export function TimerProvider({ children }: { children: ReactNode }) {
   const [specs, setSpecs] = useState<TimerSpec[]>(loadTimers);
   const [now, setNow] = useState(() => Date.now());
@@ -117,7 +147,74 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     // The bell was scheduled on the audio clock at start time; only the
     // vibration has to be triggered here.
     vibrateAlarm();
+    for (const spec of expired) {
+      cancelDoneNotification(spec.id);
+      // The worker may have posted this card already; same tag, so this
+      // replaces it in place rather than stacking a second one.
+      showDoneNotification({ id: spec.id, label: spec.label });
+    }
   }, [now, specs]);
+
+  // Coming back to the app is acknowledgement enough: the cards of timers that
+  // already rang would just linger in the shade.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void clearDoneNotifications();
+    };
+    onVisible();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
+
+  // A reload restarts the timers from storage, but the worker that was to ring
+  // for them may have been shut down in between: schedule them again. Only when
+  // permission is already there — a prompt needs a tap behind it.
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+    if (!notificationsEnabled()) return;
+    for (const spec of specs) {
+      if (spec.endsAt === undefined) continue;
+      scheduleDoneNotification({
+        id: spec.id,
+        label: spec.label,
+        endsAt: spec.endsAt,
+        url: currentPath(),
+      });
+    }
+  }, [specs]);
+
+  /** Last card posted per timer, so a tick only reposts a changed countdown. */
+  const postedCards = useRef(new Map<string, string>());
+
+  // Keeps the lock screen cards counting down. A notification cannot tick on
+  // its own, so it is reposted — under the same tag, silently — each time its
+  // clock would read differently: once a second, out of the two ticks that ran.
+  useEffect(() => {
+    if (!notificationsEnabled()) return;
+    const live = new Set<string>();
+    for (const spec of specs) {
+      live.add(spec.id);
+      // A timer that has run out belongs to the "c'est prêt" card. Its chrono
+      // must not be reposted over it — the two effects run in the same pass,
+      // this one last, and a card reading 00:00 would bury the ring.
+      if (spec.doneAt !== undefined || (spec.endsAt !== undefined && spec.endsAt <= now)) continue;
+      const running = spec.endsAt !== undefined;
+      const remainingMs = running
+        ? Math.max(0, spec.endsAt! - now)
+        : spec.remainingMs ?? spec.totalMs;
+      const card = `${running ? 'run' : 'pause'}:${formatRemainingLabel(remainingMs)}`;
+      if (postedCards.current.get(spec.id) === card) continue;
+      postedCards.current.set(spec.id, card);
+      const timer = { id: spec.id, label: spec.label, url: currentPath() };
+      if (running) showRunningNotification({ ...timer, endsAt: spec.endsAt });
+      else showPausedNotification({ ...timer, remainingMs });
+    }
+    for (const id of postedCards.current.keys()) {
+      if (!live.has(id)) postedCards.current.delete(id);
+    }
+  }, [specs, now]);
 
   // A finished timer announces itself for a moment, then puts its chip back to
   // the idle state on its own — dismissing it is not something to remember.
@@ -148,12 +245,14 @@ export function TimerProvider({ children }: { children: ReactNode }) {
       cancelBell(id);
       // Called from a click, which is what unlocks audio playback on mobile.
       bellCancels.current.set(id, scheduleAlarmSound(seconds));
+      const endsAt = Date.now() + seconds * 1000;
       const spec: TimerSpec = {
         id,
         label,
         totalMs: seconds * 1000,
-        endsAt: Date.now() + seconds * 1000,
+        endsAt,
       };
+      armNotifications(id, label, endsAt);
       setSpecs((prev) => [...prev.filter((other) => other.id !== id), spec]);
       setNow(Date.now());
     },
@@ -162,15 +261,18 @@ export function TimerProvider({ children }: { children: ReactNode }) {
 
   const pause = useCallback(
     (id: string) => {
+      const spec = specs.find((candidate) => candidate.id === id);
+      if (!spec || spec.endsAt === undefined) return;
       cancelBell(id);
+      cancelDoneNotification(id);
+      const remainingMs = Math.max(0, spec.endsAt - Date.now());
       setSpecs((prev) =>
-        prev.map((spec) => {
-          if (spec.id !== id || spec.endsAt === undefined) return spec;
-          return { ...spec, remainingMs: Math.max(0, spec.endsAt - Date.now()), endsAt: undefined };
-        }),
+        prev.map((candidate) =>
+          candidate.id === id ? { ...candidate, remainingMs, endsAt: undefined } : candidate,
+        ),
       );
     },
-    [cancelBell],
+    [specs, cancelBell],
   );
 
   const resume = useCallback(
@@ -180,9 +282,11 @@ export function TimerProvider({ children }: { children: ReactNode }) {
       const remaining = spec.remainingMs ?? spec.totalMs;
       cancelBell(id);
       bellCancels.current.set(id, scheduleAlarmSound(remaining / 1000));
+      const endsAt = Date.now() + remaining;
+      armNotifications(id, spec.label, endsAt);
       setSpecs((prev) =>
         prev.map((candidate) =>
-          candidate.id === id ? { ...candidate, endsAt: Date.now() + remaining, remainingMs: undefined } : candidate,
+          candidate.id === id ? { ...candidate, endsAt, remainingMs: undefined } : candidate,
         ),
       );
       setNow(Date.now());
@@ -193,10 +297,28 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   const stop = useCallback(
     (id: string) => {
       cancelBell(id);
+      cancelDoneNotification(id);
+      clearNotification(id);
       setSpecs((prev) => prev.filter((spec) => spec.id !== id));
     },
     [cancelBell],
   );
+
+  // The buttons on the card are pressed against the service worker, which has
+  // already redrawn the card by the time this arrives; here the timer itself
+  // catches up, so the chip and the alarm agree with what the shade shows.
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data;
+      if (!data || data.type !== 'miam-timer-action' || typeof data.id !== 'string') return;
+      if (data.action === 'pause') pause(data.id);
+      else if (data.action === 'resume') resume(data.id);
+      else if (data.action === 'stop') stop(data.id);
+    };
+    navigator.serviceWorker.addEventListener('message', onMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage);
+  }, [pause, resume, stop]);
 
   const timers = useMemo<KitchenTimer[]>(
     () =>
