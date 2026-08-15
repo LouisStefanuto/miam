@@ -34,7 +34,7 @@ class AuthSettings(BaseSettings):
 
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
-    jwt_expiration_minutes: int = 1440  # 24 hours
+    jwt_expiration_minutes: int = 43200  # 30 days
     google_client_id: str
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
