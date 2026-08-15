@@ -17,6 +17,7 @@ interface CartContextType {
   manualItems: ManualCartItem[];
   addManualItem: (name: string) => void;
   removeManualItem: (id: string) => void;
+  renameManualItem: (id: string, name: string) => void;
   /** Servings picked per recipe; recipes absent from the map use their own servings. */
   servingsById: Record<string, number>;
   setServings: (recipeId: string, servings: number) => void;
@@ -168,15 +169,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const renameManualItem = useCallback((id: string, name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setManualItems((prev) => {
+      if (!prev.some((i) => i.id === id && i.name !== trimmed)) return prev;
+      const next = prev.map((i) => (i.id === id ? { ...i, name: trimmed } : i));
+      saveManualItems(next);
+      return next;
+    });
+  }, []);
+
   const value = useMemo<CartContextType>(() => ({
     items, toggle, add, remove, clear,
     has: (id: string) => items.has(id),
     count: items.size,
-    manualItems, addManualItem, removeManualItem,
+    manualItems, addManualItem, removeManualItem, renameManualItem,
     servingsById, setServings,
   }), [
     items, toggle, add, remove, clear,
-    manualItems, addManualItem, removeManualItem,
+    manualItems, addManualItem, removeManualItem, renameManualItem,
     servingsById, setServings,
   ]);
 

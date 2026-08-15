@@ -127,6 +127,22 @@ describe("mergeIngredients", () => {
     const merged = mergeIngredients([ing("beurre"), ing("farine")], [ing("farine")], new Set());
     expect(merged.map((i) => i.id)).toEqual(["farine"]);
   });
+
+  it("keeps the label the user rewrote instead of the recipe one", () => {
+    const previous = [ing("beurre", "Beurre demi-sel", "")];
+    const raw = [ing("beurre", "Beurre", "300 g")];
+    const renamed = new Map([["beurre", "Beurre demi-sel"]]);
+    const [merged] = mergeIngredients(previous, raw, new Set(), renamed);
+    expect(merged.name).toBe("Beurre demi-sel");
+    expect(merged.details).toBe("");
+  });
+
+  it("refreshes the ingredients the user did not rewrite", () => {
+    const previous = [ing("beurre", "Beurre demi-sel", ""), ing("farine", "Farine", "100 g")];
+    const raw = [ing("beurre", "Beurre", "300 g"), ing("farine", "Farine", "200 g")];
+    const merged = mergeIngredients(previous, raw, new Set(), new Map([["beurre", "Beurre demi-sel"]]));
+    expect(merged[1].details).toBe("200 g");
+  });
 });
 
 describe("mergeIngredients referential stability", () => {

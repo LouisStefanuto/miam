@@ -75,13 +75,14 @@ export function aggregateIngredients(
 }
 
 /**
- * Refreshes the displayed list from the recipe ingredients, keeping the order the user chose
- * and leaving out the ones they removed by hand.
+ * Refreshes the displayed list from the recipe ingredients, keeping the order the user chose,
+ * leaving out the ones they removed by hand and keeping the labels they rewrote.
  */
 export function mergeIngredients(
   previous: AggregatedIngredient[],
   raw: AggregatedIngredient[],
   removedIds: ReadonlySet<string>,
+  renamedById: ReadonlyMap<string, string> = new Map(),
 ): AggregatedIngredient[] {
   const rawById = new Map(raw.map((i) => [i.id, i]));
   const previousIds = new Set(previous.map((i) => i.id));
@@ -89,6 +90,9 @@ export function mergeIngredients(
   const kept = previous
     .filter((i) => rawById.has(i.id))
     .map((i) => {
+      // A label the user rewrote replaces the whole line, quantities included
+      const renamed = renamedById.get(i.id);
+      if (renamed !== undefined) return { ...i, name: renamed, details: '' };
       const updated = rawById.get(i.id)!;
       return { ...i, name: updated.name, details: updated.details };
     });

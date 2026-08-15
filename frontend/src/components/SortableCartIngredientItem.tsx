@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, X } from 'lucide-react';
@@ -9,9 +10,10 @@ interface SortableCartIngredientItemProps {
   checked: boolean;
   onToggle: (id: string) => void;
   onRemove: (id: string) => void;
+  onRename: (id: string, label: string) => void;
 }
 
-export function SortableCartIngredientItem({ id, name, details, checked, onToggle, onRemove }: SortableCartIngredientItemProps) {
+export function SortableCartIngredientItem({ id, name, details, checked, onToggle, onRemove, onRename }: SortableCartIngredientItemProps) {
   const {
     attributes,
     listeners,
@@ -21,10 +23,30 @@ export function SortableCartIngredientItem({ id, name, details, checked, onToggl
     isDragging,
   } = useSortable({ id });
 
+  const label = details ? `${details} ${name}` : name;
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(label);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const skipCommitRef = useRef(false);
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+  };
+
+  const startEditing = () => {
+    setDraft(label);
+    setEditing(true);
+  };
+
+  /** Leaving the field saves, unless the user pressed Escape or wiped the line. */
+  const stopEditing = () => {
+    const cancelled = skipCommitRef.current;
+    skipCommitRef.current = false;
+    setEditing(false);
+    const next = draft.trim();
+    if (!cancelled && next && next !== label) onRename(id, next);
   };
 
   return (
@@ -56,10 +78,41 @@ export function SortableCartIngredientItem({ id, name, details, checked, onToggl
           </svg>
         )}
       </button>
-      <span className={`flex-1 min-w-0 ${checked ? 'line-through' : ''}`}>
-        {details && <span>{details} </span>}
-        {name}
-      </span>
+      {editing ? (
+        <form
+          className="flex-1 min-w-0"
+          onSubmit={(e) => {
+            e.preventDefault();
+            inputRef.current?.blur();
+          }}
+        >
+          <input
+            ref={inputRef}
+            autoFocus
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                skipCommitRef.current = true;
+                inputRef.current?.blur();
+              }
+            }}
+            onBlur={stopEditing}
+            enterKeyHint="done"
+            className="w-full bg-transparent border-0 p-0 outline-none"
+            aria-label="Modifier l'article"
+          />
+        </form>
+      ) : (
+        <button
+          type="button"
+          onClick={startEditing}
+          title="Modifier l'article"
+          className={`flex-1 min-w-0 text-left break-words ${checked ? 'line-through' : ''}`}
+        >
+          {label}
+        </button>
+      )}
       <button
         onClick={() => onRemove(id)}
         className="shrink-0 p-2 rounded-full text-muted-foreground md:text-muted-foreground/0 md:group-hover:text-muted-foreground hover:!text-destructive transition-colors"
