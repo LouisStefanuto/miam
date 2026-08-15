@@ -15,7 +15,7 @@ class JwtTokenHandler(JwtTokenPort):
         self,
         secret_key: str,
         algorithm: str = "HS256",
-        expiration_minutes: int = 1440,
+        expiration_minutes: int = 43200,
     ):
         self._secret_key = secret_key
         self._algorithm = algorithm

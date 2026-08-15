@@ -76,7 +76,7 @@ sequenceDiagram
         DB-->>SVC: User
     end
     SVC->>JWT: create_access_token(user.id)
-    JWT-->>SVC: signed JWT (HS256, 24h)
+    JWT-->>SVC: signed JWT (HS256, 30d)
     SVC-->>API: jwt
     API-->>FE: 200 + Set-Cookie: miam_auth_token (HttpOnly, Secure, SameSite=Lax, path=/api)
     FE->>FE: store display info in localStorage
@@ -141,5 +141,5 @@ Loaded by `AuthSettings` from `.env`:
 | --- | --- | --- |
 | `JWT_SECRET_KEY` | — (required) | HMAC secret used to sign app JWTs |
 | `JWT_ALGORITHM` | `HS256` | JWT signing algorithm |
-| `JWT_EXPIRATION_MINUTES` | `1440` | Token + cookie lifetime in minutes |
+| `JWT_EXPIRATION_MINUTES` | `43200` | Token + cookie lifetime in minutes (30 days) |
 | `GOOGLE_CLIENT_ID` | — (required) | OAuth client ID used to validate the `aud` claim of the Google ID token |
