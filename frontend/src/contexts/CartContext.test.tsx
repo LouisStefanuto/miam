@@ -44,6 +44,15 @@ describe('CartContext hand edits to the shopping list', () => {
     expect(second.result.current.hiddenIngredientIds.has('farine')).toBe(true);
   });
 
+  it('keeps the dragged order after the screen is torn down and rebuilt', () => {
+    const first = mountCart();
+    act(() => first.result.current.setIngredientOrder(['oeuf', 'beurre', 'farine']));
+    first.unmount();
+
+    const second = mountCart();
+    expect(second.result.current.ingredientOrder).toEqual(['oeuf', 'beurre', 'farine']);
+  });
+
   it('forgets the deletions of ingredients no recipe provides anymore', () => {
     const { result } = mountCart();
     act(() => result.current.hideIngredient('farine'));
@@ -66,6 +75,7 @@ describe('CartContext hand edits to the shopping list', () => {
     act(() => {
       first.result.current.renameIngredient('beurre', rename);
       first.result.current.hideIngredient('farine');
+      first.result.current.setIngredientOrder(['beurre', 'farine']);
     });
     act(() => first.result.current.clear());
     first.unmount();
@@ -73,5 +83,6 @@ describe('CartContext hand edits to the shopping list', () => {
     const second = mountCart();
     expect(second.result.current.ingredientRenames).toEqual({});
     expect(second.result.current.hiddenIngredientIds.size).toBe(0);
+    expect(second.result.current.ingredientOrder).toEqual([]);
   });
 });

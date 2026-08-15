@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { aggregateIngredients, generateShoppingListText, mergeIngredients, servingsFor } from "@/lib/shopping-list";
+import { aggregateIngredients, generateShoppingListText, mergeIngredients, servingsFor, sortByOrder } from "@/lib/shopping-list";
 import type { Recipe } from "@/data/recipes";
 
 function makeRecipe(id: string, servings: number, ingredients: Recipe["ingredients"]): Recipe {
@@ -159,6 +159,46 @@ describe("mergeIngredients", () => {
     // The servings moved, so the stale quantity the user typed must not stick
     expect(merged.name).toBe("Beurre");
     expect(merged.details).toBe("300 g");
+  });
+});
+
+describe("sortByOrder", () => {
+  const ing = (id: string) => ({ id, name: id, details: "" });
+
+  it("puts the list back in the order the user dragged it into", () => {
+    const list = [ing("beurre"), ing("farine"), ing("oeuf")];
+    expect(sortByOrder(list, ["oeuf", "beurre", "farine"]).map((i) => i.id)).toEqual([
+      "oeuf",
+      "beurre",
+      "farine",
+    ]);
+  });
+
+  it("leaves the list alone when no order was ever chosen", () => {
+    const list = [ing("beurre"), ing("farine")];
+    expect(sortByOrder(list, [])).toBe(list);
+  });
+
+  it("keeps the ingredients the order says nothing about at the end", () => {
+    const list = [ing("beurre"), ing("farine"), ing("sucre")];
+    expect(sortByOrder(list, ["farine", "beurre"]).map((i) => i.id)).toEqual([
+      "farine",
+      "beurre",
+      "sucre",
+    ]);
+  });
+
+  it("ignores the ids of ingredients that left the list", () => {
+    const list = [ing("beurre"), ing("farine")];
+    expect(sortByOrder(list, ["oeuf", "farine", "beurre"]).map((i) => i.id)).toEqual([
+      "farine",
+      "beurre",
+    ]);
+  });
+
+  it("returns the same array when the list is already in that order", () => {
+    const list = [ing("beurre"), ing("farine")];
+    expect(sortByOrder(list, ["beurre", "farine"])).toBe(list);
   });
 });
 

@@ -8,6 +8,7 @@ import {
   generateShoppingListText,
   ingredientLabel,
   mergeIngredients,
+  sortByOrder,
   type AggregatedIngredient,
 } from '@/lib/shopping-list';
 
@@ -22,6 +23,7 @@ export function useShoppingList() {
     items, manualItems, removeManualItem, renameManualItem, servingsById,
     hiddenIngredientIds, hideIngredient, pruneHiddenIngredients,
     ingredientRenames, renameIngredient: persistRename, forgetIngredientRename,
+    ingredientOrder, setIngredientOrder,
   } = useCart();
   const { data: allRecipes, isSuccess: recipesLoaded } = useRecipes();
 
@@ -39,9 +41,9 @@ export function useShoppingList() {
     [cartRecipes, manualItems, servingsById],
   );
 
-  // The deletions and the rewritten labels come from the cart, which outlives this screen
+  // The order, the deletions and the rewritten labels come from the cart, which outlives this screen
   const [ingredients, setIngredients] = useState<AggregatedIngredient[]>(
-    () => mergeIngredients([], rawIngredients, hiddenIngredientIds, ingredientRenames),
+    () => sortByOrder(mergeIngredients([], rawIngredients, hiddenIngredientIds, ingredientRenames), ingredientOrder),
   );
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
 
@@ -54,14 +56,16 @@ export function useShoppingList() {
     // deletions would all be wiped on a cold load.
     if (recipesLoaded) pruneHiddenIngredients(rawIds);
 
-    setIngredients((prev) => mergeIngredients(prev, rawIngredients, hiddenIngredientIds, ingredientRenames));
+    setIngredients((prev) =>
+      sortByOrder(mergeIngredients(prev, rawIngredients, hiddenIngredientIds, ingredientRenames), ingredientOrder),
+    );
 
     // Clean up checked IDs for ingredients that no longer exist
     setCheckedIds((prev) => {
       const next = new Set([...prev].filter((id) => rawIds.has(id)));
       return next.size === prev.size ? prev : next;
     });
-  }, [rawIngredients, hiddenIngredientIds, ingredientRenames, recipesLoaded, pruneHiddenIngredients]);
+  }, [rawIngredients, hiddenIngredientIds, ingredientRenames, ingredientOrder, recipesLoaded, pruneHiddenIngredients]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -70,14 +74,16 @@ export function useShoppingList() {
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
-    if (over && active.id !== over.id) {
-      setIngredients((prev) => {
-        const oldIndex = prev.findIndex((i) => i.id === active.id);
-        const newIndex = prev.findIndex((i) => i.id === over.id);
-        return arrayMove(prev, oldIndex, newIndex);
-      });
-    }
-  }, []);
+    if (!over || active.id === over.id) return;
+    const oldIndex = ingredients.findIndex((i) => i.id === active.id);
+    const newIndex = ingredients.findIndex((i) => i.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    const next = arrayMove(ingredients, oldIndex, newIndex);
+    setIngredients(next);
+    // The cart keeps the order, so it is still there after leaving the screen
+    setIngredientOrder(next.map((i) => i.id));
+  }, [ingredients, setIngredientOrder]);
 
   const toggleIngredient = useCallback((id: string) => {
     setCheckedIds((prev) => {

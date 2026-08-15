@@ -131,6 +131,25 @@ export function mergeIngredients(
   return unchanged ? previous : [...kept, ...added];
 }
 
+/**
+ * Puts the list back in the order the user dragged it into. Ingredients the order says nothing
+ * about — added since the last drag — keep their place at the end.
+ */
+export function sortByOrder(
+  list: AggregatedIngredient[],
+  order: readonly string[],
+): AggregatedIngredient[] {
+  if (order.length === 0) return list;
+
+  const rank = new Map(order.map((id, index) => [id, index]));
+  const placed = list.filter((i) => rank.has(i.id)).sort((a, b) => rank.get(a.id)! - rank.get(b.id)!);
+  const rest = list.filter((i) => !rank.has(i.id));
+  const sorted = [...placed, ...rest];
+
+  // Already in that order: hand back the very same array so React can skip the re-render
+  return sorted.every((i, index) => i === list[index]) ? list : sorted;
+}
+
 export function generateShoppingListText(
   recipes: Recipe[],
   ingredients: AggregatedIngredient[],

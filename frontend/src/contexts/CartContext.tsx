@@ -33,6 +33,9 @@ interface CartContextType {
   ingredientRenames: Record<string, IngredientRename>;
   renameIngredient: (id: string, rename: IngredientRename) => void;
   forgetIngredientRename: (id: string) => void;
+  /** Ingredient ids in the order the user dragged them into; empty until they move one. */
+  ingredientOrder: string[];
+  setIngredientOrder: (ids: string[]) => void;
 }
 
 const CartContext = createContext<CartContextType | null>(null);
@@ -101,6 +104,21 @@ function saveHiddenIngredients(ids: Set<string>) {
   localStorage.setItem('miam-cart-hidden', JSON.stringify([...ids]));
 }
 
+function loadIngredientOrder(): string[] {
+  try {
+    const raw = localStorage.getItem('miam-cart-order');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed.filter((id) => typeof id === 'string');
+    }
+  } catch { /* ignore */ }
+  return [];
+}
+
+function saveIngredientOrder(ids: string[]) {
+  localStorage.setItem('miam-cart-order', JSON.stringify(ids));
+}
+
 function loadIngredientRenames(): Record<string, IngredientRename> {
   try {
     const raw = localStorage.getItem('miam-cart-renames');
@@ -137,6 +155,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [servingsById, setServingsById] = useState<Record<string, number>>(loadServings);
   const [hiddenIngredientIds, setHiddenIngredientIds] = useState<Set<string>>(loadHiddenIngredients);
   const [ingredientRenames, setIngredientRenames] = useState<Record<string, IngredientRename>>(loadIngredientRenames);
+  const [ingredientOrder, setIngredientOrderState] = useState<string[]>(loadIngredientOrder);
 
   /** A recipe leaving the cart forgets its servings, so it comes back with its own default. */
   const forgetServings = useCallback((id: string) => {
@@ -206,6 +225,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     saveHiddenIngredients(new Set());
     setIngredientRenames({});
     saveIngredientRenames({});
+    setIngredientOrderState([]);
+    saveIngredientOrder([]);
   }, []);
 
   const addManualItem = useCallback((name: string) => {
@@ -265,6 +286,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const setIngredientOrder = useCallback((ids: string[]) => {
+    setIngredientOrderState((prev) => {
+      if (prev.length === ids.length && prev.every((id, index) => id === ids[index])) return prev;
+      saveIngredientOrder(ids);
+      return ids;
+    });
+  }, []);
+
   const forgetIngredientRename = useCallback((id: string) => {
     setIngredientRenames((prev) => {
       if (!(id in prev)) return prev;
@@ -283,12 +312,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     servingsById, setServings,
     hiddenIngredientIds, hideIngredient, pruneHiddenIngredients,
     ingredientRenames, renameIngredient, forgetIngredientRename,
+    ingredientOrder, setIngredientOrder,
   }), [
     items, toggle, add, remove, clear,
     manualItems, addManualItem, removeManualItem, renameManualItem,
     servingsById, setServings,
     hiddenIngredientIds, hideIngredient, pruneHiddenIngredients,
     ingredientRenames, renameIngredient, forgetIngredientRename,
+    ingredientOrder, setIngredientOrder,
   ]);
 
   return (
