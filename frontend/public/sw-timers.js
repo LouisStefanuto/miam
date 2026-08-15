@@ -39,10 +39,6 @@ function miamRemainingLabel(remaining) {
   return hours > 0 ? hours + ':' + pad(minutes) + ':' + pad(seconds) : pad(minutes) + ':' + pad(seconds);
 }
 
-function miamEndTime(endsAt) {
-  return new Date(endsAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-}
-
 /** Next whole second, which is when the card would read differently. */
 function miamNextRefresh(remaining) {
   return Math.min(remaining, remaining % 1000 || 1000);
@@ -73,7 +69,7 @@ function miamTick(timer) {
   }
   self.registration.showNotification(miamRemainingLabel(remaining), {
     tag: MIAM_TAG_PREFIX + timer.id,
-    body: 'Minuteur ' + (timer.label || '') + ', fin à ' + miamEndTime(timer.endsAt),
+    body: 'Minuteur ' + (timer.label || ''),
     icon: MIAM_ICON,
     badge: MIAM_ICON,
     silent: true,

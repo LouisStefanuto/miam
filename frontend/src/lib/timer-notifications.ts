@@ -96,11 +96,6 @@ function tagOf(id: string): string {
   return `${TAG_PREFIX}${id}`;
 }
 
-/** French time of day, e.g. "14:32". */
-function formatEndTime(endsAt: number): string {
-  return new Date(endsAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-}
-
 async function show(title: string, options: NotificationOptions & { tag: string }) {
   if (!notificationsEnabled()) return;
   const reg = await registration();
@@ -141,15 +136,14 @@ export function formatRemainingLabel(remainingMs: number): string {
 }
 
 /**
- * Ongoing card for a running timer: the running clock in the title, where it is
- * read at a glance, and the end time under it. That end time is what stays true
- * during the gaps where nothing is awake to repost the card.
+ * Ongoing card for a running timer: the clock in the title, where it is read at
+ * a glance, and just enough under it to tell two timers apart.
  */
 export function showRunningNotification(timer: TimerNotification) {
   if (timer.endsAt === undefined) return;
   void show(formatRemainingLabel(timer.endsAt - Date.now()), {
     tag: tagOf(timer.id),
-    body: `Minuteur ${timer.label}, fin à ${formatEndTime(timer.endsAt)}`,
+    body: `Minuteur ${timer.label}`,
     icon: ICON,
     badge: ICON,
     silent: true,

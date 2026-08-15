@@ -94,7 +94,7 @@ describe('remaining time', () => {
 });
 
 describe('cards', () => {
-  it('leads with the running clock, and anchors it to the end time', async () => {
+  it('leads with the running clock, over the timer it belongs to', async () => {
     const endsAt = new Date('2024-01-01T14:32:00').getTime();
     vi.spyOn(Date, 'now').mockReturnValue(new Date('2024-01-01T14:24:00').getTime());
     showRunningNotification({ id: 'step-1', label: '10 min', endsAt, url: '/recipe/1' });
@@ -103,8 +103,7 @@ describe('cards', () => {
     expect(showNotification).toHaveBeenCalledTimes(1);
     const [title, options] = showNotification.mock.calls[0];
     expect(title).toBe('08:00');
-    // The clock stalls whenever neither side is awake; the end time does not.
-    expect(options.body).toBe('Minuteur 10 min, fin à 14:32');
+    expect(options.body).toBe('Minuteur 10 min');
     expect(options.tag).toBe('miam-timer-step-1');
     expect(options.silent).toBe(true);
     expect(options.data.url).toBe('/recipe/1');
