@@ -3,6 +3,7 @@ import {
   cancelDoneNotification,
   clearDoneNotifications,
   clearNotification,
+  formatRemainingLabel,
   notificationsAllowed,
   notificationsEnabled,
   scheduleDoneNotification,
@@ -62,7 +63,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 describe('preference', () => {
@@ -82,26 +83,39 @@ describe('preference', () => {
   });
 });
 
+describe('remaining time', () => {
+  it('reads as the clock on the chip', () => {
+    expect(formatRemainingLabel(8 * 60_000)).toBe('08:00');
+    expect(formatRemainingLabel(272_000)).toBe('04:32');
+    expect(formatRemainingLabel(90 * 60_000)).toBe('1:30:00');
+    expect(formatRemainingLabel(1_500)).toBe('00:02');
+    expect(formatRemainingLabel(-100)).toBe('00:00');
+  });
+});
+
 describe('cards', () => {
-  it('states when a running timer ends rather than what is left', async () => {
+  it('leads with the running clock, and anchors it to the end time', async () => {
     const endsAt = new Date('2024-01-01T14:32:00').getTime();
+    vi.spyOn(Date, 'now').mockReturnValue(new Date('2024-01-01T14:24:00').getTime());
     showRunningNotification({ id: 'step-1', label: '10 min', endsAt, url: '/recipe/1' });
     await flush();
 
     expect(showNotification).toHaveBeenCalledTimes(1);
     const [title, options] = showNotification.mock.calls[0];
-    expect(title).toBe('Minuteur 10 min');
-    expect(options.body).toBe('Fin à 14:32');
+    expect(title).toBe('08:00');
+    // The clock stalls whenever neither side is awake; the end time does not.
+    expect(options.body).toBe('Minuteur 10 min, fin à 14:32');
     expect(options.tag).toBe('miam-timer-step-1');
     expect(options.silent).toBe(true);
     expect(options.data.url).toBe('/recipe/1');
   });
 
-  it('shows what is left on a paused timer', async () => {
+  it('freezes the clock of a paused timer', async () => {
     showPausedNotification({ id: 'step-1', label: '10 min', remainingMs: 272_000 });
     await flush();
 
-    expect(showNotification.mock.calls[0][1].body).toBe('En pause, 04:32 restant');
+    expect(showNotification.mock.calls[0][0]).toBe('04:32');
+    expect(showNotification.mock.calls[0][1].body).toBe('Minuteur 10 min, en pause');
   });
 
   it('rings loud when the app is not on screen', async () => {

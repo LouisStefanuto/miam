@@ -6,13 +6,14 @@
  * read — on the lock screen — and turns the ring into something that shows up
  * even when the app is not on screen.
  *
- * Two things post notifications:
- *  - this module, from the page, for the "running" / "paused" / "done" cards;
- *  - `public/sw-timers.js`, from the service worker, for the "done" card of a
- *    timer that ran out while the page was frozen (a locked screen suspends the
- *    tab, so its own tick may be minutes late).
- * Both use the same tag per timer, so whichever fires first wins and the other
- * silently replaces it instead of stacking a duplicate.
+ * A notification has no clock of its own, so the countdown is animated by
+ * reposting the card every second. Two things do that:
+ *  - this module, from the page, while the app is awake;
+ *  - `public/sw-timers.js`, from the service worker, once the screen is locked
+ *    and the page frozen — which is also when it posts the ring, since the
+ *    page's own tick may by then be minutes late.
+ * Both write under the same tag per timer, so a repost replaces the card in
+ * place, silently, instead of stacking a second one.
  */
 
 import { formatClock } from '@/lib/parse-durations';
@@ -127,16 +128,30 @@ async function close(id: string) {
   }
 }
 
-/** Ongoing card for a running timer: silent, and stating when it will ring. */
+/**
+ * The countdown as it reads on the card: `08:12`, the same clock as the chip.
+ *
+ * A notification cannot tick on its own, so the card is reposted — same tag,
+ * silently, in place — every time this string changes, which is once a second.
+ * Whoever is awake does the reposting: the page, or the service worker once the
+ * screen is locked and the page frozen.
+ */
+export function formatRemainingLabel(remainingMs: number): string {
+  return formatClock(Math.max(0, remainingMs));
+}
+
+/**
+ * Ongoing card for a running timer: the running clock in the title, where it is
+ * read at a glance, and the end time under it. That end time is what stays true
+ * during the gaps where nothing is awake to repost the card.
+ */
 export function showRunningNotification(timer: TimerNotification) {
   if (timer.endsAt === undefined) return;
-  void show(`Minuteur ${timer.label}`, {
+  void show(formatRemainingLabel(timer.endsAt - Date.now()), {
     tag: tagOf(timer.id),
-    body: `Fin à ${formatEndTime(timer.endsAt)}`,
+    body: `Minuteur ${timer.label}, fin à ${formatEndTime(timer.endsAt)}`,
     icon: ICON,
     badge: ICON,
-    // The body cannot count down, so it names the end time instead: still true
-    // ten minutes later, with no update needed while the page is frozen.
     silent: true,
     requireInteraction: true,
     data: { url: timer.url },
@@ -144,9 +159,9 @@ export function showRunningNotification(timer: TimerNotification) {
 }
 
 export function showPausedNotification(timer: TimerNotification) {
-  void show(`Minuteur ${timer.label}`, {
+  void show(formatRemainingLabel(timer.remainingMs ?? 0), {
     tag: tagOf(timer.id),
-    body: `En pause, ${formatClock(timer.remainingMs ?? 0)} restant`,
+    body: `Minuteur ${timer.label}, en pause`,
     icon: ICON,
     badge: ICON,
     silent: true,

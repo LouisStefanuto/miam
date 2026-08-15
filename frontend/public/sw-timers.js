@@ -2,10 +2,10 @@
  * Timer half of the service worker, pulled in by the generated Workbox worker
  * (see `workbox.importScripts` in `vite.config.ts`).
  *
- * A locked screen freezes the page: its interval stops ticking and the alarm it
- * would have fired arrives late, or not at all. The worker is not tied to the
- * page's lifetime, so the ring is scheduled here too, and posted as a
- * notification the phone can show without the app being open.
+ * A locked screen freezes the page: the countdown on its card stops being
+ * refreshed and the alarm it would have fired arrives late, or not at all. The
+ * worker is not tied to the page's lifetime, so it keeps the card counting down
+ * and posts the ring itself.
  *
  * Best effort by design: the browser may shut the worker down before the
  * timeout fires. The page reposts the same card, under the same tag, as soon as
@@ -26,11 +26,39 @@ function miamCancel(id) {
   miamTimeouts.delete(id);
 }
 
-function miamSchedule(timer) {
-  if (!timer || typeof timer.id !== 'string' || typeof timer.endsAt !== 'number') return;
-  miamCancel(timer.id);
-  const delay = Math.max(0, timer.endsAt - Date.now());
-  const handle = setTimeout(() => {
+/**
+ * The countdown as `formatClock` writes it in the app — the card must not
+ * change shape depending on which side posted it last.
+ */
+function miamRemainingLabel(remaining) {
+  const total = Math.max(0, Math.ceil(remaining / 1000));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  const pad = (n) => String(n).padStart(2, '0');
+  return hours > 0 ? hours + ':' + pad(minutes) + ':' + pad(seconds) : pad(minutes) + ':' + pad(seconds);
+}
+
+function miamEndTime(endsAt) {
+  return new Date(endsAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
+/** Next whole second, which is when the card would read differently. */
+function miamNextRefresh(remaining) {
+  return Math.min(remaining, remaining % 1000 || 1000);
+}
+
+/**
+ * Reposts the card a second at a time, so the countdown keeps running in the
+ * shade, then posts the ring. The page cannot do this while it is frozen behind
+ * a locked screen — which is exactly when the card is all there is to read.
+ *
+ * The ticking is also what keeps the worker itself awake: a worker with nothing
+ * pending is shut down within seconds, and would take the ring with it.
+ */
+function miamTick(timer) {
+  const remaining = timer.endsAt - Date.now();
+  if (remaining <= 0) {
     miamTimeouts.delete(timer.id);
     self.registration.showNotification('Minuteur terminé', {
       tag: MIAM_TAG_PREFIX + timer.id,
@@ -41,8 +69,27 @@ function miamSchedule(timer) {
       vibrate: MIAM_VIBRATION,
       data: { url: timer.url, done: true },
     });
-  }, delay);
-  miamTimeouts.set(timer.id, handle);
+    return;
+  }
+  self.registration.showNotification(miamRemainingLabel(remaining), {
+    tag: MIAM_TAG_PREFIX + timer.id,
+    body: 'Minuteur ' + (timer.label || '') + ', fin à ' + miamEndTime(timer.endsAt),
+    icon: MIAM_ICON,
+    badge: MIAM_ICON,
+    silent: true,
+    requireInteraction: true,
+    data: { url: timer.url },
+  });
+  miamTimeouts.set(
+    timer.id,
+    setTimeout(() => miamTick(timer), miamNextRefresh(remaining)),
+  );
+}
+
+function miamSchedule(timer) {
+  if (!timer || typeof timer.id !== 'string' || typeof timer.endsAt !== 'number') return;
+  miamCancel(timer.id);
+  miamTick(timer);
 }
 
 self.addEventListener('message', (event) => {

@@ -4,6 +4,7 @@ import {
   cancelDoneNotification,
   clearDoneNotifications,
   clearNotification,
+  formatRemainingLabel,
   notificationsAllowed,
   notificationsEnabled,
   requestNotificationPermission,
@@ -95,16 +96,14 @@ function currentPath(): string {
 }
 
 /**
- * Mirrors a running timer onto the lock screen, and hands its ring to the
- * service worker. Permission is asked the first time a timer is started, which
- * is a tap — the only moment browsers accept the prompt.
+ * Hands the ring of a starting timer to the service worker. Permission is asked
+ * the first time a timer is started, which is a tap — the only moment browsers
+ * accept the prompt. The card itself is posted by the refresh effect below.
  */
-function mirrorRunning(id: string, label: string, endsAt: number) {
+function armNotifications(id: string, label: string, endsAt: number) {
   if (!notificationsAllowed()) return;
-  const timer = { id, label, endsAt, url: currentPath() };
   void requestNotificationPermission().then(() => {
-    showRunningNotification(timer);
-    scheduleDoneNotification(timer);
+    scheduleDoneNotification({ id, label, endsAt, url: currentPath() });
   });
 }
 
@@ -168,8 +167,8 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // A reload restarts the timers from storage, but the worker that was to ring
-  // for them may have been shut down in between: post and schedule them again.
-  // Only when permission is already there — a prompt needs a tap behind it.
+  // for them may have been shut down in between: schedule them again. Only when
+  // permission is already there — a prompt needs a tap behind it.
   const restored = useRef(false);
   useEffect(() => {
     if (restored.current) return;
@@ -177,11 +176,42 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     if (!notificationsEnabled()) return;
     for (const spec of specs) {
       if (spec.endsAt === undefined) continue;
-      const timer = { id: spec.id, label: spec.label, endsAt: spec.endsAt, url: currentPath() };
-      showRunningNotification(timer);
-      scheduleDoneNotification(timer);
+      scheduleDoneNotification({
+        id: spec.id,
+        label: spec.label,
+        endsAt: spec.endsAt,
+        url: currentPath(),
+      });
     }
   }, [specs]);
+
+  /** Last card posted per timer, so a tick only reposts a changed countdown. */
+  const postedCards = useRef(new Map<string, string>());
+
+  // Keeps the lock screen cards counting down. A notification cannot tick on
+  // its own, so it is reposted — under the same tag, silently — each time its
+  // clock would read differently: once a second, out of the two ticks that ran.
+  useEffect(() => {
+    if (!notificationsEnabled()) return;
+    const live = new Set<string>();
+    for (const spec of specs) {
+      if (spec.doneAt !== undefined) continue;
+      live.add(spec.id);
+      const running = spec.endsAt !== undefined;
+      const remainingMs = running
+        ? Math.max(0, spec.endsAt! - now)
+        : spec.remainingMs ?? spec.totalMs;
+      const card = `${running ? 'run' : 'pause'}:${formatRemainingLabel(remainingMs)}`;
+      if (postedCards.current.get(spec.id) === card) continue;
+      postedCards.current.set(spec.id, card);
+      const timer = { id: spec.id, label: spec.label, url: currentPath() };
+      if (running) showRunningNotification({ ...timer, endsAt: spec.endsAt });
+      else showPausedNotification({ ...timer, remainingMs });
+    }
+    for (const id of postedCards.current.keys()) {
+      if (!live.has(id)) postedCards.current.delete(id);
+    }
+  }, [specs, now]);
 
   // A finished timer announces itself for a moment, then puts its chip back to
   // the idle state on its own — dismissing it is not something to remember.
@@ -219,7 +249,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
         totalMs: seconds * 1000,
         endsAt,
       };
-      mirrorRunning(id, label, endsAt);
+      armNotifications(id, label, endsAt);
       setSpecs((prev) => [...prev.filter((other) => other.id !== id), spec]);
       setNow(Date.now());
     },
@@ -233,7 +263,6 @@ export function TimerProvider({ children }: { children: ReactNode }) {
       cancelBell(id);
       cancelDoneNotification(id);
       const remainingMs = Math.max(0, spec.endsAt - Date.now());
-      showPausedNotification({ id, label: spec.label, remainingMs });
       setSpecs((prev) =>
         prev.map((candidate) =>
           candidate.id === id ? { ...candidate, remainingMs, endsAt: undefined } : candidate,
@@ -251,7 +280,7 @@ export function TimerProvider({ children }: { children: ReactNode }) {
       cancelBell(id);
       bellCancels.current.set(id, scheduleAlarmSound(remaining / 1000));
       const endsAt = Date.now() + remaining;
-      mirrorRunning(id, spec.label, endsAt);
+      armNotifications(id, spec.label, endsAt);
       setSpecs((prev) =>
         prev.map((candidate) =>
           candidate.id === id ? { ...candidate, endsAt, remainingMs: undefined } : candidate,
