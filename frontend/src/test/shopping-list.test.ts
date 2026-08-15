@@ -130,18 +130,35 @@ describe("mergeIngredients", () => {
 
   it("keeps the label the user rewrote instead of the recipe one", () => {
     const previous = [ing("beurre", "Beurre demi-sel", "")];
-    const raw = [ing("beurre", "Beurre", "300 g")];
-    const renamed = new Map([["beurre", "Beurre demi-sel"]]);
-    const [merged] = mergeIngredients(previous, raw, new Set(), renamed);
+    const raw = [ing("beurre", "Beurre", "200 g")];
+    const renames = { beurre: { label: "Beurre demi-sel", from: "200 g Beurre" } };
+    const [merged] = mergeIngredients(previous, raw, new Set(), renames);
     expect(merged.name).toBe("Beurre demi-sel");
     expect(merged.details).toBe("");
   });
 
   it("refreshes the ingredients the user did not rewrite", () => {
     const previous = [ing("beurre", "Beurre demi-sel", ""), ing("farine", "Farine", "100 g")];
-    const raw = [ing("beurre", "Beurre", "300 g"), ing("farine", "Farine", "200 g")];
-    const merged = mergeIngredients(previous, raw, new Set(), new Map([["beurre", "Beurre demi-sel"]]));
-    expect(merged[1].details).toBe("200 g");
+    const raw = [ing("beurre", "Beurre", "200 g"), ing("farine", "Farine", "200 g")];
+    const renames = { beurre: { label: "Beurre demi-sel", from: "200 g Beurre" } };
+    expect(mergeIngredients(previous, raw, new Set(), renames)[1].details).toBe("200 g");
+  });
+
+  // Leaving the cart and coming back rebuilds the list from nothing
+  it("applies the rewritten labels to a list built from scratch", () => {
+    const raw = [ing("beurre", "Beurre", "200 g")];
+    const renames = { beurre: { label: "Beurre demi-sel", from: "200 g Beurre" } };
+    const [merged] = mergeIngredients([], raw, new Set(), renames);
+    expect(merged.name).toBe("Beurre demi-sel");
+  });
+
+  it("drops a rewritten label once the recipes change the line under it", () => {
+    const raw = [ing("beurre", "Beurre", "300 g")];
+    const renames = { beurre: { label: "200 g Beurre demi-sel", from: "200 g Beurre" } };
+    const [merged] = mergeIngredients([], raw, new Set(), renames);
+    // The servings moved, so the stale quantity the user typed must not stick
+    expect(merged.name).toBe("Beurre");
+    expect(merged.details).toBe("300 g");
   });
 });
 

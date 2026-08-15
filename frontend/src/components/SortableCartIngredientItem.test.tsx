@@ -6,7 +6,7 @@ import { SortableCartIngredientItem } from './SortableCartIngredientItem';
 
 function renderItem(overrides: Partial<Parameters<typeof SortableCartIngredientItem>[0]> = {}) {
   const onRename = vi.fn();
-  render(
+  const { unmount } = render(
     <DndContext>
       <SortableContext items={['beurre']}>
         <ul>
@@ -24,7 +24,7 @@ function renderItem(overrides: Partial<Parameters<typeof SortableCartIngredientI
       </SortableContext>
     </DndContext>,
   );
-  return { onRename };
+  return { onRename, unmount };
 }
 
 /** Opens the editor and returns the input, pre-filled with the whole line. */
@@ -58,6 +58,28 @@ describe('SortableCartIngredientItem', () => {
     fireEvent.change(input, { target: { value: 'Margarine' } });
     fireEvent.keyDown(input, { key: 'Escape' });
     fireEvent.blur(input);
+
+    expect(onRename).not.toHaveBeenCalled();
+  });
+
+  it('saves the pending edit when the screen goes away with the field still open', () => {
+    const { onRename, unmount } = renderItem();
+    const input = startEditing();
+
+    fireEvent.change(input, { target: { value: 'Beurre demi-sel' } });
+    // Leaving for another page never blurs the field, so no blur here on purpose
+    unmount();
+
+    expect(onRename).toHaveBeenCalledWith('beurre', 'Beurre demi-sel');
+  });
+
+  it('does not save a cancelled edit when the screen goes away', () => {
+    const { onRename, unmount } = renderItem();
+    const input = startEditing();
+
+    fireEvent.change(input, { target: { value: 'Margarine' } });
+    fireEvent.keyDown(input, { key: 'Escape' });
+    unmount();
 
     expect(onRename).not.toHaveBeenCalled();
   });

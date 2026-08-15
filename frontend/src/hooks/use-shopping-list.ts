@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useCart } from '@/contexts/CartContext';
@@ -6,6 +6,7 @@ import { useRecipes } from '@/hooks/use-recipes';
 import {
   aggregateIngredients,
   generateShoppingListText,
+  ingredientLabel,
   mergeIngredients,
   type AggregatedIngredient,
 } from '@/lib/shopping-list';
@@ -17,11 +18,15 @@ import {
  * Shared by the cart page and the cart sheet so both behave the same.
  */
 export function useShoppingList() {
-  const { items, manualItems, removeManualItem, renameManualItem, servingsById } = useCart();
-  const { data: allRecipes = [] } = useRecipes();
+  const {
+    items, manualItems, removeManualItem, renameManualItem, servingsById,
+    hiddenIngredientIds, hideIngredient, pruneHiddenIngredients,
+    ingredientRenames, renameIngredient: persistRename, forgetIngredientRename,
+  } = useCart();
+  const { data: allRecipes, isSuccess: recipesLoaded } = useRecipes();
 
   const cartRecipes = useMemo(
-    () => allRecipes.filter((r) => items.has(r.id)),
+    () => (allRecipes ?? []).filter((r) => items.has(r.id)),
     [allRecipes, items],
   );
 
@@ -34,33 +39,29 @@ export function useShoppingList() {
     [cartRecipes, manualItems, servingsById],
   );
 
-  const [ingredients, setIngredients] = useState<AggregatedIngredient[]>(rawIngredients);
+  // The deletions and the rewritten labels come from the cart, which outlives this screen
+  const [ingredients, setIngredients] = useState<AggregatedIngredient[]>(
+    () => mergeIngredients([], rawIngredients, hiddenIngredientIds, ingredientRenames),
+  );
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
-  // Ingredients the user deleted by hand: they must not come back when the list is recomputed
-  const removedIds = useRef<Set<string>>(new Set());
-  // Labels the user rewrote: they must survive the list being recomputed
-  const renamedById = useRef<Map<string, string>>(new Map());
 
-  // Sync when recipes change (new recipe added/removed from cart)
+  // Sync when the recipes, the servings or the hand edits change
   useEffect(() => {
     const rawIds = new Set(rawIngredients.map((i) => i.id));
 
-    // An ingredient no recipe provides anymore forgets what the user did to it, so it comes back intact
-    for (const id of removedIds.current) {
-      if (!rawIds.has(id)) removedIds.current.delete(id);
-    }
-    for (const id of [...renamedById.current.keys()]) {
-      if (!rawIds.has(id)) renamedById.current.delete(id);
-    }
+    // An ingredient no recipe provides anymore forgets its deletion, so it can come back later.
+    // Only once the recipes are in: until then every ingredient looks gone, and the stored
+    // deletions would all be wiped on a cold load.
+    if (recipesLoaded) pruneHiddenIngredients(rawIds);
 
-    setIngredients((prev) => mergeIngredients(prev, rawIngredients, removedIds.current, renamedById.current));
+    setIngredients((prev) => mergeIngredients(prev, rawIngredients, hiddenIngredientIds, ingredientRenames));
 
     // Clean up checked IDs for ingredients that no longer exist
     setCheckedIds((prev) => {
       const next = new Set([...prev].filter((id) => rawIds.has(id)));
       return next.size === prev.size ? prev : next;
     });
-  }, [rawIngredients]);
+  }, [rawIngredients, hiddenIngredientIds, ingredientRenames, recipesLoaded, pruneHiddenIngredients]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -90,30 +91,33 @@ export function useShoppingList() {
   const removeIngredient = useCallback((id: string) => {
     // A manual item is deleted at the source; a recipe ingredient is only hidden from the list
     if (id.startsWith('manual:')) removeManualItem(id);
-    else removedIds.current.add(id);
-    renamedById.current.delete(id);
+    else hideIngredient(id);
+    forgetIngredientRename(id);
     setIngredients((prev) => prev.filter((i) => i.id !== id));
     setCheckedIds((prev) => {
       const next = new Set(prev);
       next.delete(id);
       return next;
     });
-  }, [removeManualItem]);
+  }, [removeManualItem, hideIngredient, forgetIngredientRename]);
 
   /** Replaces the whole line, quantities included, with what the user typed. */
   const renameIngredient = useCallback((id: string, label: string) => {
     const trimmed = label.trim();
     if (!trimmed) return;
-    // A manual item is renamed at the source, so the new name is kept across sessions
+    // A manual item is renamed at the source, next to the name it was created with
     if (id.startsWith('manual:')) {
       renameManualItem(id, trimmed);
       return;
     }
-    renamedById.current.set(id, trimmed);
+    // Fingerprint the recipe line, not the one on screen: editing twice must not chain the renames
+    const source = rawIngredients.find((i) => i.id === id);
+    if (!source) return;
+    persistRename(id, { label: trimmed, from: ingredientLabel(source) });
     setIngredients((prev) =>
       prev.map((i) => (i.id === id ? { ...i, name: trimmed, details: '' } : i)),
     );
-  }, [renameManualItem]);
+  }, [rawIngredients, renameManualItem, persistRename]);
 
   const shoppingListText = useCallback(
     () => generateShoppingListText(cartRecipes, ingredients, checkedIds, servingsById),

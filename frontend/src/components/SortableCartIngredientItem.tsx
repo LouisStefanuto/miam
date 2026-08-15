@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, X } from 'lucide-react';
+import { ingredientLabel } from '@/lib/shopping-list';
 
 interface SortableCartIngredientItemProps {
   id: string;
@@ -23,7 +24,7 @@ export function SortableCartIngredientItem({ id, name, details, checked, onToggl
     isDragging,
   } = useSortable({ id });
 
-  const label = details ? `${details} ${name}` : name;
+  const label = ingredientLabel({ id, name, details });
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(label);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -40,14 +41,28 @@ export function SortableCartIngredientItem({ id, name, details, checked, onToggl
     setEditing(true);
   };
 
-  /** Leaving the field saves, unless the user pressed Escape or wiped the line. */
-  const stopEditing = () => {
+  /** Saves what was typed, unless the user pressed Escape or wiped the line. */
+  const commit = () => {
     const cancelled = skipCommitRef.current;
     skipCommitRef.current = false;
-    setEditing(false);
     const next = draft.trim();
     if (!cancelled && next && next !== label) onRename(id, next);
   };
+
+  const stopEditing = () => {
+    setEditing(false);
+    commit();
+  };
+
+  // Leaving the screen with the keyboard still open unmounts the row without ever blurring the
+  // field, and React fires no blur on unmount: the pending edit has to be saved from here.
+  const commitRef = useRef(commit);
+  commitRef.current = commit;
+  const editingRef = useRef(editing);
+  editingRef.current = editing;
+  useEffect(() => () => {
+    if (editingRef.current) commitRef.current();
+  }, []);
 
   return (
     <li
