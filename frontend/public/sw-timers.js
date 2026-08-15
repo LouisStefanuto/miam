@@ -56,9 +56,11 @@ function miamTick(timer) {
   const remaining = timer.endsAt - Date.now();
   if (remaining <= 0) {
     miamTimeouts.delete(timer.id);
-    self.registration.showNotification('Minuteur terminé', {
+    // Takes the chrono's place, under the same tag: the countdown turns into
+    // its own answer instead of leaving a card stuck at 00:00.
+    self.registration.showNotification("C'est prêt !", {
       tag: MIAM_TAG_PREFIX + timer.id,
-      body: (timer.label || 'Minuteur') + " : c'est prêt",
+      body: 'Minuteur ' + (timer.label || ''),
       icon: MIAM_ICON,
       badge: MIAM_ICON,
       requireInteraction: true,

@@ -195,8 +195,11 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     if (!notificationsEnabled()) return;
     const live = new Set<string>();
     for (const spec of specs) {
-      if (spec.doneAt !== undefined) continue;
       live.add(spec.id);
+      // A timer that has run out belongs to the "c'est prêt" card. Its chrono
+      // must not be reposted over it — the two effects run in the same pass,
+      // this one last, and a card reading 00:00 would bury the ring.
+      if (spec.doneAt !== undefined || (spec.endsAt !== undefined && spec.endsAt <= now)) continue;
       const running = spec.endsAt !== undefined;
       const remainingMs = running
         ? Math.max(0, spec.endsAt! - now)

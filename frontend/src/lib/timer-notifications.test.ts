@@ -122,8 +122,11 @@ describe('cards', () => {
     showDoneNotification({ id: 'step-1', label: '10 min' });
     await flush();
 
-    const options = showNotification.mock.calls[0][1];
-    expect(options.body).toBe("10 min : c'est prêt");
+    const [title, options] = showNotification.mock.calls[0];
+    // Same tag and same shape as the chrono it replaces.
+    expect(title).toBe("C'est prêt !");
+    expect(options.tag).toBe('miam-timer-step-1');
+    expect(options.body).toBe('Minuteur 10 min');
     expect(options.silent).toBe(false);
     expect(options.data.done).toBe(true);
   });

@@ -3,13 +3,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TimerProvider, useTimers } from '@/contexts/TimerContext';
 
 // Hoisted with the `vi.mock` call below, which runs before the imports.
-const { showRunningNotification, showPausedNotification, scheduleDoneNotification } = vi.hoisted(
-  () => ({
-    showRunningNotification: vi.fn(),
-    showPausedNotification: vi.fn(),
-    scheduleDoneNotification: vi.fn(),
-  }),
-);
+const {
+  showRunningNotification,
+  showPausedNotification,
+  showDoneNotification,
+  scheduleDoneNotification,
+} = vi.hoisted(() => ({
+  showRunningNotification: vi.fn(),
+  showPausedNotification: vi.fn(),
+  showDoneNotification: vi.fn(),
+  scheduleDoneNotification: vi.fn(),
+}));
 
 // The wording itself is covered in timer-notifications.test.ts; what matters
 // here is when the provider decides to repost a card.
@@ -22,7 +26,7 @@ vi.mock('@/lib/timer-notifications', async (importOriginal) => {
     requestNotificationPermission: async () => 'granted' as NotificationPermission,
     showRunningNotification,
     showPausedNotification,
-    showDoneNotification: vi.fn(),
+    showDoneNotification,
     scheduleDoneNotification,
     cancelDoneNotification: vi.fn(),
     clearNotification: vi.fn(),
@@ -37,6 +41,9 @@ function Harness() {
       <button type="button" onClick={() => start('step-1', 180, '3 min')}>
         start
       </button>
+      <button type="button" onClick={() => start('step-2', 2, '2 s')}>
+        start short
+      </button>
       <button type="button" onClick={() => pause('step-1')}>
         pause
       </button>
@@ -48,6 +55,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   showRunningNotification.mockClear();
   showPausedNotification.mockClear();
+  showDoneNotification.mockClear();
   scheduleDoneNotification.mockClear();
 });
 
@@ -89,6 +97,31 @@ describe('lock screen cards', () => {
       });
     }
     expect(showRunningNotification).toHaveBeenCalledTimes(12);
+  });
+
+  it('lets the ring have the last word, with no 00:00 posted over it', async () => {
+    render(
+      <TimerProvider>
+        <Harness />
+      </TimerProvider>,
+    );
+
+    await act(async () => {
+      screen.getByText('start short').click();
+    });
+
+    for (let second = 0; second < 4; second++) {
+      await act(async () => {
+        vi.advanceTimersByTime(1_000);
+      });
+    }
+
+    expect(showDoneNotification).toHaveBeenCalledTimes(1);
+    // Both effects run in the same pass; whichever posted last is what the
+    // phone shows, and it has to be the ring.
+    const ring = showDoneNotification.mock.invocationCallOrder[0];
+    const lastChrono = Math.max(...showRunningNotification.mock.invocationCallOrder);
+    expect(ring).toBeGreaterThan(lastChrono);
   });
 
   it('posts a paused card, and hands the ring back to the worker on resume', async () => {

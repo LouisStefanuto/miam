@@ -165,14 +165,15 @@ export function showPausedNotification(timer: TimerNotification) {
 }
 
 /**
- * The ring, as a card. Stays silent when the app is on screen, where the alarm
- * sound and the chip already say it: no reason to ring twice.
+ * The ring, as a card: it takes the chrono's place, same tag and same layout,
+ * so the countdown ends by turning into its own answer. Stays silent when the
+ * app is on screen, where the alarm sound and the chip already say it.
  */
 export function showDoneNotification(timer: TimerNotification) {
   const inForeground = typeof document !== 'undefined' && document.visibilityState === 'visible';
-  void show('Minuteur terminé', {
+  void show("C'est prêt !", {
     tag: tagOf(timer.id),
-    body: `${timer.label} : c'est prêt`,
+    body: `Minuteur ${timer.label}`,
     icon: ICON,
     badge: ICON,
     silent: inForeground,
