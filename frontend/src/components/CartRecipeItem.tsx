@@ -2,6 +2,7 @@ import { Users, X } from 'lucide-react';
 import type { Recipe } from '@/data/recipes';
 import { AuthImage } from '@/hooks/use-auth-image';
 import { getDefaultRecipeImage } from '@/lib/recipe-default-image';
+import { displayTitle } from '@/lib/recipe-title';
 import { ServingsPicker } from './ServingsPicker';
 
 interface CartRecipeItemProps {
@@ -14,17 +15,18 @@ interface CartRecipeItemProps {
 
 /** A recipe card in the cart carousel. Tapping it opens the servings picker. */
 export function CartRecipeItem({ recipe, servings, onServingsChange, onRemove }: CartRecipeItemProps) {
+  const title = displayTitle(recipe.title);
   return (
     <div className="relative shrink-0 w-36 snap-start group">
       <ServingsPicker
         servings={servings}
         onChange={onServingsChange}
-        label={recipe.title}
+        label={title}
         trigger={
           <button
             type="button"
             className="w-full text-left rounded-lg overflow-hidden bg-secondary/50 hover:bg-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            title={`${recipe.title} — changer le nombre de personnes`}
+            title={`${title} — changer le nombre de personnes`}
           >
             {recipe.image ? (
               <AuthImage src={recipe.image} alt="" className="w-full h-20 object-cover" />
@@ -36,7 +38,7 @@ export function CartRecipeItem({ recipe, servings, onServingsChange, onRemove }:
               />
             )}
             <div className="p-2.5 space-y-1">
-              <p className="font-body text-sm font-medium truncate">{recipe.title}</p>
+              <p className="font-body text-sm font-medium truncate">{title}</p>
               <span className="flex items-center gap-1.5 font-body text-sm text-muted-foreground tabular-nums">
                 <Users size={14} className="shrink-0" />
                 {servings} pers.

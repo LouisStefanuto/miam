@@ -5,6 +5,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuthImage } from '@/hooks/use-auth-image';
 import { getDefaultRecipeImage } from '@/lib/recipe-default-image';
+import { displayTitle } from '@/lib/recipe-title';
 
 
 const difficultyLabels: Record<string, { label: string; bars: number }> = {
@@ -59,6 +60,7 @@ const StarRating = ({ rating, size = 14, emptyClassName = 'text-white/30' }: { r
 export default function RecipeCard({ recipe, onClick, variant = 'card', selectionMode, selected, onSelect }: RecipeCardProps) {
   const isMobile = useIsMobile();
   const totalTime = recipe.prepTime + recipe.cookTime;
+  const title = displayTitle(recipe.title);
   const diff = difficultyLabels[recipe.difficulty];
   const cart = useCart();
   const inCart = cart.has(recipe.id);
@@ -105,7 +107,7 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
         {/* Line heights are tight so that even a two-line title stays within the image height. */}
         <div className="flex-1 min-w-0">
           <h3 className="font-display text-base font-bold text-foreground leading-tight line-clamp-2">
-            {recipe.title}
+            {title}
           </h3>
           <p className="mt-0.5 flex items-center gap-1.5 text-[13px] leading-4 text-foreground/80 font-body">
             <TypeIcon size={14} className="shrink-0 text-muted-foreground" />
@@ -135,7 +137,7 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
           {imageSrc ? (
             <img
               src={imageSrc}
-              alt={recipe.title}
+              alt={title}
               className={`w-full h-full ${isDefault ? 'object-contain bg-muted p-4' : 'object-cover'}`}
               loading="lazy"
             />
@@ -174,7 +176,7 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
           <div className="absolute bottom-3 left-3 right-3">
             {/* Title */}
             <h3 className="font-display text-lg font-bold text-primary-foreground drop-shadow-lg leading-tight line-clamp-2">
-              {recipe.title}
+              {title}
             </h3>
             {/* Rating + meta */}
             <div className="flex items-center gap-3 mt-1">
@@ -200,7 +202,7 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
         {imageSrc ? (
           <img
             src={imageSrc}
-            alt={recipe.title}
+            alt={title}
             className={`w-full h-full transition-transform duration-500 group-hover:scale-105 ${isDefault ? 'object-contain bg-muted p-4' : 'object-cover'}`}
             loading="lazy"
           />
@@ -241,7 +243,7 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
       {/* Content */}
       <div className="p-4 flex flex-col flex-1">
         <h3 className="font-display text-lg font-semibold text-card-foreground leading-tight line-clamp-2 min-h-[2lh] group-hover:text-primary transition-colors">
-          {recipe.title}
+          {title}
         </h3>
 
         <div className="mt-2">

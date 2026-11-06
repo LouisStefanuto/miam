@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Star, Pencil, Trash2, Minus, Plus, CircleCheck, Copy, ClipboardCheck, Users, CopyPlus, LogOut, Vegan, Timer, Flame, Sun, Snowflake, Flower, LeafyGreen, Utensils, Circle, Camera, ShoppingCart, LucideIcon } from 'lucide-react';
+import { displayTitle } from '@/lib/recipe-title';
 import { Recipe } from '@/data/recipes';
 import { displayUnit } from '@/lib/units';
 import { Button } from '@/components/ui/button';
@@ -73,6 +74,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
   const { toast } = useToast();
   const imageSrc = useAuthImage(recipe.image);
   const isMobile = useIsMobile();
+  const title = displayTitle(recipe.title);
   const canEdit = recipe.userRole !== 'reader';
   const imageClickable = !isMobile && canEdit;
 
@@ -272,7 +274,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 <AlertDialogHeader>
                   <AlertDialogTitle className="font-display">Supprimer cette recette ?</AlertDialogTitle>
                   <AlertDialogDescription className="font-body">
-                    La recette « {recipe.title} » sera supprimée définitivement. Cette action est irréversible.
+                    La recette « {title} » sera supprimée définitivement. Cette action est irréversible.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -294,7 +296,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 <AlertDialogHeader>
                   <AlertDialogTitle className="font-display">Dupliquer et retirer ?</AlertDialogTitle>
                   <AlertDialogDescription className="font-body">
-                    Une copie de « {recipe.title} » sera créée dans votre bibliothèque et la recette partagée sera retirée. Vous pourrez modifier votre copie librement.
+                    Une copie de « {title} » sera créée dans votre bibliothèque et la recette partagée sera retirée. Vous pourrez modifier votre copie librement.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -314,7 +316,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                 <AlertDialogHeader>
                   <AlertDialogTitle className="font-display">Retirer cette recette ?</AlertDialogTitle>
                   <AlertDialogDescription className="font-body">
-                    La recette « {recipe.title} » sera retirée de votre collection. Vous pourrez la retrouver si on vous la partage à nouveau.
+                    La recette « {title} » sera retirée de votre collection. Vous pourrez la retrouver si on vous la partage à nouveau.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -376,7 +378,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
                   />
                   <img
                     src={imageSrc}
-                    alt={recipe.title}
+                    alt={title}
                     onLoad={(e) => {
                       const { naturalWidth, naturalHeight } = e.currentTarget;
                       setImageOrientation(naturalHeight > naturalWidth ? 'portrait' : 'landscape');
@@ -411,7 +413,7 @@ export default function RecipeDetail({ recipe, onBack, onRatingChange, onSave, o
               ) : imageEl;
             })()}
             <div className="w-full space-y-0.5">
-              <h1 className="font-display text-xl md:text-2xl font-bold text-foreground">{recipe.title}</h1>
+              <h1 className="font-display text-xl md:text-2xl font-bold text-foreground">{title}</h1>
               <div className="flex items-center gap-3 pt-1">
                 <div className="flex gap-0.5" onMouseLeave={() => setHoveredStar(0)}>
                   {[1, 2, 3, 4, 5].map((i) => (
