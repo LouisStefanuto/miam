@@ -45,6 +45,13 @@ const DifficultyBars = ({ level }: { level: number }) => (
   </div>
 );
 
+/** Small leaf marking a vegetarian recipe, shown next to its time. */
+const VeggieLeaf = ({ size, className = 'text-green-600' }: { size: number; className?: string }) => (
+  <Leaf size={size} className={`shrink-0 ${className}`} role="img" aria-label="Végétarien">
+    <title>Végétarien</title>
+  </Leaf>
+);
+
 const StarRating = ({ rating, size = 14, emptyClassName = 'text-white/30' }: { rating: number; size?: number; emptyClassName?: string }) => (
   <div className="flex gap-0.5">
     {[1, 2, 3, 4, 5].map((i) => (
@@ -61,6 +68,7 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
   const isMobile = useIsMobile();
   const totalTime = recipe.prepTime + recipe.cookTime;
   const title = displayTitle(recipe.title);
+  const isVeggie = recipe.diets.includes('végétarien');
   const diff = difficultyLabels[recipe.difficulty];
   const cart = useCart();
   const inCart = cart.has(recipe.id);
@@ -115,9 +123,7 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
           </p>
           <div className="mt-0.5 flex items-center gap-2 h-3">
             <StarRating rating={recipe.rating} size={12} emptyClassName="text-muted-foreground/30" />
-            {recipe.diets.includes('végétarien') && (
-              <Leaf size={13} className="shrink-0 text-green-600" aria-label="Végétarien" role="img" />
-            )}
+            {isVeggie && <VeggieLeaf size={13} />}
           </div>
         </div>
 
@@ -163,15 +169,6 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
             )}
           </div>
 
-          {/* Top left: Végé badge */}
-          {recipe.diets.includes('végétarien') && (
-            <div className="absolute top-2 left-2">
-              <Badge variant="secondary" className="bg-card/95 text-green-600 font-body text-xs">
-                Végé
-              </Badge>
-            </div>
-          )}
-
           {/* Overlaid content at bottom */}
           <div className="absolute bottom-3 left-3 right-3">
             {/* Title */}
@@ -185,6 +182,7 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
                 <Clock size={12} />
                 {totalTime ? `${totalTime} min` : '-'}
               </span>
+              {isVeggie && <VeggieLeaf size={14} className="text-green-400 drop-shadow" />}
             </div>
           </div>
         </div>
@@ -224,13 +222,8 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
             </div>
           )}
         </div>
-        {/* Type badge */}
-        <div className="absolute top-2 left-2 flex gap-1.5">
-          {recipe.diets.includes('végétarien') && (
-            <Badge variant="secondary" className="bg-card/95 text-green-600 font-body text-xs">
-              Végé
-            </Badge>
-          )}
+        {/* Role badge */}
+        <div className="absolute top-2 left-2 flex items-center gap-1.5">
           {recipe.userRole && recipe.userRole !== 'owner' && (
             <Badge variant="secondary" className="bg-card/95 text-muted-foreground font-body text-xs flex items-center gap-0.5">
               <Users size={10} />
@@ -255,6 +248,7 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
             <Clock size={13} />
             {totalTime ? `${totalTime} min` : '-'}
           </span>
+          {isVeggie && <VeggieLeaf size={14} />}
           <span className="flex items-end gap-1">
             <DifficultyBars level={diff.bars} />
             {diff.label}
