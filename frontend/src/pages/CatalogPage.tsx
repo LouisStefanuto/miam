@@ -43,6 +43,9 @@ const CatalogPage = () => {
   useWindowScrollMemory(savedScrollY, !isLoading);
   const isMobile = useIsMobile();
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  // True while the list unrolls after the search view opens; typing does not replay it.
+  const [revealList, setRevealList] = useState(false);
   const [showBeaverGame, setShowBeaverGame] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedRecipes, setSelectedRecipes] = useState<Set<string>>(new Set());
@@ -192,8 +195,26 @@ const CatalogPage = () => {
     }
   };
 
-  // On mobile, search results show as a compact list instead of large cards.
-  const showAsList = isMobile && (searchQuery.trim() !== '' || searchTags.length > 0);
+  // On mobile, the search view shows recipes as a compact list instead of large cards.
+  // It opens when the search bar is tapped and stays open while a search or filter is set,
+  // so the large-card catalog always shows every recipe.
+  const showAsList = isMobile && (searchOpen || hasActiveFilters);
+
+  const openSearch = () => {
+    setSearchOpen(true);
+    if (!showAsList) {
+      // The list starts from the first result, wherever the catalog was scrolled.
+      setCurrentPage(1);
+      window.scrollTo({ top: 0 });
+      setRevealList(true);
+    }
+  };
+
+  const closeSearch = () => {
+    setSearchOpen(false);
+    resetAll();
+    window.scrollTo({ top: 0 });
+  };
 
   const displayedRecipes = selectionMode
     ? filtered.filter(r => !r.userRole || r.userRole === 'owner' || r.userRole === 'editor')
@@ -230,6 +251,10 @@ const CatalogPage = () => {
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
         onFiltersTap={() => setShowMobileSearch(true)}
+        searchOpen={showAsList}
+        onSearchOpen={openSearch}
+        onSearchClose={closeSearch}
+        onReset={resetAll}
         hasActiveFilters={hasActiveFilters}
         onLogoTap={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         onLogoLongPress={openBeaverGame}
@@ -407,12 +432,6 @@ const CatalogPage = () => {
             <p className="text-sm text-muted-foreground font-body">
               {filtered.length} recette{filtered.length !== 1 ? 's' : ''} trouvée{filtered.length !== 1 ? 's' : ''}
             </p>
-            {hasActiveFilters && (
-              <button onClick={resetAll} className="md:hidden flex items-center gap-1 text-sm text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0">
-                <X size={14} />
-                Réinitialiser
-              </button>
-            )}
           </div>
           <div className="md:hidden">
             <DropdownMenu>
@@ -465,17 +484,26 @@ const CatalogPage = () => {
             <p className="font-body text-muted-foreground">Chargement des recettes…</p>
           </div>
         ) : paginatedRecipes.length > 0 && showAsList ? (
-          <div className="flex flex-col -mx-2">
-            {paginatedRecipes.map((recipe) => (
-              <RecipeCard
+          <div
+            className={`flex flex-col -mx-2 ${revealList ? 'motion-safe:animate-search-unroll' : ''}`}
+            // The unroll outlasts the staggered rows, so its end means the whole reveal is done.
+            onAnimationEnd={(e) => { if (e.target === e.currentTarget) setRevealList(false); }}
+          >
+            {paginatedRecipes.map((recipe, i) => (
+              <div
                 key={recipe.id}
-                recipe={recipe}
-                variant="row"
-                onClick={() => navigate(`/recipes/${recipe.id}`)}
-                selectionMode={selectionMode}
-                selected={selectedRecipes.has(recipe.id)}
-                onSelect={toggleSelection}
-              />
+                className={revealList ? 'motion-safe:animate-search-row-in' : undefined}
+                style={revealList ? { animationDelay: `${Math.min(i, 6) * 30}ms` } : undefined}
+              >
+                <RecipeCard
+                  recipe={recipe}
+                  variant="row"
+                  onClick={() => navigate(`/recipes/${recipe.id}`)}
+                  selectionMode={selectionMode}
+                  selected={selectedRecipes.has(recipe.id)}
+                  onSelect={toggleSelection}
+                />
+              </div>
             ))}
           </div>
         ) : paginatedRecipes.length > 0 ? (

@@ -115,6 +115,18 @@ export default {
           from: { transform: "translateX(0)" },
           to: { transform: "translateX(100%)" },
         },
+        "search-unroll": {
+          from: { clipPath: "inset(0 0 100% 0)" },
+          to: { clipPath: "inset(0 0 0 0)" },
+        },
+        "search-row-in": {
+          from: { opacity: "0", transform: "translateY(-12px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "search-arrow-in": {
+          from: { opacity: "0", transform: "rotate(-90deg) scale(0.5)" },
+          to: { opacity: "1", transform: "rotate(0) scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -124,6 +136,9 @@ export default {
         "bounce-in": "bounce-in 0.25s ease-out",
         "slide-in-from-right": "slide-in-from-right 0.3s ease-out both",
         "slide-out-to-right": "slide-out-to-right 0.3s ease-out forwards",
+        "search-unroll": "search-unroll 0.5s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "search-row-in": "search-row-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "search-arrow-in": "search-arrow-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
       },
     },
   },
