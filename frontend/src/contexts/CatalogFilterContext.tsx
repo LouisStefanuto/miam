@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState, ReactNode } from 'react';
+import { createContext, useCallback, useContext, useRef, useState, MutableRefObject, ReactNode } from 'react';
 import { Filters } from '@/components/FilterBar';
 
 interface CatalogFilterState {
@@ -10,6 +10,8 @@ interface CatalogFilterState {
   setFilters: (f: Filters) => void;
   currentPage: number;
   setCurrentPage: (page: number) => void;
+  /** Window scroll position of the catalog, kept while the user is on another page. */
+  savedScrollY: MutableRefObject<number | null>;
 }
 
 const defaultFilters: Filters = {
@@ -30,6 +32,7 @@ export function CatalogFilterProvider({ children }: { children: ReactNode }) {
   const [searchTags, setSearchTagsState] = useState<string[]>([]);
   const [filters, setFiltersState] = useState<Filters>(defaultFilters);
   const [currentPage, setCurrentPage] = useState(1);
+  const savedScrollY = useRef<number | null>(null);
 
   // A new search or filter goes back to page 1. This lives in the setters, not in
   // an effect on the catalog page, so that leaving the catalog (e.g. to /cart) and
@@ -50,7 +53,7 @@ export function CatalogFilterProvider({ children }: { children: ReactNode }) {
 
   return (
     <CatalogFilterContext.Provider
-      value={{ searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage }}
+      value={{ searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage, savedScrollY }}
     >
       {children}
     </CatalogFilterContext.Provider>
