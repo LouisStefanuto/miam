@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, Share2, Plus, ShoppingCart, UserRound } from 'lucide-react';
+import { BookOpen, Share2, ShoppingCart, UserRound } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
@@ -23,7 +23,6 @@ export default function MobileBottomBar() {
   if (!user) return null;
 
   const isRecipes = location.pathname === '/';
-  const isAdd = location.pathname === '/add' || location.pathname === '/recipes/new' || location.pathname.startsWith('/import');
   const isCart = location.pathname === '/cart';
   const isShares = location.pathname === '/shares' || location.pathname.startsWith('/shares/');
   const isAccount = location.pathname === '/settings' || location.pathname.startsWith('/settings/');
@@ -66,17 +65,6 @@ export default function MobileBottomBar() {
           >
             <BookOpen size={22} strokeWidth={isRecipes ? 2.5 : 2} />
             <span className="text-[11px] font-body font-medium">Recettes</span>
-          </button>
-
-          {/* Add */}
-          <button
-            onClick={() => handleTap('add', '/add')}
-            className={`tap-pill ${tappedTab === 'add' ? 'tap-pill-active' : ''} relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
-              isAdd ? 'text-primary' : 'text-muted-foreground'
-            }`}
-          >
-            <Plus size={22} strokeWidth={isAdd ? 2.5 : 2} />
-            <span className="text-[11px] font-body font-medium">Ajouter</span>
           </button>
 
           {/* Cart */}
