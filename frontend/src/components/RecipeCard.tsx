@@ -1,4 +1,4 @@
-import { Clock, Star, Users, ShoppingCart, Check, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, LucideIcon } from 'lucide-react';
+import { Clock, Star, Users, ShoppingCart, Check, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, LucideIcon } from 'lucide-react';
 import { Recipe, RecipeType } from '@/data/recipes';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
@@ -83,16 +83,13 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
 
   if (variant === 'row') {
     const TypeIcon = typeIcons[recipe.type] ?? UtensilsCrossed;
-    const summary = [totalTime ? `${totalTime} min` : null, diff.label, `${recipe.servings} pers.`]
-      .filter(Boolean)
-      .join(' · ');
     return (
       <button
         onClick={handleClick}
         style={{ WebkitTapHighlightColor: 'transparent' }}
         className={`w-full flex items-center gap-4 px-2 py-1.5 text-left rounded-lg transition-colors active:bg-secondary/60 ${selectionMode && selected ? 'bg-primary/10' : ''}`}
       >
-        <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-muted">
+        <div className="w-[72px] h-[72px] shrink-0 rounded-lg overflow-hidden bg-muted">
           {imageSrc ? (
             <img
               src={imageSrc}
@@ -105,34 +102,24 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
           )}
         </div>
 
-        <div className="flex-1 min-w-0 space-y-1">
-          <h3 className="font-display text-base font-bold text-foreground leading-snug line-clamp-2">
+        {/* Line heights are tight so that even a two-line title stays within the image height. */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-display text-base font-bold text-foreground leading-tight line-clamp-2">
             {recipe.title}
           </h3>
-          <p className="flex items-center gap-1.5 text-sm text-foreground/80 font-body">
-            <TypeIcon size={15} className="shrink-0 text-muted-foreground" />
-            <span className="truncate">{summary}</span>
+          <p className="mt-0.5 flex items-center gap-1.5 text-[13px] leading-4 text-foreground/80 font-body">
+            <TypeIcon size={14} className="shrink-0 text-muted-foreground" />
+            <span className="truncate">{totalTime ? `${totalTime} min` : '-'}</span>
           </p>
-          <div className="flex items-center gap-2">
+          <div className="mt-0.5 flex items-center gap-2 h-3">
             <StarRating rating={recipe.rating} size={12} emptyClassName="text-muted-foreground/30" />
             {recipe.diets.includes('végétarien') && (
-              <span className="text-xs font-body font-medium text-green-600">Végé</span>
+              <Leaf size={13} className="shrink-0 text-green-600" aria-label="Végétarien" role="img" />
             )}
           </div>
         </div>
 
-        {selectionMode ? selectionCheck : (
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={(e) => { e.stopPropagation(); cart.toggle(recipe.id); }}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); cart.toggle(recipe.id); } }}
-            className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center transition-colors ${inCart ? 'text-primary' : 'text-muted-foreground/70'}`}
-            title={inCart ? 'Retirer du panier' : 'Ajouter au panier'}
-          >
-            <ShoppingCart size={18} className={inCart ? 'fill-primary' : ''} />
-          </div>
-        )}
+        {selectionMode && selectionCheck}
       </button>
     );
   }
