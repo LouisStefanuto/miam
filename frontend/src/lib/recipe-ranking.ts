@@ -5,6 +5,8 @@ const RECENCY_WEIGHT = 1;
 const RECENCY_HALF_LIFE_DAYS = 30;
 const SEASON_WEIGHT = 1;
 const TO_TEST_WEIGHT = 0.5;
+// Above RANDOM_WEIGHT: between two otherwise alike recipes, the one with a photo always comes first.
+const IMAGE_WEIGHT = 2;
 const RANDOM_WEIGHT = 1.5;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -40,9 +42,9 @@ export function seededRandom(seed: number, id: string): number {
 }
 
 /**
- * Score of a recipe in the "Suggestions" order: higher for recipes that are
- * new, in season or still to test, plus a random part so the catalog does
- * not always start with the same recipes.
+ * Score of a recipe in the "Suggestions" order: higher for recipes that have
+ * a photo, are new, in season or still to test, plus a random part so the
+ * catalog does not always start with the same recipes.
  */
 export function suggestionScore(recipe: Recipe, now: Date, seed: number): number {
   const created = Date.parse(recipe.createdAt);
@@ -54,7 +56,10 @@ export function suggestionScore(recipe: Recipe, now: Date, seed: number): number
 
   const toTest = recipe.tested ? 0 : 1;
 
+  const hasImage = recipe.image ? 1 : 0;
+
   return (
+    IMAGE_WEIGHT * hasImage +
     RECENCY_WEIGHT * recency +
     SEASON_WEIGHT * season +
     TO_TEST_WEIGHT * toTest +

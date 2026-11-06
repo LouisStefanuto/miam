@@ -69,6 +69,10 @@ describe('suggestionScore', () => {
     expect(score({ season: null })).toBeGreaterThan(score({ season: 'été' }));
   });
 
+  it('ranks recipes with a photo above recipes without', () => {
+    expect(score({ image: 'https://example.com/photo.jpg' })).toBeGreaterThan(score({ image: undefined }));
+  });
+
   it('ranks recipes to test above tested ones', () => {
     expect(score({ tested: false })).toBeGreaterThan(score({ tested: true }));
   });
@@ -115,6 +119,24 @@ describe('sortBySuggestion', () => {
       if (sortBySuggestion([other, favored], NOW, seed)[0].id === 'favored') favoredFirst++;
     }
     expect(favoredFirst).toBeGreaterThan(90);
+  });
+
+  it('always puts a recipe with a photo before an otherwise alike one without', () => {
+    const withPhoto = makeRecipe({ id: 'with-photo', image: 'https://example.com/photo.jpg' });
+    const withoutPhoto = makeRecipe({ id: 'without-photo' });
+    for (let seed = 0; seed < 100; seed++) {
+      expect(sortBySuggestion([withoutPhoto, withPhoto], NOW, seed)[0].id).toBe('with-photo');
+    }
+  });
+
+  it('still lets a new, in-season recipe to test without a photo come first', () => {
+    const fresh = makeRecipe({ id: 'fresh', season: 'automne', tested: false, createdAt: '2026-11-01T00:00:00Z' });
+    const oldWithPhoto = makeRecipe({ id: 'old-with-photo', season: 'été', image: 'https://example.com/photo.jpg' });
+    let freshFirst = 0;
+    for (let seed = 0; seed < 100; seed++) {
+      if (sortBySuggestion([oldWithPhoto, fresh], NOW, seed)[0].id === 'fresh') freshFirst++;
+    }
+    expect(freshFirst).toBeGreaterThan(50);
   });
 
   it('still lets a weaker recipe come first some of the time', () => {
