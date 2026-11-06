@@ -18,7 +18,7 @@ export const defaultFilters: Filters = {
   type: 'tous',
   season: 'toutes',
   difficulty: 'toutes',
-  sort: 'recent',
+  sort: 'suggestions',
   tested: 'off',
   vegetarian: 'off',
   rapido: 'off',
@@ -33,7 +33,8 @@ interface FilterBarProps {
 const types = ['tous', 'apéro', 'entrée', 'plat', 'pâtes', 'dessert', 'boisson'];
 const seasons = ['toutes', 'printemps', 'été', 'automne', 'hiver'];
 const difficulties = ['toutes', 'facile', 'moyen', 'difficile'];
-const sorts = [
+export const sortOptions = [
+  { value: 'suggestions', label: 'Suggestions' },
   { value: 'recent', label: 'Plus récent' },
   { value: 'rating', label: 'Mieux noté' },
   { value: 'alpha', label: 'A → Z' },
@@ -101,7 +102,7 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
               {!isMobile && <SelectValue />}
             </SelectTrigger>
             <SelectContent className="bg-popover z-50">
-              {sorts.map((s) => (
+              {sortOptions.map((s) => (
                 <SelectItem key={s.value} value={s.value} className="text-xs font-body">{s.label}</SelectItem>
               ))}
             </SelectContent>
