@@ -1,6 +1,7 @@
-import { KeyboardEvent, useRef, useEffect, useState } from 'react';
-import { ArrowLeft, Search, Check, Leaf, Zap, Users, UtensilsCrossed, Sun, Gauge, RotateCcw, Grid2X2, Wine, Salad, Beef, CupSoda, Cake, Flower, Snowflake, Grape, LucideIcon } from 'lucide-react';
+import { useRef, useEffect, useState } from 'react';
+import { ArrowLeft, Check, Leaf, Zap, Users, UtensilsCrossed, Sun, Gauge, RotateCcw, Grid2X2, Wine, Salad, Beef, CupSoda, Cake, Flower, Snowflake, Grape, LucideIcon } from 'lucide-react';
 import { Filters, defaultFilters } from '@/components/FilterBar';
+import MobileSearchField from '@/components/MobileSearchField';
 
 interface MobileSearchOverlayProps {
   open: boolean;
@@ -13,6 +14,8 @@ interface MobileSearchOverlayProps {
   onFiltersChange: (filters: Filters) => void;
   topTags: string[];
   resultCount: number;
+  /** A search or filter is set: shows the clear button, as in the catalog header. */
+  hasActiveFilters: boolean;
 }
 
 const types: { value: string; label: string; icon: LucideIcon }[] = [
@@ -51,10 +54,10 @@ export default function MobileSearchOverlay({
   onFiltersChange,
   topTags,
   resultCount,
+  hasActiveFilters,
 }: MobileSearchOverlayProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [visible, setVisible] = useState(false);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   // Animate in/out
   useEffect(() => {
@@ -77,30 +80,6 @@ export default function MobileSearchOverlay({
     }
   }, [open]);
 
-  const addTag = () => {
-    const tag = searchQuery.trim().toLowerCase();
-    if (tag && !searchTags.includes(tag)) {
-      onSearchTagsChange([...searchTags, tag]);
-    }
-    onSearchQueryChange('');
-    setSelectedTag(null);
-  };
-
-  const removeTag = (tag: string) => {
-    onSearchTagsChange(searchTags.filter((t) => t !== tag));
-    setSelectedTag(null);
-  };
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addTag();
-    }
-    if (e.key === 'Backspace' && !searchQuery && searchTags.length > 0) {
-      removeTag(selectedTag ?? searchTags[searchTags.length - 1]);
-    }
-  };
-
   const handleTagClick = (tag: string) => {
     if (searchTags.includes(tag)) {
       onSearchTagsChange(searchTags.filter((t) => t !== tag));
@@ -115,179 +94,154 @@ export default function MobileSearchOverlay({
   const toggle = (key: keyof Filters) =>
     set(key, filters[key] === 'on' ? 'off' : 'on');
 
-  const hasActiveFilters =
-    searchTags.length > 0 ||
-    filters.type !== defaultFilters.type ||
-    filters.season !== defaultFilters.season ||
-    filters.difficulty !== defaultFilters.difficulty ||
-    filters.tested !== defaultFilters.tested ||
-    filters.vegetarian !== defaultFilters.vegetarian ||
-    filters.rapido !== defaultFilters.rapido ||
-    filters.ownership !== defaultFilters.ownership;
-
   const resetAll = () => {
     onSearchQueryChange('');
     onSearchTagsChange([]);
     onFiltersChange({ ...defaultFilters, sort: filters.sort });
   };
 
+  const close = () => { setVisible(false); setTimeout(onClose, 300); };
+
   if (!open) return null;
 
   return (
-    <div
-      className={`fixed inset-0 z-50 bg-background flex flex-col md:hidden transition-transform duration-300 ease-out ${
-        visible ? 'translate-x-0' : 'translate-x-full'
-      }`}
-    >
-      {/* Search header */}
-      <div className="flex items-center gap-2 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-border">
+    <div className="fixed inset-0 z-50 flex flex-col md:hidden">
+      {/* Same row as the catalog header's search view, drawn over it: it stays
+          still while only the panel below slides in. */}
+      <div className="flex items-start gap-3 px-3 py-2 min-h-14 bg-background border-b border-border">
         <button
-          onClick={() => { setVisible(false); setTimeout(onClose, 300); }}
-          className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full active:bg-secondary/80 text-foreground"
+          type="button"
+          onClick={close}
+          className="shrink-0 w-8 h-8 mt-1 flex items-center justify-center rounded-full active:bg-secondary/80 text-foreground"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
+          aria-label="Fermer les filtres"
         >
           <ArrowLeft size={22} />
         </button>
-        <div className="flex-1 flex items-center gap-2 flex-wrap min-h-12 px-3 bg-secondary/50 rounded-xl">
-
-          <Search className="text-muted-foreground shrink-0" size={18} />
-          {searchTags.map((tag) => {
-            const isSelected = selectedTag === tag;
-            return (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => {
-                  setSelectedTag(isSelected ? null : tag);
-                  inputRef.current?.focus();
-                }}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-                className={`flex items-center text-sm font-body font-medium px-2.5 py-1 rounded-full capitalize transition-colors ${
-                  isSelected
-                    ? 'bg-primary text-primary-foreground ring-2 ring-primary/40'
-                    : 'bg-primary/15 text-primary'
-                }`}
-              >
-                {tag}
-              </button>
-            );
-          })}
-          <input
-            ref={inputRef}
-            value={searchQuery}
-            onChange={(e) => onSearchQueryChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={searchTags.length === 0 ? 'Rechercher un ingrédient, un tag…' : ''}
-            className="flex-1 min-w-[80px] h-10 bg-transparent font-body text-base outline-none placeholder:text-muted-foreground/60"
-          />
-        </div>
+        <MobileSearchField
+          inputRef={inputRef}
+          tags={searchTags}
+          onTagsChange={onSearchTagsChange}
+          query={searchQuery}
+          onQueryChange={onSearchQueryChange}
+          canReset={hasActiveFilters}
+          onReset={resetAll}
+          onFiltersTap={close}
+        />
       </div>
 
-      {/* Scrollable filter content */}
-      <div className="flex-1 overflow-y-auto overscroll-contain">
-        <div className="px-4 pt-5 pb-6 space-y-6">
+      <div
+        className={`flex-1 min-h-0 flex flex-col bg-background transition-transform duration-300 ease-out ${
+          visible ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        {/* Scrollable filter content */}
+        <div className="flex-1 overflow-y-auto overscroll-contain">
+          <div className="px-4 pt-5 pb-6 space-y-6">
 
-          {/* Quick tags — outline ghost pills */}
-          {topTags.length > 0 && (
-            <Section title="Tags populaires">
-              <div className="flex flex-wrap gap-2">
-                {topTags.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => handleTagClick(tag)}
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
-                    className={`text-[13px] px-3.5 py-2 rounded-full border font-body font-medium capitalize transition-all duration-150 active:scale-95 ${
-                      searchTags.includes(tag)
-                        ? 'bg-primary/15 border-primary/40 text-primary'
-                        : 'bg-transparent border-border text-muted-foreground active:border-foreground/30 active:text-foreground'
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                ))}
+            {/* Quick tags — outline ghost pills */}
+            {topTags.length > 0 && (
+              <Section title="Tags populaires">
+                <div className="flex flex-wrap gap-2">
+                  {topTags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => handleTagClick(tag)}
+                      style={{ WebkitTapHighlightColor: 'transparent' }}
+                      className={`text-[13px] px-3.5 py-2 rounded-full border font-body font-medium capitalize transition-all duration-150 active:scale-95 ${
+                        searchTags.includes(tag)
+                          ? 'bg-primary/15 border-primary/40 text-primary'
+                          : 'bg-transparent border-border text-muted-foreground active:border-foreground/30 active:text-foreground'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </Section>
+            )}
+
+            {/* Type — icon grid */}
+            <Section title="Type" icon={<UtensilsCrossed size={14} />}>
+              <IconGrid
+                options={types}
+                value={filters.type}
+                onChange={(v) => set('type', v)}
+              />
+            </Section>
+
+            {/* Season — segmented control */}
+            <Section title="Saison" icon={<Sun size={14} />} subtitle={filters.season !== 'toutes' ? seasons.find(s => s.value === filters.season)?.label : undefined}>
+              <SegmentedControl
+                options={seasons}
+                value={filters.season}
+                defaultValue="toutes"
+                onChange={(v) => set('season', v)}
+              />
+            </Section>
+
+            {/* Difficulty — segmented control */}
+            <Section title="Difficulté" icon={<Gauge size={14} />}>
+              <SegmentedControl
+                options={difficulties}
+                value={filters.difficulty}
+                defaultValue="toutes"
+                onChange={(v) => set('difficulty', v)}
+              />
+            </Section>
+
+            {/* Toggle filters — cards */}
+            <Section title="Préférences">
+              <div className="grid grid-cols-4 gap-2">
+                <ToggleCard
+                  active={filters.tested === 'on'}
+                  onClick={() => toggle('tested')}
+                  icon={<Check size={20} />}
+                  label="Testé"
+                  activeColor="bg-primary/12 border-primary/35 text-primary"
+                />
+                <ToggleCard
+                  active={filters.vegetarian === 'on'}
+                  onClick={() => toggle('vegetarian')}
+                  icon={<Leaf size={20} />}
+                  label="Végé"
+                  activeColor="bg-success/12 border-success/35 text-success"
+                />
+                <ToggleCard
+                  active={filters.rapido === 'on'}
+                  onClick={() => toggle('rapido')}
+                  icon={<Zap size={20} />}
+                  label="Rapido"
+                  activeColor="bg-primary/12 border-primary/35 text-primary"
+                />
+                <ToggleCard
+                  active={filters.ownership === 'shared'}
+                  onClick={() => set('ownership', filters.ownership === 'shared' ? 'all' : 'shared')}
+                  icon={<Users size={20} />}
+                  label="Partagées"
+                  activeColor="bg-primary/12 border-primary/35 text-primary"
+                />
               </div>
             </Section>
-          )}
 
-          {/* Type — icon grid */}
-          <Section title="Type" icon={<UtensilsCrossed size={14} />}>
-            <IconGrid
-              options={types}
-              value={filters.type}
-              onChange={(v) => set('type', v)}
-            />
-          </Section>
-
-          {/* Season — segmented control */}
-          <Section title="Saison" icon={<Sun size={14} />} subtitle={filters.season !== 'toutes' ? seasons.find(s => s.value === filters.season)?.label : undefined}>
-            <SegmentedControl
-              options={seasons}
-              value={filters.season}
-              defaultValue="toutes"
-              onChange={(v) => set('season', v)}
-            />
-          </Section>
-
-          {/* Difficulty — segmented control */}
-          <Section title="Difficulté" icon={<Gauge size={14} />}>
-            <SegmentedControl
-              options={difficulties}
-              value={filters.difficulty}
-              defaultValue="toutes"
-              onChange={(v) => set('difficulty', v)}
-            />
-          </Section>
-
-          {/* Toggle filters — cards */}
-          <Section title="Préférences">
-            <div className="grid grid-cols-4 gap-2">
-              <ToggleCard
-                active={filters.tested === 'on'}
-                onClick={() => toggle('tested')}
-                icon={<Check size={20} />}
-                label="Testé"
-                activeColor="bg-primary/12 border-primary/35 text-primary"
-              />
-              <ToggleCard
-                active={filters.vegetarian === 'on'}
-                onClick={() => toggle('vegetarian')}
-                icon={<Leaf size={20} />}
-                label="Végé"
-                activeColor="bg-success/12 border-success/35 text-success"
-              />
-              <ToggleCard
-                active={filters.rapido === 'on'}
-                onClick={() => toggle('rapido')}
-                icon={<Zap size={20} />}
-                label="Rapido"
-                activeColor="bg-primary/12 border-primary/35 text-primary"
-              />
-              <ToggleCard
-                active={filters.ownership === 'shared'}
-                onClick={() => set('ownership', filters.ownership === 'shared' ? 'all' : 'shared')}
-                icon={<Users size={20} />}
-                label="Partagées"
-                activeColor="bg-primary/12 border-primary/35 text-primary"
-              />
-            </div>
-          </Section>
-
+          </div>
         </div>
-      </div>
 
-      {/* Bottom bar */}
-      <div className="border-t border-border px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-3 bg-background">
-        <button
-          onClick={resetAll}
-          className="shrink-0 w-11 h-11 flex items-center justify-center rounded-xl border border-border text-muted-foreground active:bg-secondary"
-        >
-          <RotateCcw size={18} />
-        </button>
-        <button
-          onClick={() => { setVisible(false); setTimeout(onClose, 300); }}
-          className="flex-1 gradient-warm text-primary-foreground font-body font-semibold py-3 rounded-xl text-[15px] active:opacity-90 transition-opacity"
-        >
-          Voir {resultCount} recette{resultCount !== 1 ? 's' : ''}
-        </button>
+        {/* Bottom bar */}
+        <div className="border-t border-border px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-3 bg-background">
+          <button
+            onClick={resetAll}
+            className="shrink-0 w-11 h-11 flex items-center justify-center rounded-xl border border-border text-muted-foreground active:bg-secondary"
+          >
+            <RotateCcw size={18} />
+          </button>
+          <button
+            onClick={close}
+            className="flex-1 gradient-warm text-primary-foreground font-body font-semibold py-3 rounded-xl text-[15px] active:opacity-90 transition-opacity"
+          >
+            Voir {resultCount} recette{resultCount !== 1 ? 's' : ''}
+          </button>
+        </div>
       </div>
     </div>
   );

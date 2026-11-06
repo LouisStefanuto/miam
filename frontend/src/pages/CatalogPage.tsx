@@ -256,6 +256,7 @@ const CatalogPage = () => {
         onSearchClose={closeSearch}
         onReset={resetAll}
         hasActiveFilters={hasActiveFilters}
+        onAddTap={() => navigate('/add')}
         onLogoTap={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         onLogoLongPress={openBeaverGame}
       />
@@ -272,6 +273,7 @@ const CatalogPage = () => {
         onFiltersChange={setFilters}
         topTags={topTags}
         resultCount={filtered.length}
+        hasActiveFilters={hasActiveFilters}
       />
 
       {/* Desktop top banner (hidden on mobile) */}
@@ -373,7 +375,7 @@ const CatalogPage = () => {
                 Réinitialiser
               </button>
             )}
-            {/* Desktop add recipe dropdown (hidden on mobile, FAB replaces it) */}
+            {/* Desktop add recipe dropdown (hidden on mobile, the mobile header has its own button) */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 shrink-0 ml-auto hidden md:inline-flex">
