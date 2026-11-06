@@ -120,6 +120,7 @@ interface BackendRecipe {
   ingredients: BackendIngredient[];
   images: BackendImage[];
   sources: { type: string; raw_content: string }[];
+  created_at?: string | null;
   user_role?: string;
   owner_name?: string;
 }
@@ -168,7 +169,7 @@ function backendToFrontend(b: BackendRecipe): Recipe {
       })),
     steps: b.preparation.map((text) => ({ text })),
     tested: b.tested,
-    createdAt: '',
+    createdAt: b.created_at ?? '',
     updatedAt: '',
     userRole: (b.user_role as UserRole) ?? undefined,
     ownerName: b.owner_name ?? undefined,

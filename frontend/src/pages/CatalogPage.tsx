@@ -15,12 +15,13 @@ import { useShakeEscalation } from '@/hooks/use-shake-escalation';
 import { useWindowScrollMemory } from '@/hooks/use-window-scroll-memory';
 import { useCatalogFilters } from '@/contexts/CatalogFilterContext';
 import SearchBar from '@/components/SearchBar';
-import FilterBar, { defaultFilters } from '@/components/FilterBar';
+import FilterBar, { defaultFilters, sortOptions } from '@/components/FilterBar';
 import RecipeCard from '@/components/RecipeCard';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import PointerTooltip from '@/components/PointerTooltip';
 import { Button } from '@/components/ui/button';
 import { exportToMarkdown, exportToWord } from '@/lib/api';
+import { sortBySearchRelevance, sortBySuggestion } from '@/lib/recipe-ranking';
 import { useToast } from '@/hooks/use-toast';
 import {
   Pagination,
@@ -34,21 +35,10 @@ import {
 
 const RECIPES_PER_PAGE = 20;
 
-const sortOptions = [
-  { value: 'recent', label: 'Plus récent' },
-  { value: 'rating', label: 'Mieux noté' },
-  { value: 'alpha', label: 'A → Z' },
-  { value: 'time', label: 'Plus rapide' },
-];
-
-const sortLabels: Record<string, string> = Object.fromEntries(
-  sortOptions.map((o) => [o.value, o.label])
-);
-
 const CatalogPage = () => {
   const navigate = useNavigate();
   const { data: recipes = [], isLoading } = useRecipes();
-  const { searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage, savedScrollY } = useCatalogFilters();
+  const { searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage, savedScrollY, shuffleSeed } = useCatalogFilters();
   useWindowScrollMemory(savedScrollY, !isLoading);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [showBeaverGame, setShowBeaverGame] = useState(false);
@@ -106,9 +96,10 @@ const CatalogPage = () => {
   }, []);
 
   const filtered = useMemo(() => {
+    const liveQuery = searchQuery.trim().toLowerCase();
+    const allTerms = [...searchTags, ...(liveQuery ? [liveQuery] : [])];
+
     let result = recipes.filter((r) => {
-      const liveQuery = searchQuery.trim().toLowerCase();
-      const allTerms = [...searchTags, ...(liveQuery ? [liveQuery] : [])];
       const matchSearch =
         allTerms.length === 0 ||
         allTerms.every((q) =>
@@ -139,12 +130,18 @@ const CatalogPage = () => {
         result.sort((a, b) => a.prepTime + a.cookTime - (b.prepTime + b.cookTime));
         break;
       case 'recent':
-      default:
         result.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        break;
+      case 'suggestions':
+      default:
+        // A search gets a fixed order, so the same query always gives the same results.
+        result = allTerms.length > 0
+          ? sortBySearchRelevance(result, allTerms)
+          : sortBySuggestion(result, new Date(), shuffleSeed);
     }
 
     return result;
-  }, [recipes, searchQuery, searchTags, filters]);
+  }, [recipes, searchQuery, searchTags, filters, shuffleSeed]);
 
   const shareableRecipeIds = useMemo(() =>
     filtered.filter(r => !r.userRole || r.userRole === 'owner' || r.userRole === 'editor').map(r => r.id),
