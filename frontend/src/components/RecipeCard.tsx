@@ -90,7 +90,7 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
       <button
         onClick={handleClick}
         style={{ WebkitTapHighlightColor: 'transparent' }}
-        className={`w-full flex items-center gap-4 px-2 py-3 text-left rounded-lg transition-colors active:bg-secondary/60 ${selectionMode && selected ? 'bg-primary/10' : ''}`}
+        className={`w-full flex items-center gap-4 px-2 py-1.5 text-left rounded-lg transition-colors active:bg-secondary/60 ${selectionMode && selected ? 'bg-primary/10' : ''}`}
       >
         <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-muted">
           {imageSrc ? (
