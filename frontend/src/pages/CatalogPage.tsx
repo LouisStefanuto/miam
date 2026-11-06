@@ -13,6 +13,7 @@ import MobileSearchOverlay from '@/components/MobileSearchOverlay';
 import { useRecipes } from '@/hooks/use-recipes';
 import { useShakeEscalation } from '@/hooks/use-shake-escalation';
 import { useWindowScrollMemory } from '@/hooks/use-window-scroll-memory';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useCatalogFilters } from '@/contexts/CatalogFilterContext';
 import SearchBar from '@/components/SearchBar';
 import FilterBar, { defaultFilters, sortOptions } from '@/components/FilterBar';
@@ -40,6 +41,7 @@ const CatalogPage = () => {
   const { data: recipes = [], isLoading } = useRecipes();
   const { searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage, savedScrollY, shuffleSeed } = useCatalogFilters();
   useWindowScrollMemory(savedScrollY, !isLoading);
+  const isMobile = useIsMobile();
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [showBeaverGame, setShowBeaverGame] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -189,6 +191,9 @@ const CatalogPage = () => {
       setSearchTags([...searchTags, tag]);
     }
   };
+
+  // On mobile, search results show as a compact list instead of large cards.
+  const showAsList = isMobile && (searchQuery.trim() !== '' || searchTags.length > 0);
 
   const displayedRecipes = selectionMode
     ? filtered.filter(r => !r.userRole || r.userRole === 'owner' || r.userRole === 'editor')
@@ -458,6 +463,20 @@ const CatalogPage = () => {
         {isLoading ? (
           <div className="text-center py-20">
             <p className="font-body text-muted-foreground">Chargement des recettes…</p>
+          </div>
+        ) : paginatedRecipes.length > 0 && showAsList ? (
+          <div className="flex flex-col -mx-2">
+            {paginatedRecipes.map((recipe) => (
+              <RecipeCard
+                key={recipe.id}
+                recipe={recipe}
+                variant="row"
+                onClick={() => navigate(`/recipes/${recipe.id}`)}
+                selectionMode={selectionMode}
+                selected={selectedRecipes.has(recipe.id)}
+                onSelect={toggleSelection}
+              />
+            ))}
           </div>
         ) : paginatedRecipes.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

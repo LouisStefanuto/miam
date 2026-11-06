@@ -1,5 +1,5 @@
-import { Clock, Star, Users, ShoppingCart, Check } from 'lucide-react';
-import { Recipe } from '@/data/recipes';
+import { Clock, Star, Users, ShoppingCart, Check, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, LucideIcon } from 'lucide-react';
+import { Recipe, RecipeType } from '@/data/recipes';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -13,9 +13,20 @@ const difficultyLabels: Record<string, { label: string; bars: number }> = {
   difficile: { label: 'Difficile', bars: 3 },
 };
 
+const typeIcons: Record<RecipeType, LucideIcon> = {
+  'apéro': Wine,
+  'entrée': Salad,
+  'plat': Beef,
+  'pâtes': UtensilsCrossed,
+  'dessert': Cake,
+  'boisson': CupSoda,
+};
+
 interface RecipeCardProps {
   recipe: Recipe;
   onClick: () => void;
+  /** 'row' is a compact list item: small square image with a short text summary beside it. */
+  variant?: 'card' | 'row';
   selectionMode?: boolean;
   selected?: boolean;
   onSelect?: (id: string) => void;
@@ -45,7 +56,7 @@ const StarRating = ({ rating, size = 14, emptyClassName = 'text-white/30' }: { r
   </div>
 );
 
-export default function RecipeCard({ recipe, onClick, selectionMode, selected, onSelect }: RecipeCardProps) {
+export default function RecipeCard({ recipe, onClick, variant = 'card', selectionMode, selected, onSelect }: RecipeCardProps) {
   const isMobile = useIsMobile();
   const totalTime = recipe.prepTime + recipe.cookTime;
   const diff = difficultyLabels[recipe.difficulty];
@@ -69,6 +80,62 @@ export default function RecipeCard({ recipe, onClick, selectionMode, selected, o
       <Check size={16} />
     </div>
   );
+
+  if (variant === 'row') {
+    const TypeIcon = typeIcons[recipe.type] ?? UtensilsCrossed;
+    const summary = [totalTime ? `${totalTime} min` : null, diff.label, `${recipe.servings} pers.`]
+      .filter(Boolean)
+      .join(' · ');
+    return (
+      <button
+        onClick={handleClick}
+        style={{ WebkitTapHighlightColor: 'transparent' }}
+        className={`w-full flex items-center gap-4 px-2 py-3 text-left rounded-lg transition-colors active:bg-secondary/60 ${selectionMode && selected ? 'bg-primary/10' : ''}`}
+      >
+        <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-muted">
+          {imageSrc ? (
+            <img
+              src={imageSrc}
+              alt=""
+              className={`w-full h-full ${isDefault ? 'object-contain p-2' : 'object-cover'}`}
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full animate-pulse" />
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0 space-y-1">
+          <h3 className="font-display text-base font-bold text-foreground leading-snug line-clamp-2">
+            {recipe.title}
+          </h3>
+          <p className="flex items-center gap-1.5 text-sm text-foreground/80 font-body">
+            <TypeIcon size={15} className="shrink-0 text-muted-foreground" />
+            <span className="truncate">{summary}</span>
+          </p>
+          <div className="flex items-center gap-2">
+            <StarRating rating={recipe.rating} size={12} emptyClassName="text-muted-foreground/30" />
+            {recipe.diets.includes('végétarien') && (
+              <span className="text-xs font-body font-medium text-green-600">Végé</span>
+            )}
+          </div>
+        </div>
+
+        {selectionMode ? selectionCheck : (
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={(e) => { e.stopPropagation(); cart.toggle(recipe.id); }}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); cart.toggle(recipe.id); } }}
+            className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center transition-colors ${inCart ? 'text-primary' : 'text-muted-foreground/70'}`}
+            title={inCart ? 'Retirer du panier' : 'Ajouter au panier'}
+          >
+            <ShoppingCart size={18} className={inCart ? 'fill-primary' : ''} />
+          </div>
+        )}
+      </button>
+    );
+  }
 
   if (isMobile) {
     return (
