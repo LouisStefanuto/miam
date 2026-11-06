@@ -536,7 +536,7 @@ const CatalogPage = () => {
             </div>
           </div>
         ) : (
-          <div className="text-center py-20">
+          <div className="text-center px-6 py-20">
             <p className="font-display text-2xl text-muted-foreground mb-2">Aucune recette trouvée</p>
             <p className="font-body text-muted-foreground">Essayez de modifier vos filtres ou votre recherche</p>
           </div>
