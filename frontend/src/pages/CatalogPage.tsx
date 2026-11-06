@@ -191,11 +191,6 @@ const CatalogPage = () => {
     }
   };
 
-  // Reset to page 1 when filters or search change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, searchTags, filters, setCurrentPage]);
-
   const displayedRecipes = selectionMode
     ? filtered.filter(r => !r.userRole || r.userRole === 'owner' || r.userRole === 'editor')
     : filtered;
