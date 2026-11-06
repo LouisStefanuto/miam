@@ -172,7 +172,7 @@ export default function MobileHeader({
             onChange={(e) => onSearchQueryChange(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={onSearchOpen}
-            placeholder={isEmpty ? (searchOpen ? 'Rechercher un ingrédient, un tag…' : 'Rechercher') : ''}
+            placeholder={isEmpty ? 'Rechercher' : ''}
             className="flex-1 min-w-[80px] h-7 bg-transparent font-body text-base outline-none placeholder:text-muted-foreground"
           />
         </div>
