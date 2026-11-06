@@ -12,6 +12,7 @@ import MobileHeader from '@/components/MobileHeader';
 import MobileSearchOverlay from '@/components/MobileSearchOverlay';
 import { useRecipes } from '@/hooks/use-recipes';
 import { useShakeEscalation } from '@/hooks/use-shake-escalation';
+import { useWindowScrollMemory } from '@/hooks/use-window-scroll-memory';
 import { useCatalogFilters } from '@/contexts/CatalogFilterContext';
 import SearchBar from '@/components/SearchBar';
 import FilterBar, { defaultFilters } from '@/components/FilterBar';
@@ -47,7 +48,8 @@ const sortLabels: Record<string, string> = Object.fromEntries(
 const CatalogPage = () => {
   const navigate = useNavigate();
   const { data: recipes = [], isLoading } = useRecipes();
-  const { searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage } = useCatalogFilters();
+  const { searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage, savedScrollY } = useCatalogFilters();
+  useWindowScrollMemory(savedScrollY, !isLoading);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [showBeaverGame, setShowBeaverGame] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -190,11 +192,6 @@ const CatalogPage = () => {
       setSearchTags([...searchTags, tag]);
     }
   };
-
-  // Reset to page 1 when filters or search change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, searchTags, filters, setCurrentPage]);
 
   const displayedRecipes = selectionMode
     ? filtered.filter(r => !r.userRole || r.userRole === 'owner' || r.userRole === 'editor')

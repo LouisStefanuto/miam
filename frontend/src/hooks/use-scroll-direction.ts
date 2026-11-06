@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const HIDE_THRESHOLD = 10;
 const HEADER_HEIGHT = 56; // h-14 = 3.5rem = 56px
@@ -13,9 +14,26 @@ export function useScrollDirection() {
   const [headerOffset, setHeaderOffset] = useState(0);
   const lastScrollY = useRef(0);
   const scrollUpAnchor = useRef<number | null>(null);
+  const rebaseline = useRef(true);
+  const { pathname } = useLocation();
+
+  // A route change moves the window without the user scrolling: the browser
+  // clamps to a shorter page, or the catalog jumps back to where it was left.
+  // Take the next position as the new baseline rather than as a direction, so
+  // the bars do not slide away right after tapping a tab.
+  // Layout effect: it must run in the navigation commit, before that scroll event.
+  useLayoutEffect(() => {
+    rebaseline.current = true;
+  }, [pathname]);
 
   const onScroll = useCallback(() => {
     const currentY = window.scrollY;
+    if (rebaseline.current) {
+      rebaseline.current = false;
+      scrollUpAnchor.current = null;
+      lastScrollY.current = currentY;
+      return;
+    }
     const diff = currentY - lastScrollY.current;
 
     if (diff > 0) {

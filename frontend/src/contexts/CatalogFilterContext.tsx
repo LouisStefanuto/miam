@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useCallback, useContext, useRef, useState, MutableRefObject, ReactNode } from 'react';
 import { Filters } from '@/components/FilterBar';
 
 interface CatalogFilterState {
@@ -10,6 +10,8 @@ interface CatalogFilterState {
   setFilters: (f: Filters) => void;
   currentPage: number;
   setCurrentPage: (page: number) => void;
+  /** Window scroll position of the catalog, kept while the user is on another page. */
+  savedScrollY: MutableRefObject<number | null>;
 }
 
 const defaultFilters: Filters = {
@@ -26,14 +28,32 @@ const defaultFilters: Filters = {
 const CatalogFilterContext = createContext<CatalogFilterState | null>(null);
 
 export function CatalogFilterProvider({ children }: { children: ReactNode }) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchTags, setSearchTags] = useState<string[]>([]);
-  const [filters, setFilters] = useState<Filters>(defaultFilters);
+  const [searchQuery, setSearchQueryState] = useState('');
+  const [searchTags, setSearchTagsState] = useState<string[]>([]);
+  const [filters, setFiltersState] = useState<Filters>(defaultFilters);
   const [currentPage, setCurrentPage] = useState(1);
+  const savedScrollY = useRef<number | null>(null);
+
+  // A new search or filter goes back to page 1. This lives in the setters, not in
+  // an effect on the catalog page, so that leaving the catalog (e.g. to /cart) and
+  // coming back remounts it on the page the user was on.
+  const setSearchQuery = useCallback((q: string) => {
+    setSearchQueryState(q);
+    // Enter on an empty search box sets '' again; that is not a new search.
+    if (q !== searchQuery) setCurrentPage(1);
+  }, [searchQuery]);
+  const setSearchTags = useCallback((tags: string[]) => {
+    setSearchTagsState(tags);
+    setCurrentPage(1);
+  }, []);
+  const setFilters = useCallback((f: Filters) => {
+    setFiltersState(f);
+    setCurrentPage(1);
+  }, []);
 
   return (
     <CatalogFilterContext.Provider
-      value={{ searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage }}
+      value={{ searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage, savedScrollY }}
     >
       {children}
     </CatalogFilterContext.Provider>
