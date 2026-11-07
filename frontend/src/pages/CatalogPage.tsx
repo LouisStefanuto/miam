@@ -18,6 +18,8 @@ import { useCatalogFilters } from '@/contexts/CatalogFilterContext';
 import SearchBar from '@/components/SearchBar';
 import FilterBar, { defaultFilters, sortOptions } from '@/components/FilterBar';
 import RecipeCard from '@/components/RecipeCard';
+import { RecipeCatalogSkeleton } from '@/components/RecipeCardSkeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import PointerTooltip from '@/components/PointerTooltip';
 import { Button } from '@/components/ui/button';
@@ -431,9 +433,13 @@ const CatalogPage = () => {
         {/* Results count + reset + sort */}
         <div className="flex items-center justify-between md:justify-start gap-2 py-1 md:py-0">
           <div className="flex items-center gap-2">
-            <p className="text-sm text-muted-foreground font-body">
-              {filtered.length} recette{filtered.length !== 1 ? 's' : ''} trouvée{filtered.length !== 1 ? 's' : ''}
-            </p>
+            {isLoading ? (
+              <div className="h-5 flex items-center"><Skeleton className="h-3.5 w-32" /></div>
+            ) : (
+              <p className="text-sm text-muted-foreground font-body">
+                {filtered.length} recette{filtered.length !== 1 ? 's' : ''} trouvée{filtered.length !== 1 ? 's' : ''}
+              </p>
+            )}
           </div>
           <div className="md:hidden">
             <DropdownMenu>
@@ -482,10 +488,8 @@ const CatalogPage = () => {
 
         {/* Grid */}
         {isLoading ? (
-          <div className="text-center py-20">
-            <p className="font-body text-muted-foreground">Chargement des recettes…</p>
-          </div>
-        ) : paginatedRecipes.length > 0 && showAsList ? (
+          <RecipeCatalogSkeleton variant={showAsList ? 'row' : 'card'} />
+        ) :paginatedRecipes.length > 0 && showAsList ? (
           <div
             className={`flex flex-col -mx-2 ${revealList ? 'motion-safe:animate-search-unroll' : ''}`}
             // The unroll outlasts the staggered rows, so its end means the whole reveal is done.
