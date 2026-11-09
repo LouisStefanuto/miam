@@ -64,6 +64,28 @@ const StarRating = ({ rating, size = 14, emptyClassName = 'text-white/30' }: { r
   </div>
 );
 
+const iconSwap = 'col-start-1 row-start-1 transition-[opacity,transform] duration-300 [transition-timing-function:cubic-bezier(0.3,1.6,0.5,1)] motion-reduce:transition-none';
+
+/** Frosted glass disc over the photo: a cart to add, solid orange with a check once in the cart. */
+const CartToggle = ({ inCart, onToggle }: { inCart: boolean; onToggle: () => void }) => (
+  <div
+    role="button"
+    tabIndex={0}
+    onClick={(e) => { e.stopPropagation(); onToggle(); }}
+    onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); onToggle(); } }}
+    className={`w-8 h-8 rounded-full grid place-items-center ring-1 ring-inset ring-white/25 backdrop-blur-md backdrop-saturate-150 transition-[background-color,box-shadow,transform] duration-200 active:scale-90 motion-reduce:transition-none ${
+      inCart
+        ? 'bg-primary text-primary-foreground shadow-[0_4px_14px_-3px_hsl(var(--primary)/0.6)]'
+        : 'bg-black/30 text-white shadow-[0_2px_10px_-2px_rgb(0_0_0/0.3)] hover:bg-black/45'
+    }`}
+    title={inCart ? 'Retirer du panier' : 'Ajouter au panier'}
+    aria-pressed={inCart}
+  >
+    <ShoppingCart size={16} className={`${iconSwap} ${inCart ? 'opacity-0 scale-50' : 'opacity-100 scale-100'}`} />
+    <Check size={16} strokeWidth={3} className={`${iconSwap} ${inCart ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-45'}`} />
+  </div>
+);
+
 export default function RecipeCard({ recipe, onClick, variant = 'card', selectionMode, selected, onSelect }: RecipeCardProps) {
   const isMobile = useIsMobile();
   const totalTime = recipe.prepTime + recipe.cookTime;
@@ -155,18 +177,7 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
 
           {/* Top right: selection check or cart button */}
           <div className="absolute top-2 right-2">
-            {selectionMode ? selectionCheck : (
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={(e) => { e.stopPropagation(); cart.toggle(recipe.id); }}
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); cart.toggle(recipe.id); } }}
-                className={`w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm transition-colors ${inCart ? 'text-primary fill-primary' : 'text-muted-foreground'}`}
-                title={inCart ? 'Retirer du panier' : 'Ajouter au panier'}
-              >
-                <ShoppingCart size={16} className={inCart ? 'fill-primary' : ''} />
-              </div>
-            )}
+            {selectionMode ? selectionCheck : <CartToggle inCart={inCart} onToggle={() => cart.toggle(recipe.id)} />}
           </div>
 
           {/* Overlaid content at bottom */}
@@ -209,18 +220,7 @@ export default function RecipeCard({ recipe, onClick, variant = 'card', selectio
         )}
         {/* Top right: selection check or cart button */}
         <div className="absolute top-2 right-2 flex gap-1.5">
-          {selectionMode ? selectionCheck : (
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={(e) => { e.stopPropagation(); cart.toggle(recipe.id); }}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); cart.toggle(recipe.id); } }}
-              className={`w-8 h-8 rounded-full border-2 border-card/95 bg-card/95 flex items-center justify-center shadow-sm transition-colors ${inCart ? 'text-primary fill-primary' : 'text-gray-600 dark:text-gray-300 hover:text-primary'}`}
-              title={inCart ? 'Retirer du panier' : 'Ajouter au panier'}
-            >
-              <ShoppingCart size={16} className={inCart ? 'fill-primary' : ''} />
-            </div>
-          )}
+          {selectionMode ? selectionCheck : <CartToggle inCart={inCart} onToggle={() => cart.toggle(recipe.id)} />}
         </div>
         {/* Role badge */}
         <div className="absolute top-2 left-2 flex items-center gap-1.5">
