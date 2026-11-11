@@ -1,7 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { readdirSync } from 'fs';
 import path from 'path';
-import { AVATARS, AVATAR_GROUPS, getAvatar, setAvatar, subscribeToAvatar } from './avatars';
+import {
+  ACCOUNT_PHOTO,
+  AVATARS,
+  AVATAR_GROUPS,
+  DEFAULT_AVATAR,
+  getAvatar,
+  getAvatarById,
+  MIAM_LOGO,
+  setAvatar,
+  subscribeToAvatar,
+} from './avatars';
 
 describe('avatar catalog', () => {
   it('matches the images in public/avatars one to one', () => {
@@ -14,6 +24,11 @@ describe('avatar catalog', () => {
   it('gives every avatar a known group', () => {
     const groups = new Set(AVATAR_GROUPS.map((group) => group.id));
     expect(AVATARS.every((avatar) => groups.has(avatar.group))).toBe(true);
+  });
+
+  it('keeps the logo and account photo values apart from the avatar ids', () => {
+    expect(getAvatarById(MIAM_LOGO)).toBeUndefined();
+    expect(getAvatarById(ACCOUNT_PHOTO)).toBeUndefined();
   });
 });
 
@@ -31,8 +46,9 @@ describe('avatar storage', () => {
     });
   });
 
-  it('falls back to the account photo when nothing is picked', () => {
-    expect(getAvatar('ana@example.com')).toBeNull();
+  it('shows the Miam logo when nothing is picked', () => {
+    expect(DEFAULT_AVATAR).toBe(MIAM_LOGO);
+    expect(getAvatar('ana@example.com')).toBe(MIAM_LOGO);
   });
 
   it('keeps one pick per account', () => {
@@ -42,15 +58,17 @@ describe('avatar storage', () => {
     expect(getAvatar('bob@example.com')).toBe('grande-toque');
   });
 
-  it('goes back to the account photo when cleared', () => {
+  it('keeps the account photo or the logo when picked', () => {
     setAvatar('ana@example.com', 'fraise');
-    setAvatar('ana@example.com', null);
-    expect(getAvatar('ana@example.com')).toBeNull();
+    setAvatar('ana@example.com', ACCOUNT_PHOTO);
+    expect(getAvatar('ana@example.com')).toBe(ACCOUNT_PHOTO);
+    setAvatar('ana@example.com', MIAM_LOGO);
+    expect(getAvatar('ana@example.com')).toBe(MIAM_LOGO);
   });
 
   it('ignores an id that is no longer in the catalog', () => {
     localStorage.setItem('miam-avatar:ana@example.com', 'ancien-avatar');
-    expect(getAvatar('ana@example.com')).toBeNull();
+    expect(getAvatar('ana@example.com')).toBe(DEFAULT_AVATAR);
   });
 
   it('notifies subscribers on change', () => {

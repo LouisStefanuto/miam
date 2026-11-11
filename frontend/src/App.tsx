@@ -75,6 +75,9 @@ const App = () => (
               <Route index element={null} />
               <Route path="recipes/:id" element={<RecipeDetailPage />} />
               <Route path="recipes/new" element={<CreateRecipePage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="settings/alarm" element={<AlarmSoundPage />} />
+              <Route path="settings/avatar" element={<AvatarPage />} />
             </Route>
             <Route path="/add" element={<ProtectedRoute><AddRecipePage /></ProtectedRoute>} />
             <Route path="/import/ocr" element={<ProtectedRoute><ImportOCRPage /></ProtectedRoute>} />
@@ -85,9 +88,6 @@ const App = () => (
             <Route path="/shares/batch" element={<ProtectedRoute><ShareBatchPage /></ProtectedRoute>} />
             <Route path="/shares/inbox" element={<ProtectedRoute><ShareInboxPage /></ProtectedRoute>} />
             <Route path="/export" element={<ProtectedRoute><ExportPage /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-            <Route path="/settings/alarm" element={<ProtectedRoute><AlarmSoundPage /></ProtectedRoute>} />
-            <Route path="/settings/avatar" element={<ProtectedRoute><AvatarPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>

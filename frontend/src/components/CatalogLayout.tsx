@@ -53,8 +53,9 @@ export default function CatalogLayout() {
     }
   }, [isMobile, navigate]);
 
-  const handleAnimationEnd = useCallback(() => {
-    if (exiting) {
+  const handleAnimationEnd = useCallback((event: React.AnimationEvent<HTMLDivElement>) => {
+    // Animations inside the page (a back arrow spinning in) bubble up here too.
+    if (exiting && event.target === event.currentTarget) {
       navigate(exitTarget.current);
     }
   }, [exiting, navigate]);
@@ -65,7 +66,7 @@ export default function CatalogLayout() {
       {(hasOverlay || exiting) && (
         <div
           ref={overlayRef}
-          className={`fixed inset-0 z-40 bg-background overflow-y-auto overscroll-none ${
+          className={`fixed inset-0 z-40 bg-background overflow-y-auto overflow-x-hidden overscroll-none ${
             isMobile
               ? exiting
                 ? 'animate-slide-out-to-right'

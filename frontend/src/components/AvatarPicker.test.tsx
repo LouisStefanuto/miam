@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
-import { AVATARS, getAvatar } from '@/lib/avatars';
+import { ACCOUNT_PHOTO, AVATARS, MIAM_LOGO, getAvatar } from '@/lib/avatars';
 import AvatarPicker from './AvatarPicker';
 
 const EMAIL = 'ana@example.com';
@@ -23,11 +23,11 @@ describe('AvatarPicker', () => {
     });
   });
 
-  it('offers the account photo and every avatar, with the account photo checked', () => {
+  it('offers the logo, the account photo and every avatar, with the logo checked', () => {
     render(<AvatarPicker />);
-    expect(screen.getAllByRole('radio')).toHaveLength(AVATARS.length + 1);
-    expect(screen.getByRole('radio', { name: /Photo du compte/ })).toBeChecked();
-    expect(screen.getByRole('radio', { name: 'Grande toque' })).not.toBeChecked();
+    expect(screen.getAllByRole('radio')).toHaveLength(AVATARS.length + 2);
+    expect(screen.getByRole('radio', { name: /Logo Miam/ })).toBeChecked();
+    expect(screen.getByRole('radio', { name: /Photo du compte/ })).not.toBeChecked();
   });
 
   it('persists the picked avatar', () => {
@@ -42,7 +42,7 @@ describe('AvatarPicker', () => {
     expect(screen.getByRole('radio', { name: /Photo du compte/ })).not.toBeChecked();
   });
 
-  it('goes back to the account photo', () => {
+  it('switches to the account photo', () => {
     render(<AvatarPicker />);
 
     act(() => {
@@ -52,8 +52,25 @@ describe('AvatarPicker', () => {
       screen.getByRole('radio', { name: /Photo du compte/ }).click();
     });
 
-    expect(getAvatar(EMAIL)).toBeNull();
+    expect(getAvatar(EMAIL)).toBe(ACCOUNT_PHOTO);
     expect(screen.getByRole('radio', { name: /Photo du compte/ })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Fraise' })).not.toBeChecked();
+  });
+
+  it('goes back to the logo', () => {
+    render(<AvatarPicker />);
+
+    act(() => {
+      screen.getByRole('radio', { name: 'Fraise' }).click();
+    });
+    expect(screen.getByRole('radio', { name: /Logo Miam/ })).not.toBeChecked();
+
+    act(() => {
+      screen.getByRole('radio', { name: /Logo Miam/ }).click();
+    });
+
+    expect(getAvatar(EMAIL)).toBe(MIAM_LOGO);
+    expect(screen.getByRole('radio', { name: /Logo Miam/ })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'Fraise' })).not.toBeChecked();
   });
 });

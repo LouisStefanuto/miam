@@ -5,7 +5,6 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
 import { PendingSharesBadge } from '@/components/PendingSharesSheet';
-import UserAvatar from '@/components/UserAvatar';
 
 export default function MobileBottomBar() {
   const { hidden } = useScrollDirection();
@@ -26,7 +25,6 @@ export default function MobileBottomBar() {
   const isRecipes = location.pathname === '/';
   const isCart = location.pathname === '/cart';
   const isShares = location.pathname === '/shares' || location.pathname.startsWith('/shares/');
-  const isAccount = location.pathname === '/settings' || location.pathname.startsWith('/settings/');
 
   return (
     <>
@@ -78,15 +76,6 @@ export default function MobileBottomBar() {
           <Tab label="Partages" active={isShares} tapped={tappedTab === 'shares'} onClick={() => handleTap('shares', '/shares')}>
             <Share2 size={24} strokeWidth={isShares ? 2.5 : 2} />
             <PendingSharesBadge />
-          </Tab>
-
-          <Tab label="Compte" active={isAccount} tapped={tappedTab === 'account'} onClick={() => handleTap('account', '/settings')}>
-            {/* Slightly smaller than the icons so its ring doesn't crowd the label. */}
-            <UserAvatar
-              className={`h-[22px] w-[22px] shrink-0 rounded-full text-[10px] ${
-                isAccount ? 'ring-2 ring-primary' : 'ring-1 ring-border'
-              }`}
-            />
           </Tab>
         </div>
       </nav>

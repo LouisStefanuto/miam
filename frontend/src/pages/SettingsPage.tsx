@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import UserAvatar from '@/components/UserAvatar';
+import { useOverlayClose } from '@/components/CatalogLayout';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { getAlarmSoundById } from '@/lib/alarm';
 import { useAlarmSound } from '@/hooks/use-alarm-sound';
@@ -15,6 +16,8 @@ export default function SettingsPage() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  // Opened over the catalog: going back slides it out to the right on mobile.
+  const { requestClose } = useOverlayClose();
   const [alarmSound] = useAlarmSound();
   const notifications = useTimerNotifications();
 
@@ -22,7 +25,13 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-background">
       {/* Mobile header */}
       <header className="sticky top-0 z-20 flex items-center gap-3 px-4 h-14 bg-background border-b border-border md:hidden">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/')} aria-label="Retour au catalogue">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => requestClose('/')}
+          aria-label="Retour au catalogue"
+          className="motion-safe:animate-back-arrow-in"
+        >
           <ArrowLeft size={20} />
         </Button>
         <h1 className="font-display text-lg font-bold text-foreground">Paramètres</h1>
@@ -32,7 +41,7 @@ export default function SettingsPage() {
       <header className="hidden md:flex items-center gap-3 h-16 px-6 bg-background/85 backdrop-blur-md border-b border-border/60 sticky top-0 z-30">
         <button
           type="button"
-          onClick={() => navigate('/')}
+          onClick={() => requestClose('/')}
           className="inline-flex items-center justify-center h-10 w-10 -ml-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-primary active:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Retour au catalogue"
         >

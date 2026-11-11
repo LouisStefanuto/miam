@@ -33,7 +33,7 @@ export default function SettingsSubpage({ title, children }: { title: string; ch
     <div className={`min-h-screen bg-background ${slideClass}`} onAnimationEnd={handleAnimationEnd}>
       {/* Mobile header */}
       <header className="sticky top-0 z-20 flex items-center gap-3 px-4 h-14 bg-background border-b border-border md:hidden">
-        <Button variant="ghost" size="icon" onClick={goBack} aria-label="Retour aux paramètres">
+        <Button variant="ghost" size="icon" onClick={goBack} aria-label="Retour aux paramètres" className="motion-safe:animate-back-arrow-in">
           <ArrowLeft size={20} />
         </Button>
         <h1 className="font-display text-lg font-bold text-foreground">{title}</h1>

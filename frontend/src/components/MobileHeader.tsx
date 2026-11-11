@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { ArrowLeft, Plus, Search } from 'lucide-react';
 import MobileSearchField from '@/components/MobileSearchField';
+import UserAvatar from '@/components/UserAvatar';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
 import { useShakeEscalation } from '@/hooks/use-shake-escalation';
 
@@ -11,7 +12,7 @@ interface MobileHeaderProps {
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
   onFiltersTap: () => void;
-  /** The search view is open: the logo becomes a back arrow and the search icon becomes the search bar. */
+  /** The search view is open: the avatar becomes a back arrow and the search icon becomes the search bar. */
   searchOpen: boolean;
   onSearchOpen: () => void;
   onSearchClose: () => void;
@@ -20,8 +21,9 @@ interface MobileHeaderProps {
   hasActiveFilters?: boolean;
   /** Opens the add recipe page. */
   onAddTap: () => void;
-  onLogoTap?: () => void;
-  onLogoLongPress?: () => void;
+  /** Opens the account settings. */
+  onAvatarTap: () => void;
+  onAvatarLongPress?: () => void;
 }
 
 export default function MobileHeader({
@@ -29,13 +31,13 @@ export default function MobileHeader({
   searchQuery, onSearchQueryChange,
   onFiltersTap,
   searchOpen, onSearchOpen, onSearchClose, onReset, hasActiveFilters,
-  onAddTap, onLogoTap, onLogoLongPress,
+  onAddTap, onAvatarTap, onAvatarLongPress,
 }: MobileHeaderProps) {
   const { headerOffset } = useScrollDirection();
   const inputRef = useRef<HTMLInputElement>(null);
-  const { ref: logoRef, handlers: logoHandlers } = useShakeEscalation(
-    () => onLogoTap?.(),
-    () => onLogoLongPress?.(),
+  const { ref: avatarRef, handlers: avatarHandlers } = useShakeEscalation<HTMLButtonElement>(
+    onAvatarTap,
+    () => onAvatarLongPress?.(),
   );
 
   // Render the bar first, then focus it within the tap: iOS only opens the
@@ -55,15 +57,16 @@ export default function MobileHeader({
     >
       {!searchOpen ? (
         <>
-          <img
-            ref={logoRef}
-            src="/icon.png"
-            alt="Miam"
-            className="w-8 h-8 shrink-0 mt-1 select-none"
-            style={{ WebkitTouchCallout: 'none' }}
-            draggable={false}
-            {...logoHandlers}
-          />
+          <button
+            ref={avatarRef}
+            type="button"
+            className="shrink-0 mt-1 rounded-full select-none"
+            style={{ WebkitTouchCallout: 'none', WebkitTapHighlightColor: 'transparent' }}
+            aria-label="Mon compte"
+            {...avatarHandlers}
+          >
+            <UserAvatar className="h-8 w-8 rounded-full text-sm pointer-events-none" />
+          </button>
           {/* Same height as the search bar, so opening it does not shift the page */}
           <div className="ml-auto h-[42px] flex items-center gap-1">
             <button
@@ -94,7 +97,7 @@ export default function MobileHeader({
               inputRef.current?.blur();
               onSearchClose();
             }}
-            className="w-8 h-8 shrink-0 mt-1 flex items-center justify-center rounded-full text-foreground active:bg-secondary/80 motion-safe:animate-search-arrow-in"
+            className="w-8 h-8 shrink-0 mt-1 flex items-center justify-center rounded-full text-foreground active:bg-secondary/80 motion-safe:animate-back-arrow-in"
             style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-label="Fermer la recherche"
           >

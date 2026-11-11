@@ -1,19 +1,28 @@
 import { User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAvatar } from '@/hooks/use-avatar';
-import { avatarSrc } from '@/lib/avatars';
+import { ACCOUNT_PHOTO, MIAM_LOGO, avatarSrc } from '@/lib/avatars';
 import { cn } from '@/lib/utils';
 
 // Size, shape and font size come from className; the images are decorative, so the
 // surrounding button or text carries the label.
 
-/** A pixel-art avatar centred on its disc. */
-export function SpriteAvatar({ id, className }: { id: string; className?: string }) {
+function OnDisc({ src, imageClassName, className }: { src: string; imageClassName: string; className?: string }) {
   return (
     <span className={cn('flex items-center justify-center bg-avatar', className)}>
-      <img src={avatarSrc(id)} alt="" draggable={false} className="h-[68%] w-[68%] object-contain" />
+      <img src={src} alt="" draggable={false} className={cn('object-contain', imageClassName)} />
     </span>
   );
+}
+
+/** A pixel-art avatar centred on its disc. */
+export function SpriteAvatar({ id, className }: { id: string; className?: string }) {
+  return <OnDisc src={avatarSrc(id)} imageClassName="h-[68%] w-[68%]" className={className} />;
+}
+
+/** The Miam logo on the same disc as the pixel-art avatars. */
+export function LogoAvatar({ className }: { className?: string }) {
+  return <OnDisc src="/icon.png" imageClassName="h-[80%] w-[80%]" className={className} />;
 }
 
 /** The account's own photo, or its initial when it has none. */
@@ -38,8 +47,10 @@ export function AccountPhoto({ className }: { className?: string }) {
   );
 }
 
-/** The signed-in user's avatar: their pixel-art pick, otherwise their account photo. */
+/** The signed-in user's avatar: the Miam logo by default, a pixel-art pick, or their account photo. */
 export default function UserAvatar({ className }: { className?: string }) {
   const [avatar] = useAvatar();
-  return avatar ? <SpriteAvatar id={avatar} className={className} /> : <AccountPhoto className={className} />;
+  if (avatar === MIAM_LOGO) return <LogoAvatar className={className} />;
+  if (avatar === ACCOUNT_PHOTO) return <AccountPhoto className={className} />;
+  return <SpriteAvatar id={avatar} className={className} />;
 }

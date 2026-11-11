@@ -124,7 +124,7 @@ export default {
           from: { opacity: "0", transform: "translateY(-12px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
-        "search-arrow-in": {
+        "back-arrow-in": {
           from: { opacity: "0", transform: "rotate(-90deg) scale(0.5)" },
           to: { opacity: "1", transform: "rotate(0) scale(1)" },
         },
@@ -139,7 +139,7 @@ export default {
         "slide-out-to-right": "slide-out-to-right 0.3s ease-out forwards",
         "search-unroll": "search-unroll 0.5s cubic-bezier(0.22, 1, 0.36, 1) both",
         "search-row-in": "search-row-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
-        "search-arrow-in": "search-arrow-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "back-arrow-in": "back-arrow-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
       },
     },
   },

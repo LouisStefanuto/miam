@@ -1,6 +1,6 @@
 /**
- * Pixel-art avatars a user can pick instead of their account photo.
- * The images live in public/avatars/<id>.svg; the id is what gets stored, so never rename one.
+ * What a user can show as their avatar: the Miam logo (the default), a pixel-art avatar, or their account photo.
+ * The pixel-art images live in public/avatars/<id>.svg; the id is what gets stored, so never rename one.
  */
 
 export type AvatarGroup = 'castors' | 'marche' | 'divers';
@@ -70,26 +70,35 @@ export function getAvatarById(id: string): Avatar | undefined {
   return AVATARS.find((avatar) => avatar.id === id);
 }
 
+/** Stored in place of an avatar id when the user prefers the Miam logo. */
+export const MIAM_LOGO = 'miam';
+
+/** Stored in place of an avatar id when the user prefers their account photo. */
+export const ACCOUNT_PHOTO = 'account';
+
+/** Shown until the user picks something. */
+export const DEFAULT_AVATAR = MIAM_LOGO;
+
 // Kept per account so two people sharing a browser don't swap avatars.
 const storageKey = (email: string) => `miam-avatar:${email}`;
 
 const listeners = new Set<() => void>();
 
-/** The avatar this user picked on this device, or null for their account photo. */
-export function getAvatar(email: string): string | null {
+/** What this user picked on this device (an avatar id, MIAM_LOGO or ACCOUNT_PHOTO), the default if nothing yet. */
+export function getAvatar(email: string): string {
   try {
     const stored = localStorage.getItem(storageKey(email));
-    return stored && getAvatarById(stored) ? stored : null;
+    if (stored && (stored === MIAM_LOGO || stored === ACCOUNT_PHOTO || getAvatarById(stored))) return stored;
   } catch {
-    return null;
+    // Storage unavailable (private mode): nothing was kept, so show the default.
   }
+  return DEFAULT_AVATAR;
 }
 
-/** Saves the pick (null goes back to the account photo) and tells every mounted avatar. */
-export function setAvatar(email: string, id: string | null): void {
+/** Saves the pick (an avatar id, MIAM_LOGO or ACCOUNT_PHOTO) and tells every mounted avatar. */
+export function setAvatar(email: string, choice: string): void {
   try {
-    if (id) localStorage.setItem(storageKey(email), id);
-    else localStorage.removeItem(storageKey(email));
+    localStorage.setItem(storageKey(email), choice);
   } catch {
     // Storage unavailable (private mode): there is nowhere to keep the pick.
   }

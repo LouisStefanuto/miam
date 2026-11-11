@@ -259,8 +259,8 @@ const CatalogPage = () => {
         onReset={resetAll}
         hasActiveFilters={hasActiveFilters}
         onAddTap={() => navigate('/add')}
-        onLogoTap={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        onLogoLongPress={openBeaverGame}
+        onAvatarTap={() => navigate('/settings')}
+        onAvatarLongPress={openBeaverGame}
       />
 
       {/* Mobile search overlay */}

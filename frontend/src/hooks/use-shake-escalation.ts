@@ -5,7 +5,8 @@ const TAP_THRESHOLD = 300;
 
 /**
  * Progressive shake on hold: gentle wiggle that escalates over 5 s,
- * then fires onLongPress. Short taps play a quick wiggle and fire onTap.
+ * then fires onLongPress. Short taps play a quick wiggle; any click that does not end a
+ * long press fires onTap, so the keyboard works too.
  */
 export function useShakeEscalation<T extends HTMLElement = HTMLImageElement>(
   onTap: () => void,
@@ -96,15 +97,24 @@ export function useShakeEscalation<T extends HTMLElement = HTMLImageElement>(
     const elapsed = performance.now() - startTimeRef.current;
     const wasActive = activeRef.current;
     clearHold();
-    if (wasActive && !firedRef.current) {
-      if (elapsed < TAP_THRESHOLD) playTapWiggle();
-      onTap();
-    }
-  }, [onTap, clearHold, playTapWiggle]);
+    if (wasActive && !firedRef.current && elapsed < TAP_THRESHOLD) playTapWiggle();
+  }, [clearHold, playTapWiggle]);
 
   const onPointerCancel = useCallback(() => {
     clearHold();
   }, [clearHold]);
+
+  // The tap acts on click, the last event of a press. Acting on pointerup let the browser's
+  // click that follows land on whatever the tap had just put there, such as the back button
+  // of the page it opened, which bounced straight back.
+  const onClick = useCallback(() => {
+    if (firedRef.current) {
+      // The release that ends a long press is not a tap.
+      firedRef.current = false;
+      return;
+    }
+    onTap();
+  }, [onTap]);
 
   return {
     ref: elementRef,
@@ -112,6 +122,7 @@ export function useShakeEscalation<T extends HTMLElement = HTMLImageElement>(
       onPointerDown,
       onPointerUp,
       onPointerCancel,
+      onClick,
       onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
     },
   };
