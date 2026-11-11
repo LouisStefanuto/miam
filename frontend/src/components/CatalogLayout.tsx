@@ -29,9 +29,14 @@ export default function CatalogLayout() {
   // the first render after navigation uses the correct prev pathname.
   const cameFromCatalog = prevPathname.current === '/' && hasOverlay;
   useEffect(() => {
-    prevPathname.current = location.pathname;
+    const prev = prevPathname.current;
+    const path = location.pathname;
+    prevPathname.current = path;
     setExiting(false);
-    if (overlayRef.current) {
+    // A subpage opening over its parent (settings -> settings/avatar) or closing back to
+    // it leaves the parent where it was; any other page starts at the top.
+    const nested = path.startsWith(`${prev}/`) || prev.startsWith(`${path}/`);
+    if (overlayRef.current && !nested) {
       overlayRef.current.scrollTop = 0;
     }
   }, [location.pathname]);
@@ -53,8 +58,9 @@ export default function CatalogLayout() {
     }
   }, [isMobile, navigate]);
 
-  const handleAnimationEnd = useCallback(() => {
-    if (exiting) {
+  const handleAnimationEnd = useCallback((event: React.AnimationEvent<HTMLDivElement>) => {
+    // Animations inside the page (a back arrow spinning in) bubble up here too.
+    if (exiting && event.target === event.currentTarget) {
       navigate(exitTarget.current);
     }
   }, [exiting, navigate]);
@@ -65,7 +71,7 @@ export default function CatalogLayout() {
       {(hasOverlay || exiting) && (
         <div
           ref={overlayRef}
-          className={`fixed inset-0 z-40 bg-background overflow-y-auto overscroll-none ${
+          className={`fixed inset-0 z-40 bg-background overflow-y-auto overflow-x-hidden overscroll-none ${
             isMobile
               ? exiting
                 ? 'animate-slide-out-to-right'

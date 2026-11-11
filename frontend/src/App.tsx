@@ -39,6 +39,7 @@ const ShareInboxPage = lazy(() => import("./pages/ShareInboxPage"));
 const ExportPage = lazy(() => import("./pages/ExportPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const AlarmSoundPage = lazy(() => import("./pages/AlarmSoundPage"));
+const AvatarPage = lazy(() => import("./pages/AvatarPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const GOOGLE_CLIENT_ID =
@@ -74,6 +75,11 @@ const App = () => (
               <Route index element={null} />
               <Route path="recipes/:id" element={<RecipeDetailPage />} />
               <Route path="recipes/new" element={<CreateRecipePage />} />
+              {/* The subpages open on top of the settings, which stay mounted underneath. */}
+              <Route path="settings" element={<SettingsPage />}>
+                <Route path="alarm" element={<AlarmSoundPage />} />
+                <Route path="avatar" element={<AvatarPage />} />
+              </Route>
             </Route>
             <Route path="/add" element={<ProtectedRoute><AddRecipePage /></ProtectedRoute>} />
             <Route path="/import/ocr" element={<ProtectedRoute><ImportOCRPage /></ProtectedRoute>} />
@@ -84,8 +90,6 @@ const App = () => (
             <Route path="/shares/batch" element={<ProtectedRoute><ShareBatchPage /></ProtectedRoute>} />
             <Route path="/shares/inbox" element={<ProtectedRoute><ShareInboxPage /></ProtectedRoute>} />
             <Route path="/export" element={<ProtectedRoute><ExportPage /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-            <Route path="/settings/alarm" element={<ProtectedRoute><AlarmSoundPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>

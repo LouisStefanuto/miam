@@ -1,10 +1,13 @@
+import { Suspense } from 'react';
 import { useTheme } from 'next-themes';
-import { useNavigate } from 'react-router-dom';
-import { Sun, Moon, Monitor, LogOut, User, ArrowLeft, BellRing, ChevronRight, Smartphone } from 'lucide-react';
+import { Outlet, useNavigate } from 'react-router-dom';
+import { Sun, Moon, Monitor, LogOut, Pencil, ArrowLeft, BellRing, ChevronRight, Smartphone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import UserAvatar from '@/components/UserAvatar';
+import { useOverlayClose } from '@/components/CatalogLayout';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { getAlarmSoundById } from '@/lib/alarm';
 import { useAlarmSound } from '@/hooks/use-alarm-sound';
@@ -14,6 +17,8 @@ export default function SettingsPage() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  // Opened over the catalog: going back slides it out to the right on mobile.
+  const { requestClose } = useOverlayClose();
   const [alarmSound] = useAlarmSound();
   const notifications = useTimerNotifications();
 
@@ -21,7 +26,13 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-background">
       {/* Mobile header */}
       <header className="sticky top-0 z-20 flex items-center gap-3 px-4 h-14 bg-background border-b border-border md:hidden">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/')} aria-label="Retour au catalogue">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => requestClose('/')}
+          aria-label="Retour au catalogue"
+          className="motion-safe:animate-back-arrow-in"
+        >
           <ArrowLeft size={20} />
         </Button>
         <h1 className="font-display text-lg font-bold text-foreground">Paramètres</h1>
@@ -31,7 +42,7 @@ export default function SettingsPage() {
       <header className="hidden md:flex items-center gap-3 h-16 px-6 bg-background/85 backdrop-blur-md border-b border-border/60 sticky top-0 z-30">
         <button
           type="button"
-          onClick={() => navigate('/')}
+          onClick={() => requestClose('/')}
           className="inline-flex items-center justify-center h-10 w-10 -ml-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-primary active:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Retour au catalogue"
         >
@@ -45,20 +56,17 @@ export default function SettingsPage() {
         <section className="space-y-4">
           <h2 className="text-sm font-semibold font-body text-muted-foreground uppercase tracking-wide">Profil</h2>
           <div className="flex items-center gap-4">
-            <div className="h-14 w-14 rounded-full overflow-hidden ring-1 ring-border shrink-0">
-              {user?.picture ? (
-                <img
-                  src={user.picture}
-                  alt={user.name}
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <span className="flex items-center justify-center w-full h-full bg-muted">
-                  <User size={24} />
-                </span>
-              )}
-            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/settings/avatar')}
+              aria-label="Changer d'avatar"
+              className="group relative shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <UserAvatar className="h-14 w-14 rounded-full ring-1 ring-border text-xl transition-transform group-active:scale-95" />
+              <span className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-background">
+                <Pencil size={12} />
+              </span>
+            </button>
             <div className="min-w-0">
               <p className="font-body font-medium truncate">{user?.name}</p>
               <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
@@ -169,6 +177,11 @@ export default function SettingsPage() {
           </Button>
         </section>
       </main>
+
+      {/* Sonnerie and Avatar slide in over this page; their own boundary keeps it shown while they load. */}
+      <Suspense>
+        <Outlet />
+      </Suspense>
     </div>
   );
 }

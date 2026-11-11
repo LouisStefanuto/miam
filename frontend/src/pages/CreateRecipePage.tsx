@@ -1,10 +1,16 @@
 import { useState, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useRecipes, useCreateRecipe, useUpdateRecipe } from '@/hooks/use-recipes';
 import RecipeForm from '@/components/RecipeForm';
 import { toast } from '@/hooks/use-toast';
 import { Recipe } from '@/data/recipes';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useOverlayClose } from '@/components/CatalogLayout';
+
+/** Navigation state for opening this page straight from the catalog, skipping the add menu. */
+export interface CreateRecipeState {
+  fromCatalog?: boolean;
+}
 
 
 const CreateRecipePage = () => {
@@ -14,7 +20,14 @@ const CreateRecipePage = () => {
   const createMutation = useCreateRecipe();
   const updateMutation = useUpdateRecipe();
   const [customTags, setCustomTags] = useState<string[]>([]);
-  const handleBack = useCallback(() => navigate(isMobile ? '/add' : '/'), [navigate, isMobile]);
+  const { requestClose } = useOverlayClose();
+  const fromCatalog = (useLocation().state as CreateRecipeState | null)?.fromCatalog ?? false;
+  // On mobile the page is normally reached through the add menu, so back returns there;
+  // opened straight from the catalog, it slides back out to the catalog instead.
+  const handleBack = useCallback(
+    () => (isMobile && !fromCatalog ? navigate('/add') : requestClose('/')),
+    [isMobile, fromCatalog, navigate, requestClose],
+  );
 
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();

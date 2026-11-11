@@ -54,6 +54,8 @@
     --warning-foreground: 25 20% 15%;
     --info: 210 70% 55%;
     --info-foreground: 0 0% 100%;
+    /* Disc behind pixel-art avatars: stays light in both modes so the dark outline reads. */
+    --avatar: 32 85% 90%;
 
     --font-display: 'Playfair Display', serif;
     --font-body: 'Source Sans 3', sans-serif;
@@ -109,6 +111,7 @@
     --warning-foreground: 25 20% 15%;
     --info: 210 70% 55%;
     --info-foreground: 0 0% 100%;
+    --avatar: 30 35% 76%;
 
     --shadow-card: 0 2px 12px -2px hsl(0 0% 0% / 0.3);
     --shadow-card-hover: 0 8px 30px -4px hsl(27 95% 55% / 0.2);

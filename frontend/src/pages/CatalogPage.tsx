@@ -23,6 +23,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import PointerTooltip from '@/components/PointerTooltip';
 import { Button } from '@/components/ui/button';
+import type { CreateRecipeState } from '@/pages/CreateRecipePage';
 import { exportToMarkdown, exportToWord } from '@/lib/api';
 import { sortBySearchRelevance, sortBySuggestion } from '@/lib/recipe-ranking';
 import { useToast } from '@/hooks/use-toast';
@@ -259,8 +260,8 @@ const CatalogPage = () => {
         onReset={resetAll}
         hasActiveFilters={hasActiveFilters}
         onAddTap={() => navigate('/add')}
-        onLogoTap={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        onLogoLongPress={openBeaverGame}
+        onAvatarTap={() => navigate('/settings')}
+        onAvatarLongPress={openBeaverGame}
       />
 
       {/* Mobile search overlay */}
@@ -536,7 +537,10 @@ const CatalogPage = () => {
               <p className="font-body text-muted-foreground">
                 Ajoutez votre première recette pour <br className="md:hidden" />commencer à cuisiner !
               </p>
-              <Button onClick={() => navigate('/recipes/new')} className="font-body md:hidden">
+              <Button
+                onClick={() => navigate('/recipes/new', { state: { fromCatalog: true } satisfies CreateRecipeState })}
+                className="font-body md:hidden"
+              >
                 <Plus size={16} className="mr-1.5" /> Ajouter ma première recette
               </Button>
             </div>
