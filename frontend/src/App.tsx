@@ -39,6 +39,7 @@ const ShareInboxPage = lazy(() => import("./pages/ShareInboxPage"));
 const ExportPage = lazy(() => import("./pages/ExportPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const AlarmSoundPage = lazy(() => import("./pages/AlarmSoundPage"));
+const AvatarPage = lazy(() => import("./pages/AvatarPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const GOOGLE_CLIENT_ID =
@@ -86,6 +87,7 @@ const App = () => (
             <Route path="/export" element={<ProtectedRoute><ExportPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/settings/alarm" element={<ProtectedRoute><AlarmSoundPage /></ProtectedRoute>} />
+            <Route path="/settings/avatar" element={<ProtectedRoute><AvatarPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>

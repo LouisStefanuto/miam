@@ -1,10 +1,11 @@
 import { useTheme } from 'next-themes';
 import { useNavigate } from 'react-router-dom';
-import { Sun, Moon, Monitor, LogOut, User, ArrowLeft, BellRing, ChevronRight, Smartphone } from 'lucide-react';
+import { Sun, Moon, Monitor, LogOut, Pencil, ArrowLeft, BellRing, ChevronRight, Smartphone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import UserAvatar from '@/components/UserAvatar';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { getAlarmSoundById } from '@/lib/alarm';
 import { useAlarmSound } from '@/hooks/use-alarm-sound';
@@ -45,20 +46,17 @@ export default function SettingsPage() {
         <section className="space-y-4">
           <h2 className="text-sm font-semibold font-body text-muted-foreground uppercase tracking-wide">Profil</h2>
           <div className="flex items-center gap-4">
-            <div className="h-14 w-14 rounded-full overflow-hidden ring-1 ring-border shrink-0">
-              {user?.picture ? (
-                <img
-                  src={user.picture}
-                  alt={user.name}
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <span className="flex items-center justify-center w-full h-full bg-muted">
-                  <User size={24} />
-                </span>
-              )}
-            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/settings/avatar')}
+              aria-label="Changer d'avatar"
+              className="group relative shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <UserAvatar className="h-14 w-14 rounded-full ring-1 ring-border text-xl transition-transform group-active:scale-95" />
+              <span className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-background">
+                <Pencil size={12} />
+              </span>
+            </button>
             <div className="min-w-0">
               <p className="font-body font-medium truncate">{user?.name}</p>
               <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
