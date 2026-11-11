@@ -75,9 +75,11 @@ const App = () => (
               <Route index element={null} />
               <Route path="recipes/:id" element={<RecipeDetailPage />} />
               <Route path="recipes/new" element={<CreateRecipePage />} />
-              <Route path="settings" element={<SettingsPage />} />
-              <Route path="settings/alarm" element={<AlarmSoundPage />} />
-              <Route path="settings/avatar" element={<AvatarPage />} />
+              {/* The subpages open on top of the settings, which stay mounted underneath. */}
+              <Route path="settings" element={<SettingsPage />}>
+                <Route path="alarm" element={<AlarmSoundPage />} />
+                <Route path="avatar" element={<AvatarPage />} />
+              </Route>
             </Route>
             <Route path="/add" element={<ProtectedRoute><AddRecipePage /></ProtectedRoute>} />
             <Route path="/import/ocr" element={<ProtectedRoute><ImportOCRPage /></ProtectedRoute>} />

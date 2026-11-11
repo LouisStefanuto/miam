@@ -1,5 +1,6 @@
+import { Suspense } from 'react';
 import { useTheme } from 'next-themes';
-import { useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { Sun, Moon, Monitor, LogOut, Pencil, ArrowLeft, BellRing, ChevronRight, Smartphone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -176,6 +177,11 @@ export default function SettingsPage() {
           </Button>
         </section>
       </main>
+
+      {/* Sonnerie and Avatar slide in over this page; their own boundary keeps it shown while they load. */}
+      <Suspense>
+        <Outlet />
+      </Suspense>
     </div>
   );
 }

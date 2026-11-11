@@ -29,9 +29,14 @@ export default function CatalogLayout() {
   // the first render after navigation uses the correct prev pathname.
   const cameFromCatalog = prevPathname.current === '/' && hasOverlay;
   useEffect(() => {
-    prevPathname.current = location.pathname;
+    const prev = prevPathname.current;
+    const path = location.pathname;
+    prevPathname.current = path;
     setExiting(false);
-    if (overlayRef.current) {
+    // A subpage opening over its parent (settings -> settings/avatar) or closing back to
+    // it leaves the parent where it was; any other page starts at the top.
+    const nested = path.startsWith(`${prev}/`) || prev.startsWith(`${path}/`);
+    if (overlayRef.current && !nested) {
       overlayRef.current.scrollTop = 0;
     }
   }, [location.pathname]);

@@ -1,4 +1,5 @@
 import { useCallback, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,11 +30,17 @@ export default function SettingsSubpage({ title, children }: { title: string; ch
       : 'animate-slide-in-from-right'
     : '';
 
-  return (
-    <div className={`min-h-screen bg-background ${slideClass}`} onAnimationEnd={handleAnimationEnd}>
+  // A layer of its own over the settings, which stay mounted underneath, so the page covers
+  // them as it slides in and uncovers them as it slides out. Portalled to the body because
+  // the settings sit in the catalog overlay, whose transform would trap a fixed element.
+  return createPortal(
+    <div
+      className={`fixed inset-0 z-50 bg-background overflow-y-auto overflow-x-hidden overscroll-none ${slideClass}`}
+      onAnimationEnd={handleAnimationEnd}
+    >
       {/* Mobile header */}
       <header className="sticky top-0 z-20 flex items-center gap-3 px-4 h-14 bg-background border-b border-border md:hidden">
-        <Button variant="ghost" size="icon" onClick={goBack} aria-label="Retour aux paramètres" className="motion-safe:animate-back-arrow-in">
+        <Button variant="ghost" size="icon" onClick={goBack} aria-label="Retour aux paramètres">
           <ArrowLeft size={20} />
         </Button>
         <h1 className="font-display text-lg font-bold text-foreground">{title}</h1>
@@ -53,6 +60,7 @@ export default function SettingsSubpage({ title, children }: { title: string; ch
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6 pb-24 md:pb-6 space-y-4">{children}</main>
-    </div>
+    </div>,
+    document.body,
   );
 }
