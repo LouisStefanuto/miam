@@ -197,7 +197,7 @@ export default function HomePage() {
       <main className="flex-1 w-full max-w-xl lg:max-w-7xl mx-auto flex flex-col gap-6 px-4 pt-[72px] pb-5 lg:grid lg:grid-cols-[1fr_1.12fr] lg:gap-14 lg:pl-16 lg:pr-10 lg:pt-24 lg:pb-9">
         <div className="anim-hero3 flex flex-col gap-3.5 lg:gap-5 lg:self-center">
           <h1 className="font-display text-[2.5rem] leading-[1.08] lg:text-[4.125rem] font-bold text-foreground tracking-tight">
-            Mes recettes{' '}
+            Les recettes{' '}
             <span className="block min-h-[2.2em] text-primary typewriter-cursor">{typed}</span>
           </h1>
           <p className="text-[17px] lg:text-xl text-muted-foreground leading-relaxed">

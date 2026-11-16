@@ -25,7 +25,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import PointerTooltip from '@/components/PointerTooltip';
 import { Button } from '@/components/ui/button';
-import type { CreateRecipeState } from '@/pages/CreateRecipePage';
+import type { AddFlowState } from '@/components/AddFlowLayout';
 import { exportToMarkdown, exportToWord } from '@/lib/api';
 import { sortBySearchRelevance, sortBySuggestion } from '@/lib/recipe-ranking';
 import { useToast } from '@/hooks/use-toast';
@@ -267,7 +267,6 @@ const CatalogPage = () => {
         hasActiveFilters={hasActiveFilters}
         onAddTap={() => navigate('/add')}
         onAvatarTap={() => navigate('/settings')}
-        onAvatarLongPress={openBeaverGame}
         showSearch={!isNewcomer}
       />
 
@@ -538,7 +537,7 @@ const CatalogPage = () => {
         ) : isNewcomer ? (
           <NewcomerWelcome
             pendingShares={pendingSharesCount}
-            onAdd={(to) => navigate(to, { state: { fromCatalog: true } satisfies CreateRecipeState })}
+            onAdd={(to) => navigate(to, { state: { fromCatalog: true } satisfies AddFlowState })}
             onOpenInbox={() => setPendingSharesOpen(true)}
           />
         ) : (

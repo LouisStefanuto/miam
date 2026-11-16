@@ -4,7 +4,6 @@ import { ArrowLeft, Plus, Search } from 'lucide-react';
 import MobileSearchField from '@/components/MobileSearchField';
 import UserAvatar from '@/components/UserAvatar';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
-import { useShakeEscalation } from '@/hooks/use-shake-escalation';
 
 interface MobileHeaderProps {
   searchTags: string[];
@@ -23,7 +22,6 @@ interface MobileHeaderProps {
   onAddTap: () => void;
   /** Opens the account settings. */
   onAvatarTap: () => void;
-  onAvatarLongPress?: () => void;
   /** Off while there is nothing to search, before the first recipe. */
   showSearch?: boolean;
 }
@@ -33,15 +31,11 @@ export default function MobileHeader({
   searchQuery, onSearchQueryChange,
   onFiltersTap,
   searchOpen, onSearchOpen, onSearchClose, onReset, hasActiveFilters,
-  onAddTap, onAvatarTap, onAvatarLongPress,
+  onAddTap, onAvatarTap,
   showSearch = true,
 }: MobileHeaderProps) {
   const { headerOffset } = useScrollDirection();
   const inputRef = useRef<HTMLInputElement>(null);
-  const { ref: avatarRef, handlers: avatarHandlers } = useShakeEscalation<HTMLButtonElement>(
-    onAvatarTap,
-    () => onAvatarLongPress?.(),
-  );
 
   // Render the bar first, then focus it within the tap: iOS only opens the
   // keyboard for a focus made during the user gesture.
@@ -61,12 +55,11 @@ export default function MobileHeader({
       {!searchOpen ? (
         <>
           <button
-            ref={avatarRef}
             type="button"
+            onClick={onAvatarTap}
             className="shrink-0 mt-1 rounded-full select-none"
-            style={{ WebkitTouchCallout: 'none', WebkitTapHighlightColor: 'transparent' }}
+            style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-label="Mon compte"
-            {...avatarHandlers}
           >
             <UserAvatar className="h-8 w-8 rounded-full text-sm pointer-events-none" />
           </button>

@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
-import { Upload, X, Check, ChefHat, ImageIcon, ArrowLeft } from 'lucide-react';
+import { Upload, X, Check, ChefHat, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/PageHeader';
 import { toast } from '@/hooks/use-toast';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
 
@@ -105,13 +106,7 @@ export default function RecipeImportOCR({ onBack, onImportRecipes }: RecipeImpor
 
   return (
     <div className="min-h-screen bg-background animate-fade-in">
-      <header className="sticky top-0 z-20 flex items-center gap-3 px-4 h-14 bg-background border-b border-border">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft size={20} />
-          <span className="sr-only">Retour</span>
-        </Button>
-        <h1 className="font-display text-lg font-bold">Importer depuis des photos</h1>
-      </header>
+      <PageHeader title="Importer depuis des photos" onBack={onBack} />
       <div className="max-w-4xl mx-auto px-4 py-8">
       <p className="font-body text-muted-foreground mb-6 text-sm">
         Uploadez des photos de recettes. L'IA extrait automatiquement le titre, les ingrédients, les étapes, et détecte les photos du plat.

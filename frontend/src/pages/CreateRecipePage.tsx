@@ -6,12 +6,7 @@ import { toast } from '@/hooks/use-toast';
 import { Recipe } from '@/data/recipes';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useOverlayClose } from '@/components/CatalogLayout';
-
-/** Navigation state for opening an add page (this one or an import) straight from the catalog, skipping the add menu. */
-export interface CreateRecipeState {
-  fromCatalog?: boolean;
-}
-
+import { AddFlowState, useBackToAddMenu } from '@/components/AddFlowLayout';
 
 const CreateRecipePage = () => {
   const navigate = useNavigate();
@@ -21,12 +16,13 @@ const CreateRecipePage = () => {
   const updateMutation = useUpdateRecipe();
   const [customTags, setCustomTags] = useState<string[]>([]);
   const { requestClose } = useOverlayClose();
-  const fromCatalog = (useLocation().state as CreateRecipeState | null)?.fromCatalog ?? false;
+  const backToAddMenu = useBackToAddMenu();
+  const fromCatalog = (useLocation().state as AddFlowState | null)?.fromCatalog ?? false;
   // On mobile the page is normally reached through the add menu, so back returns there;
   // opened straight from the catalog, it slides back out to the catalog instead.
   const handleBack = useCallback(
-    () => (isMobile && !fromCatalog ? navigate('/add') : requestClose('/')),
-    [isMobile, fromCatalog, navigate, requestClose],
+    () => (isMobile && !fromCatalog ? backToAddMenu() : requestClose('/')),
+    [isMobile, fromCatalog, backToAddMenu, requestClose],
   );
 
   const allTags = useMemo(() => {

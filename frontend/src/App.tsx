@@ -15,6 +15,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import SwipeBack from "./components/SwipeBack";
 import MobileBottomBar from "./components/MobileBottomBar";
 import CatalogLayout from "./components/CatalogLayout";
+import AddFlowLayout from "./components/AddFlowLayout";
 import HomePage from "./pages/HomePage";
 import { useAuth } from "./contexts/AuthContext";
 
@@ -74,17 +75,21 @@ const App = () => (
             <Route path="/" element={<RootRoute />}>
               <Route index element={null} />
               <Route path="recipes/:id" element={<RecipeDetailPage />} />
-              <Route path="recipes/new" element={<CreateRecipePage />} />
+              {/* The add menu and the pages it opens slide in over the catalog; a page opened from the
+                  menu slides in over the menu, which stays mounted underneath. */}
+              <Route element={<AddFlowLayout menu={<AddRecipePage />} />}>
+                <Route path="add" element={<AddRecipePage />} />
+                <Route path="recipes/new" element={<CreateRecipePage />} />
+                <Route path="import/ocr" element={<ImportOCRPage />} />
+                <Route path="import/json" element={<ImportJSONPage />} />
+                <Route path="import/instagram" element={<ImportInstagramPage />} />
+              </Route>
               {/* The subpages open on top of the settings, which stay mounted underneath. */}
               <Route path="settings" element={<SettingsPage />}>
                 <Route path="alarm" element={<AlarmSoundPage />} />
                 <Route path="avatar" element={<AvatarPage />} />
               </Route>
             </Route>
-            <Route path="/add" element={<ProtectedRoute><AddRecipePage /></ProtectedRoute>} />
-            <Route path="/import/ocr" element={<ProtectedRoute><ImportOCRPage /></ProtectedRoute>} />
-            <Route path="/import/json" element={<ProtectedRoute><ImportJSONPage /></ProtectedRoute>} />
-            <Route path="/import/instagram" element={<ProtectedRoute><ImportInstagramPage /></ProtectedRoute>} />
             <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
             <Route path="/shares" element={<ProtectedRoute><SharesPage /></ProtectedRoute>} />
             <Route path="/shares/batch" element={<ProtectedRoute><ShareBatchPage /></ProtectedRoute>} />
