@@ -252,7 +252,7 @@ const CatalogPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-[100dvh] bg-background flex flex-col">
       {/* Mobile header */}
       <MobileHeader
         searchTags={searchTags}
@@ -372,108 +372,106 @@ const CatalogPage = () => {
 
       <main className="max-w-7xl w-full mx-auto px-4 md:px-8 py-1 md:py-8 pb-20 md:pb-8 space-y-1.5 md:space-y-6 flex-1 flex flex-col">
 
+        <div className="space-y-2">
+          {/* Search + Add button on same line */}
+          <div className="flex flex-col md:flex-row gap-4 items-start">
+            {/* Desktop only — mobile search is in the header */}
+            <div className="hidden md:contents">
+              <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
+            </div>
+            {hasActiveFilters && (
+              <button onClick={resetAll} className="hidden md:flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0 h-11">
+                <X size={14} />
+                Réinitialiser
+              </button>
+            )}
+            {/* Desktop add recipe dropdown (hidden on mobile, the mobile header has its own button) */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 shrink-0 ml-auto hidden md:inline-flex">
+                  <Plus size={18} />
+                  Ajouter une recette
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="font-body">
+                <DropdownMenuItem onClick={() => navigate('/recipes/new')} className="gap-2 cursor-pointer">
+                  <PenLine size={16} />
+                  Créer manuellement
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/import/ocr')} className="gap-2 cursor-pointer">
+                  <Camera size={16} />
+                  Importer depuis des photos
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/import/json')} className="gap-2 cursor-pointer">
+                  <FileJson size={16} />
+                  Importer depuis un JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/import/instagram')} className="gap-2 cursor-pointer">
+                  <Instagram size={16} />
+                  Importer depuis Instagram
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Quick tag filters (desktop only) */}
+          {topTags.length > 0 && (
+            <div className="hidden md:flex flex-wrap gap-1.5">
+              {topTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => handleTagClick(tag)}
+                  className={`text-xs px-2.5 py-1 rounded-full border font-body capitalize transition-colors ${
+                    searchTags.includes(tag)
+                      ? 'bg-primary/20 border-primary/40 text-primary'
+                      : 'bg-secondary border-transparent text-secondary-foreground hover:bg-primary/10'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="hidden md:block">
+            <FilterBar filters={filters} onChange={setFilters} />
+          </div>
+        </div>
+
+        {/* Results count + reset + sort. Nothing to count before the first recipe. */}
         {!isNewcomer && (
-          <>
-            <div className="space-y-2">
-              {/* Search + Add button on same line */}
-              <div className="flex flex-col md:flex-row gap-4 items-start">
-                {/* Desktop only — mobile search is in the header */}
-                <div className="hidden md:contents">
-                  <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
-                </div>
-                {hasActiveFilters && (
-                  <button onClick={resetAll} className="hidden md:flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0 h-11">
-                    <X size={14} />
-                    Réinitialiser
-                  </button>
-                )}
-                {/* Desktop add recipe dropdown (hidden on mobile, the mobile header has its own button) */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 shrink-0 ml-auto hidden md:inline-flex">
-                      <Plus size={18} />
-                      Ajouter une recette
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="font-body">
-                    <DropdownMenuItem onClick={() => navigate('/recipes/new')} className="gap-2 cursor-pointer">
-                      <PenLine size={16} />
-                      Créer manuellement
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/import/ocr')} className="gap-2 cursor-pointer">
-                      <Camera size={16} />
-                      Importer depuis des photos
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/import/json')} className="gap-2 cursor-pointer">
-                      <FileJson size={16} />
-                      Importer depuis un JSON
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/import/instagram')} className="gap-2 cursor-pointer">
-                      <Instagram size={16} />
-                      Importer depuis Instagram
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {/* Quick tag filters (desktop only) */}
-              {topTags.length > 0 && (
-                <div className="hidden md:flex flex-wrap gap-1.5">
-                  {topTags.map((tag) => (
-                    <button
-                      key={tag}
-                      onClick={() => handleTagClick(tag)}
-                      className={`text-xs px-2.5 py-1 rounded-full border font-body capitalize transition-colors ${
-                        searchTags.includes(tag)
-                          ? 'bg-primary/20 border-primary/40 text-primary'
-                          : 'bg-secondary border-transparent text-secondary-foreground hover:bg-primary/10'
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
+          <div className="flex items-center justify-between md:justify-start gap-2 py-1 md:py-0">
+            <div className="flex items-center gap-2">
+              {isLoading ? (
+                <div className="h-5 flex items-center"><Skeleton className="h-3.5 w-32" /></div>
+              ) : (
+                <p className="text-sm text-muted-foreground font-body">
+                  {filtered.length} recette{filtered.length !== 1 ? 's' : ''} trouvée{filtered.length !== 1 ? 's' : ''}
+                </p>
               )}
-
-              <div className="hidden md:block">
-                <FilterBar filters={filters} onChange={setFilters} />
-              </div>
             </div>
-
-            {/* Results count + reset + sort */}
-            <div className="flex items-center justify-between md:justify-start gap-2 py-1 md:py-0">
-              <div className="flex items-center gap-2">
-                {isLoading ? (
-                  <div className="h-5 flex items-center"><Skeleton className="h-3.5 w-32" /></div>
-                ) : (
-                  <p className="text-sm text-muted-foreground font-body">
-                    {filtered.length} recette{filtered.length !== 1 ? 's' : ''} trouvée{filtered.length !== 1 ? 's' : ''}
-                  </p>
-                )}
-              </div>
-              <div className="md:hidden">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="h-8 w-8 flex items-center justify-center rounded-md bg-secondary text-muted-foreground hover:text-foreground transition-colors">
-                      <ArrowUpDown size={16} />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-popover z-50">
-                    {sortOptions.map((opt) => (
-                      <DropdownMenuItem
-                        key={opt.value}
-                        onClick={() => setFilters({ ...filters, sort: opt.value })}
-                        className="flex items-center gap-3 text-sm font-body"
-                      >
-                        <Check size={14} className={filters.sort === opt.value ? 'text-foreground' : 'opacity-0'} />
-                        {opt.label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+            <div className="md:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="h-8 w-8 flex items-center justify-center rounded-md bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                    <ArrowUpDown size={16} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-popover z-50">
+                  {sortOptions.map((opt) => (
+                    <DropdownMenuItem
+                      key={opt.value}
+                      onClick={() => setFilters({ ...filters, sort: opt.value })}
+                      className="flex items-center gap-3 text-sm font-body"
+                    >
+                      <Check size={14} className={filters.sort === opt.value ? 'text-foreground' : 'opacity-0'} />
+                      {opt.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          </>
+          </div>
         )}
 
         {/* Selection mode bar */}

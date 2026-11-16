@@ -32,7 +32,7 @@ export const ADD_RECIPE_MODES: AddRecipeMode[] = [
   {
     icon: Instagram,
     label: 'Instagram',
-    description: 'Export Instagram',
+    description: 'Import depuis Instagram',
     to: '/import/instagram',
     sprite: sprites.radish,
     spriteScale: 3.5,

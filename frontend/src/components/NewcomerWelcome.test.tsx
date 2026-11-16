@@ -3,17 +3,16 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import NewcomerWelcome from './NewcomerWelcome';
 
 describe('NewcomerWelcome', () => {
-  it('offers every way to add a recipe that works today', () => {
+  it('offers manual creation and Instagram, and leaves the other ways to the add menu', () => {
     const onAdd = vi.fn();
     render(<NewcomerWelcome pendingShares={0} onAdd={onAdd} onOpenInbox={vi.fn()} />);
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Votre livre de recettes est tout neuf');
-    expect(screen.queryByRole('button', { name: /Photos/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent("C'est l'heure d'écrire votre première recette");
+    expect(screen.getAllByRole('button')).toHaveLength(2);
 
     fireEvent.click(screen.getByRole('button', { name: /Créer manuellement/ }));
     fireEvent.click(screen.getByRole('button', { name: /Instagram/ }));
-    fireEvent.click(screen.getByRole('button', { name: /JSON/ }));
-    expect(onAdd.mock.calls).toEqual([['/recipes/new'], ['/import/instagram'], ['/import/json']]);
+    expect(onAdd.mock.calls).toEqual([['/recipes/new'], ['/import/instagram']]);
   });
 
   it('points to the inbox only when someone shared recipes', () => {
