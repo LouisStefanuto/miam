@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, PenLine, Camera, Instagram, Download, FileDown, FileText, FileJson, X, ArrowUpDown, Check, Share2, Inbox, BookOpen } from 'lucide-react';
+import { Plus, PenLine, Camera, Instagram, Download, FileDown, FileText, FileJson, X, ArrowUpDown, Check, Share2, Inbox } from 'lucide-react';
 
 
 const BeaverCatchGame = lazy(() => import('@/components/BeaverCatchGame'));
@@ -10,7 +10,9 @@ import BatchShareDialog from '@/components/BatchShareDialog';
 import UserMenu from '@/components/UserMenu';
 import MobileHeader from '@/components/MobileHeader';
 import MobileSearchOverlay from '@/components/MobileSearchOverlay';
+import NewcomerWelcome from '@/components/NewcomerWelcome';
 import { useRecipes } from '@/hooks/use-recipes';
+import { usePendingSharesCount } from '@/hooks/use-shares';
 import { useShakeEscalation } from '@/hooks/use-shake-escalation';
 import { useWindowScrollMemory } from '@/hooks/use-window-scroll-memory';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -42,6 +44,7 @@ const RECIPES_PER_PAGE = 20;
 const CatalogPage = () => {
   const navigate = useNavigate();
   const { data: recipes = [], isLoading } = useRecipes();
+  const { data: pendingSharesCount = 0 } = usePendingSharesCount();
   const { searchQuery, setSearchQuery, searchTags, setSearchTags, filters, setFilters, currentPage, setCurrentPage, savedScrollY, shuffleSeed } = useCatalogFilters();
   useWindowScrollMemory(savedScrollY, !isLoading);
   const isMobile = useIsMobile();
@@ -184,6 +187,9 @@ const CatalogPage = () => {
     filters.rapido !== defaultFilters.rapido ||
     filters.ownership !== defaultFilters.ownership;
 
+  // Before the first recipe, the catalog is a welcome: searching, filtering and counting have nothing to work on.
+  const isNewcomer = !isLoading && recipes.length === 0 && !hasActiveFilters;
+
   const resetAll = () => {
     setSearchQuery('');
     setSearchTags([]);
@@ -262,6 +268,7 @@ const CatalogPage = () => {
         onAddTap={() => navigate('/add')}
         onAvatarTap={() => navigate('/settings')}
         onAvatarLongPress={openBeaverGame}
+        showSearch={!isNewcomer}
       />
 
       {/* Mobile search overlay */}
@@ -365,105 +372,109 @@ const CatalogPage = () => {
 
       <main className="max-w-7xl w-full mx-auto px-4 md:px-8 py-1 md:py-8 pb-20 md:pb-8 space-y-1.5 md:space-y-6 flex-1 flex flex-col">
 
-        <div className="space-y-2">
-          {/* Search + Add button on same line */}
-          <div className="flex flex-col md:flex-row gap-4 items-start">
-            {/* Desktop only — mobile search is in the header */}
-            <div className="hidden md:contents">
-              <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
+        {!isNewcomer && (
+          <>
+            <div className="space-y-2">
+              {/* Search + Add button on same line */}
+              <div className="flex flex-col md:flex-row gap-4 items-start">
+                {/* Desktop only — mobile search is in the header */}
+                <div className="hidden md:contents">
+                  <SearchBar tags={searchTags} onTagsChange={setSearchTags} query={searchQuery} onQueryChange={setSearchQuery} />
+                </div>
+                {hasActiveFilters && (
+                  <button onClick={resetAll} className="hidden md:flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0 h-11">
+                    <X size={14} />
+                    Réinitialiser
+                  </button>
+                )}
+                {/* Desktop add recipe dropdown (hidden on mobile, the mobile header has its own button) */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 shrink-0 ml-auto hidden md:inline-flex">
+                      <Plus size={18} />
+                      Ajouter une recette
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="font-body">
+                    <DropdownMenuItem onClick={() => navigate('/recipes/new')} className="gap-2 cursor-pointer">
+                      <PenLine size={16} />
+                      Créer manuellement
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/import/ocr')} className="gap-2 cursor-pointer">
+                      <Camera size={16} />
+                      Importer depuis des photos
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/import/json')} className="gap-2 cursor-pointer">
+                      <FileJson size={16} />
+                      Importer depuis un JSON
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/import/instagram')} className="gap-2 cursor-pointer">
+                      <Instagram size={16} />
+                      Importer depuis Instagram
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Quick tag filters (desktop only) */}
+              {topTags.length > 0 && (
+                <div className="hidden md:flex flex-wrap gap-1.5">
+                  {topTags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => handleTagClick(tag)}
+                      className={`text-xs px-2.5 py-1 rounded-full border font-body capitalize transition-colors ${
+                        searchTags.includes(tag)
+                          ? 'bg-primary/20 border-primary/40 text-primary'
+                          : 'bg-secondary border-transparent text-secondary-foreground hover:bg-primary/10'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="hidden md:block">
+                <FilterBar filters={filters} onChange={setFilters} />
+              </div>
             </div>
-            {hasActiveFilters && (
-              <button onClick={resetAll} className="hidden md:flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-body font-medium transition-colors shrink-0 h-11">
-                <X size={14} />
-                Réinitialiser
-              </button>
-            )}
-            {/* Desktop add recipe dropdown (hidden on mobile, the mobile header has its own button) */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="gradient-warm text-primary-foreground font-body font-semibold gap-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 shrink-0 ml-auto hidden md:inline-flex">
-                  <Plus size={18} />
-                  Ajouter une recette
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="font-body">
-                <DropdownMenuItem onClick={() => navigate('/recipes/new')} className="gap-2 cursor-pointer">
-                  <PenLine size={16} />
-                  Créer manuellement
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/import/ocr')} className="gap-2 cursor-pointer">
-                  <Camera size={16} />
-                  Importer depuis des photos
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/import/json')} className="gap-2 cursor-pointer">
-                  <FileJson size={16} />
-                  Importer depuis un JSON
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/import/instagram')} className="gap-2 cursor-pointer">
-                  <Instagram size={16} />
-                  Importer depuis Instagram
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
 
-          {/* Quick tag filters (desktop only) */}
-          {topTags.length > 0 && (
-            <div className="hidden md:flex flex-wrap gap-1.5">
-              {topTags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => handleTagClick(tag)}
-                  className={`text-xs px-2.5 py-1 rounded-full border font-body capitalize transition-colors ${
-                    searchTags.includes(tag)
-                      ? 'bg-primary/20 border-primary/40 text-primary'
-                      : 'bg-secondary border-transparent text-secondary-foreground hover:bg-primary/10'
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
+            {/* Results count + reset + sort */}
+            <div className="flex items-center justify-between md:justify-start gap-2 py-1 md:py-0">
+              <div className="flex items-center gap-2">
+                {isLoading ? (
+                  <div className="h-5 flex items-center"><Skeleton className="h-3.5 w-32" /></div>
+                ) : (
+                  <p className="text-sm text-muted-foreground font-body">
+                    {filtered.length} recette{filtered.length !== 1 ? 's' : ''} trouvée{filtered.length !== 1 ? 's' : ''}
+                  </p>
+                )}
+              </div>
+              <div className="md:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="h-8 w-8 flex items-center justify-center rounded-md bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                      <ArrowUpDown size={16} />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-popover z-50">
+                    {sortOptions.map((opt) => (
+                      <DropdownMenuItem
+                        key={opt.value}
+                        onClick={() => setFilters({ ...filters, sort: opt.value })}
+                        className="flex items-center gap-3 text-sm font-body"
+                      >
+                        <Check size={14} className={filters.sort === opt.value ? 'text-foreground' : 'opacity-0'} />
+                        {opt.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
-          )}
-
-          <div className="hidden md:block">
-            <FilterBar filters={filters} onChange={setFilters} />
-          </div>
-        </div>
-
-        {/* Results count + reset + sort */}
-        <div className="flex items-center justify-between md:justify-start gap-2 py-1 md:py-0">
-          <div className="flex items-center gap-2">
-            {isLoading ? (
-              <div className="h-5 flex items-center"><Skeleton className="h-3.5 w-32" /></div>
-            ) : (
-              <p className="text-sm text-muted-foreground font-body">
-                {filtered.length} recette{filtered.length !== 1 ? 's' : ''} trouvée{filtered.length !== 1 ? 's' : ''}
-              </p>
-            )}
-          </div>
-          <div className="md:hidden">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="h-8 w-8 flex items-center justify-center rounded-md bg-secondary text-muted-foreground hover:text-foreground transition-colors">
-                  <ArrowUpDown size={16} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-popover z-50">
-                {sortOptions.map((opt) => (
-                  <DropdownMenuItem
-                    key={opt.value}
-                    onClick={() => setFilters({ ...filters, sort: opt.value })}
-                    className="flex items-center gap-3 text-sm font-body"
-                  >
-                    <Check size={14} className={filters.sort === opt.value ? 'text-foreground' : 'opacity-0'} />
-                    {opt.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+          </>
+        )}
 
         {/* Selection mode bar */}
         {selectionMode && (
@@ -526,25 +537,12 @@ const CatalogPage = () => {
               />
             ))}
           </div>
-        ) : recipes.length === 0 && !hasActiveFilters ? (
-          <div className="flex-1 md:flex-none flex flex-col items-center justify-center text-center px-6 gap-6 md:py-20">
-            <BookOpen size={48} className="text-muted-foreground/40" strokeWidth={1.5} />
-            <div className="space-y-4">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-body font-semibold bg-primary/10 text-primary uppercase tracking-wider">
-                Bienvenue
-              </span>
-              <p className="font-display text-2xl font-bold text-foreground">Votre livre de recettes <br className="md:hidden" />est tout neuf</p>
-              <p className="font-body text-muted-foreground">
-                Ajoutez votre première recette pour <br className="md:hidden" />commencer à cuisiner !
-              </p>
-              <Button
-                onClick={() => navigate('/recipes/new', { state: { fromCatalog: true } satisfies CreateRecipeState })}
-                className="font-body md:hidden"
-              >
-                <Plus size={16} className="mr-1.5" /> Ajouter ma première recette
-              </Button>
-            </div>
-          </div>
+        ) : isNewcomer ? (
+          <NewcomerWelcome
+            pendingShares={pendingSharesCount}
+            onAdd={(to) => navigate(to, { state: { fromCatalog: true } satisfies CreateRecipeState })}
+            onOpenInbox={() => setPendingSharesOpen(true)}
+          />
         ) : (
           <div className="text-center px-6 py-20">
             <p className="font-display text-2xl text-muted-foreground mb-2">Aucune recette trouvée</p>

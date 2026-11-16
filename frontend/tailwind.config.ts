@@ -128,6 +128,21 @@ export default {
           from: { opacity: "0", transform: "rotate(-90deg) scale(0.5)" },
           to: { opacity: "1", transform: "rotate(0) scale(1)" },
         },
+        // Stickers animate the standalone scale and translate properties, so they keep their own rotation.
+        "sticker-in": {
+          from: { opacity: "0", scale: "0.4" },
+          "70%": { opacity: "1", scale: "1.08" },
+          to: { opacity: "1", scale: "1" },
+        },
+        "sticker-bob": {
+          "0%, 100%": { translate: "0 0" },
+          "50%": { translate: "0 -7px" },
+        },
+        // For an SVG path with pathLength="1"
+        "stroke-draw": {
+          from: { strokeDashoffset: "1" },
+          to: { strokeDashoffset: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -140,6 +155,9 @@ export default {
         "search-unroll": "search-unroll 0.5s cubic-bezier(0.22, 1, 0.36, 1) both",
         "search-row-in": "search-row-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
         "back-arrow-in": "back-arrow-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "sticker-in": "sticker-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "sticker-bob": "sticker-bob 4.5s ease-in-out infinite",
+        "stroke-draw": "stroke-draw 0.6s cubic-bezier(0.65, 0, 0.35, 1) both",
       },
     },
   },

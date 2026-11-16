@@ -24,6 +24,8 @@ interface MobileHeaderProps {
   /** Opens the account settings. */
   onAvatarTap: () => void;
   onAvatarLongPress?: () => void;
+  /** Off while there is nothing to search, before the first recipe. */
+  showSearch?: boolean;
 }
 
 export default function MobileHeader({
@@ -32,6 +34,7 @@ export default function MobileHeader({
   onFiltersTap,
   searchOpen, onSearchOpen, onSearchClose, onReset, hasActiveFilters,
   onAddTap, onAvatarTap, onAvatarLongPress,
+  showSearch = true,
 }: MobileHeaderProps) {
   const { headerOffset } = useScrollDirection();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -78,15 +81,17 @@ export default function MobileHeader({
             >
               <Plus size={22} />
             </button>
-            <button
-              type="button"
-              onClick={openSearchAndFocus}
-              className={iconButtonClass}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-              aria-label="Rechercher"
-            >
-              <Search size={22} />
-            </button>
+            {showSearch && (
+              <button
+                type="button"
+                onClick={openSearchAndFocus}
+                className={iconButtonClass}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+                aria-label="Rechercher"
+              >
+                <Search size={22} />
+              </button>
+            )}
           </div>
         </>
       ) : (

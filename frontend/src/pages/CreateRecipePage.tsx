@@ -7,7 +7,7 @@ import { Recipe } from '@/data/recipes';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useOverlayClose } from '@/components/CatalogLayout';
 
-/** Navigation state for opening this page straight from the catalog, skipping the add menu. */
+/** Navigation state for opening an add page (this one or an import) straight from the catalog, skipping the add menu. */
 export interface CreateRecipeState {
   fromCatalog?: boolean;
 }
