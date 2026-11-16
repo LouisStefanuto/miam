@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Miam — Architecture</title>
+  <style>
+    :root {
+      --orange: #F9811F;
+      --orange-soft: #FFF1E0;
+      --ink: #111827;
+      --muted: #6B7280;
+      --faint: #9CA3AF;
+      --line: #E5E7EB;
+      --bg: #F9FAFB;
+      --google-blue: #4285F4;
+      --google-red: #EA4335;
+      --google-yellow: #FBBC05;
+      --google-green: #34A853;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+    }
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 18px 40px;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0 0 32px;
+    }
+
+    /* ----- card row with inline connectors ----- */
+    .row {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      position: relative;
+    }
+    .card {
+      flex: 1 1 0;
+      min-width: 0;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 12px 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: var(--orange);
+      border-radius: 14px 14px 0 0;
+    }
+    .icon-wrap {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--orange-soft);
+      display: flex; align-items: center; justify-content: center;
+      margin: 2px auto 10px;
+    }
+    .icon-wrap svg { width: 32px; height: 32px; }
+    .icon-wrap svg { display: block; }
+    .card h3 {
+      margin: 0 0 4px;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+    }
+    .card .role {
+      text-align: center;
+      color: var(--muted);
+      font-size: 11.5px;
+      margin: 0 0 12px;
+      line-height: 1.35;
+    }
+    .tags {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      justify-content: center;
+      margin-top: auto;
+    }
+    .tag {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #F3F4F6;
+      color: #374151;
+      border: 1px solid #E5E7EB;
+      white-space: nowrap;
+    }
+    .tag.brand { background: var(--orange-soft); color: #B45309; border-color: #FED7AA; }
+
+    /* ----- inline connectors between cards ----- */
+    .connector {
+      flex: 0 0 64px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .connector::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 14px;
+      height: 1.5px;
+      background: linear-gradient(to right, rgba(156,163,175,0) 0%, #9CA3AF 18%, #9CA3AF 100%);
+      transform: translateY(-50%);
+    }
+    .connector::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: 0;
+      width: 0;
+      height: 0;
+      border-left: 8px solid #6B7280;
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+      transform: translateY(-50%);
+    }
+    .connector-label {
+      position: relative;
+      z-index: 1;
+      background: var(--bg);
+      padding: 3px 7px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 9.5px;
+      color: var(--muted);
+      font-weight: 500;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    /* ----- section heading ----- */
+    .section-title {
+      margin: 36px 0 14px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    /* ----- auth flow (4-step horizontal) ----- */
+    .auth-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 28px 24px 26px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .auth-flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: start;
+      gap: 0;
+    }
+    .auth-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 0 8px;
+      position: relative;
+    }
+    .auth-step .icon {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: var(--orange-soft);
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      margin-bottom: 14px;
+    }
+    .auth-step .num {
+      position: absolute;
+      top: -4px; right: -4px;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--orange);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .auth-step .title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .auth-step .sub {
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.45;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .auth-step .sub.plain {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    /* connector arrow between steps — sits centered on the column boundary */
+    .auth-step + .auth-step::before {
+      content: "";
+      position: absolute;
+      top: 31px;
+      left: -10px;
+      width: 18px;
+      height: 1.5px;
+      background: #D1D5DB;
+    }
+    .auth-step + .auth-step::after {
+      content: "";
+      position: absolute;
+      top: 27px;
+      left: 6px;
+      width: 0; height: 0;
+      border-left: 6px solid #9CA3AF;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+    }
+
+    /* ----- stack detail strip ----- */
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+    .stack-col {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px 18px 16px;
+    }
+    .stack-col h4 {
+      margin: 0 0 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: 0.02em;
+    }
+    .stack-col h4 .dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--orange);
+      margin-right: 7px;
+      vertical-align: middle;
+    }
+    .stack-col ul {
+      margin: 0; padding: 0;
+      list-style: none;
+    }
+    .stack-col li {
+      font-size: 12px;
+      color: #374151;
+      padding: 4px 0;
+      border-bottom: 1px dashed #F3F4F6;
+      display: flex; justify-content: space-between;
+      gap: 10px;
+    }
+    .stack-col li:last-child { border-bottom: none; }
+    .stack-col li .k { color: var(--muted); }
+    .stack-col li .v { color: var(--ink); font-weight: 500; }
+
+    /* ----- footer note ----- */
+    .legend {
+      margin-top: 24px;
+      font-size: 11px;
+      color: var(--faint);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <h1>Miam — High-level architecture</h1>
+    <p class="subtitle">Recipe management web app · hexagonal architecture · Docker compose</p>
+
+    <!-- ============ Main row: 4 cards ============ -->
+    <div class="row">
+
+      <!-- User -->
+      <div class="card">
+        <div class="icon-wrap">
+          <svg width="40" height="40" viewBox="0 0 48 48" fill="none" stroke="#F9811F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="24" cy="17" r="9"/>
+            <path d="M9 45 a15 15 0 0 1 30 0"/>
+          </svg>
+        </div>
+        <h3>User</h3>
+        <p class="role">Browser</p>
+        <div class="tags">
+          <span class="tag">Chrome</span>
+          <span class="tag">Mobile</span>
+          <span class="tag brand">Google sign-in</span>
+        </div>
+      </div>
+
+      <div class="connector"><span class="connector-label">HTTPS</span></div>
+
+      <!-- Frontend -->
+      <div class="card">
+        <div class="icon-wrap">
+          <svg width="42" height="42" viewBox="0 0 54 54" fill="none" stroke="#F9811F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="9" width="42" height="32" rx="3"/>
+            <line x1="6" y1="17" x2="48" y2="17"/>
+            <circle cx="11" cy="13" r="1.3" fill="#F9811F" stroke="none"/>
+            <circle cx="15.5" cy="13" r="1.3" fill="#F9811F" stroke="none"/>
+            <circle cx="20" cy="13" r="1.3" fill="#F9811F" stroke="none"/>
+            <line x1="22" y1="46" x2="32" y2="46"/>
+          </svg>
+        </div>
+        <h3>Frontend</h3>
+        <p class="role">React SPA<br>nginx</p>
+        <div class="tags">
+          <span class="tag brand">React 18</span>
+          <span class="tag">Vite</span>
+          <span class="tag">TypeScript</span>
+          <span class="tag">Tailwind</span>
+          <span class="tag">shadcn/ui</span>
+        </div>
+      </div>
+
+      <div class="connector"><span class="connector-label">REST<br>JSON<br>cookie</span></div>
+
+      <!-- Backend -->
+      <div class="card">
+        <div class="icon-wrap">
+          <svg width="42" height="42" viewBox="0 0 54 54" fill="none" stroke="#F9811F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="9" width="42" height="14" rx="2.5"/>
+            <rect x="6" y="31" width="42" height="14" rx="2.5"/>
+            <circle cx="13" cy="16" r="1.6" fill="#F9811F" stroke="none"/>
+            <circle cx="13" cy="38" r="1.6" fill="#F9811F" stroke="none"/>
+            <line x1="20" y1="16" x2="42" y2="16"/>
+            <line x1="20" y1="38" x2="42" y2="38"/>
+          </svg>
+        </div>
+        <h3>Backend</h3>
+        <p class="role">FastAPI<br>hexagonal</p>
+        <div class="tags">
+          <span class="tag brand">FastAPI</span>
+          <span class="tag">Python 3.13</span>
+          <span class="tag">SQLAlchemy</span>
+          <span class="tag">Pydantic</span>
+          <span class="tag">JWT</span>
+        </div>
+      </div>
+
+      <div class="connector"><span class="connector-label">SQL<br>asyncpg</span></div>
+
+      <!-- Database -->
+      <div class="card">
+        <div class="icon-wrap">
+          <svg width="42" height="42" viewBox="0 0 54 54" fill="none" stroke="#F9811F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="27" cy="13" rx="20" ry="6"/>
+            <path d="M7 13 v28 a20 6 0 0 0 40 0 v-28"/>
+            <path d="M7 24 a20 6 0 0 0 40 0"/>
+            <path d="M7 33 a20 6 0 0 0 40 0"/>
+          </svg>
+        </div>
+        <h3>Database</h3>
+        <p class="role">Relational<br>store</p>
+        <div class="tags">
+          <span class="tag brand">PostgreSQL 16</span>
+          <span class="tag">Alembic</span>
+          <span class="tag">Docker volume</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Auth flow (4-step horizontal) ============ -->
+    <div class="section-title">Authentication flow</div>
+    <div class="auth-card">
+      <div class="auth-flow">
+
+        <!-- Step 1: Google sign-in -->
+        <div class="auth-step">
+          <div class="icon">
+            <span class="num">1</span>
+            <svg width="30" height="30" viewBox="0 0 48 48">
+              <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 18.9 13 24 13c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+              <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.5-5.2l-6.2-5.3C29.3 35 26.8 36 24 36c-5.3 0-9.7-3.1-11.3-7.6l-6.5 5C9.6 39.6 16.2 44 24 44z"/>
+              <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.2 5.3C41 35.2 44 30 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+            </svg>
+          </div>
+          <div class="title">Google sign-in</div>
+          <div class="sub plain">User authorizes via OAuth 2.0</div>
+        </div>
+
+        <!-- Step 2: ID token -->
+        <div class="auth-step">
+          <div class="icon">
+            <span class="num">2</span>
+            <svg width="30" height="30" viewBox="0 0 48 48" fill="none" stroke="#F9811F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="12" width="36" height="24" rx="3"/>
+              <path d="M6 14 L24 28 L42 14"/>
+            </svg>
+          </div>
+          <div class="title">ID token</div>
+          <div class="sub">POST /api/auth/google</div>
+        </div>
+
+        <!-- Step 3: Verify & mint JWT -->
+        <div class="auth-step">
+          <div class="icon">
+            <span class="num">3</span>
+            <svg width="30" height="30" viewBox="0 0 48 48" fill="none" stroke="#F9811F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M24 6 L40 12 V24 C40 33 33 41 24 44 C15 41 8 33 8 24 V12 Z"/>
+              <path d="M17 24 L22 29 L31 19"/>
+            </svg>
+          </div>
+          <div class="title">Verify &amp; mint JWT</div>
+          <div class="sub plain">HttpOnly · Secure · SameSite</div>
+        </div>
+
+        <!-- Step 4: Cookie session -->
+        <div class="auth-step">
+          <div class="icon">
+            <span class="num">4</span>
+            <svg width="30" height="30" viewBox="0 0 48 48" fill="none" stroke="#F9811F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="16" cy="20" r="8"/>
+              <path d="M22 22 L40 22 L40 30 M34 22 L34 28"/>
+            </svg>
+          </div>
+          <div class="title">Cookie session</div>
+          <div class="sub">Auto-sent on /api/*</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============ Stack detail strip ============ -->
+    <div class="section-title">Stack detail</div>
+    <div class="stack-grid">
+
+      <div class="stack-col">
+        <h4><span class="dot"></span>User</h4>
+        <ul>
+          <li><span class="k">Client</span><span class="v">Web browser</span></li>
+          <li><span class="k">Auth</span><span class="v">Google OAuth 2.0</span></li>
+          <li><span class="k">Session</span><span class="v">HttpOnly cookie</span></li>
+          <li><span class="k">Transport</span><span class="v">HTTPS</span></li>
+        </ul>
+      </div>
+
+      <div class="stack-col">
+        <h4><span class="dot"></span>Frontend</h4>
+        <ul>
+          <li><span class="k">Framework</span><span class="v">React 18</span></li>
+          <li><span class="k">Build</span><span class="v">Vite</span></li>
+          <li><span class="k">Language</span><span class="v">TypeScript</span></li>
+          <li><span class="k">Styling</span><span class="v">Tailwind · shadcn/ui</span></li>
+          <li><span class="k">Routing</span><span class="v">React Router</span></li>
+          <li><span class="k">Server</span><span class="v">nginx (static)</span></li>
+        </ul>
+      </div>
+
+      <div class="stack-col">
+        <h4><span class="dot"></span>Backend</h4>
+        <ul>
+          <li><span class="k">Framework</span><span class="v">FastAPI</span></li>
+          <li><span class="k">Runtime</span><span class="v">Python 3.13 · uv</span></li>
+          <li><span class="k">ORM</span><span class="v">SQLAlchemy 2</span></li>
+          <li><span class="k">Validation</span><span class="v">Pydantic v2</span></li>
+          <li><span class="k">Auth</span><span class="v">Google ID token + JWT</span></li>
+          <li><span class="k">Architecture</span><span class="v">Hexagonal (ports/adapters)</span></li>
+          <li><span class="k">Exporters</span><span class="v">Markdown · Word (docx)</span></li>
+        </ul>
+      </div>
+
+      <div class="stack-col">
+        <h4><span class="dot"></span>Database</h4>
+        <ul>
+          <li><span class="k">Engine</span><span class="v">PostgreSQL 16</span></li>
+          <li><span class="k">Migrations</span><span class="v">Alembic</span></li>
+          <li><span class="k">Driver</span><span class="v">psycopg / asyncpg</span></li>
+          <li><span class="k">Hosting</span><span class="v">Docker compose</span></li>
+          <li><span class="k">Persistence</span><span class="v">Named volume</span></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <p class="legend">All services run side-by-side via <strong>docker compose</strong> — frontend (nginx) · backend (FastAPI) · db (Postgres).</p>
+
+  </div>
+</body>
+</html>
