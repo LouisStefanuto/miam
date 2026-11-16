@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ArrowLeft, Plus, Star, Save, Camera, X, CircleCheck, Circle, Minus, ImagePlus, ImageMinus, Flower, Sun, Grape, Snowflake, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, Timer, Flame, Users, CalendarDays, LucideIcon } from 'lucide-react';
+import { Plus, Star, Save, Camera, X, CircleCheck, Circle, Minus, ImagePlus, ImageMinus, Flower, Sun, Grape, Snowflake, Leaf, Wine, Salad, Beef, UtensilsCrossed, Cake, CupSoda, Timer, Flame, Users, CalendarDays, LucideIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
 import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/PageHeader';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Recipe, Ingredient, Step, RecipeType, Season, Difficulty, Diet } from '@/data/recipes';
@@ -285,16 +286,16 @@ export default function RecipeForm({ onBack, onSave, initialRecipe, allTags = []
 
   return (
     <div>
-      {/* Sticky top bar */}
-      <div className="sticky top-0 z-[60] bg-card/95 backdrop-blur-sm border-b border-border shadow-card px-4 py-3 flex items-center justify-between">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft size={20} />
-          <span className="sr-only">Retour</span>
-        </Button>
-        <Button size="sm" className="gradient-warm text-primary-foreground font-body gap-1.5" onClick={handleSubmit}>
-          <Save size={14} /> Enregistrer
-        </Button>
-      </div>
+      <PageHeader
+        title={initialRecipe ? 'Modifier la recette' : 'Nouvelle recette'}
+        onBack={onBack}
+        layer="z-[60]"
+        actions={
+          <Button size="sm" className="gradient-warm text-primary-foreground font-body gap-1.5" onClick={handleSubmit}>
+            <Save size={14} /> Enregistrer
+          </Button>
+        }
+      />
 
       {/* Validation errors */}
       {errors.length > 0 && (

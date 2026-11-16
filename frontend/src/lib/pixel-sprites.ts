@@ -357,6 +357,42 @@ export const sprites = {
       '.kkkkkkkkkkkkkkkk.',
     ],
   },
+  // Stickers around the catalog welcome
+  kawaiiTomato: {
+    rows: [
+      '.......k.......',
+      '......kLk......',
+      '....kklLlkk....',
+      '..kkrLlLlLrkk..',
+      '.krrLrrLrrLrrk.',
+      'krrhhrrrrrrrrRk',
+      'krrhrrrrrrrrrRk',
+      'krrrerrrrrerrRk',
+      'krrcrrrrrrrcRRk',
+      'krrrrrererrrRRk',
+      '.krrrrrerrrRRk.',
+      '..krrrrrrRRRk..',
+      '...kkRRRRRkk...',
+      '.....kkkkk.....',
+    ],
+  },
+  broccoli: {
+    rows: [
+      '....kk..kkk....',
+      '...kllkklllkk..',
+      '..kllLlklLlllk.',
+      '.klllllllllLlk.',
+      'kllLlllLlllllLk',
+      'klllllllLllLllk',
+      '.kLlllLlllllLk.',
+      '..kkLaaaaaLkk..',
+      '....kaaaaak....',
+      '....kaaaaAk....',
+      '....kaaaaAk....',
+      '...kaaaaaaAk...',
+      '....kkkkkkk....',
+    ],
+  },
 } satisfies Record<string, PixelSpriteData>;
 
 export interface PixelRun {

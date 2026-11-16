@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Upload, FileJson, ArrowLeft, AlertCircle, ClipboardPaste } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/PageHeader';
 import { toast } from '@/hooks/use-toast';
 import { importRecipesBatch, fetchRecipes } from '@/lib/api';
 import { Recipe } from '@/data/recipes';
@@ -92,13 +93,7 @@ export default function RecipeImportJSON({ onBack, onImportRecipes }: RecipeImpo
 
   return (
     <div className="min-h-screen bg-background animate-fade-in">
-      <header className="sticky top-0 z-20 flex items-center gap-3 px-4 h-14 bg-background border-b border-border">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft size={20} />
-          <span className="sr-only">Retour</span>
-        </Button>
-        <h1 className="font-display text-lg font-bold">Importer depuis un fichier JSON</h1>
-      </header>
+      <PageHeader title="Importer depuis un fichier JSON" onBack={onBack} />
       <div className="max-w-4xl mx-auto px-4 py-8">
       <p className="font-body text-muted-foreground mb-6 text-sm">
         Importez vos recettes au format <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{ "recipes": [...] }'}</code> : déposez un fichier ou collez le contenu directement.

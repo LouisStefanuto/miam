@@ -63,6 +63,8 @@
     --shadow-card: 0 2px 12px -2px hsl(25 20% 15% / 0.08);
     --shadow-card-hover: 0 8px 30px -4px hsl(27 95% 55% / 0.15);
     --gradient-warm: linear-gradient(135deg, hsl(27 95% 55%), hsl(35 85% 55%));
+    /* Die-cut edge around stickers */
+    --sticker-edge: 0 0% 100%;
   }
 
   .dark {
@@ -115,6 +117,7 @@
 
     --shadow-card: 0 2px 12px -2px hsl(0 0% 0% / 0.3);
     --shadow-card-hover: 0 8px 30px -4px hsl(27 95% 55% / 0.2);
+    --sticker-edge: 30 15% 92%;
   }
 }
 
@@ -149,5 +152,14 @@
   }
   .gradient-warm {
     background: var(--gradient-warm);
+  }
+  /* A pixel sprite cut out like a sticker: a solid edge that follows its outline, and a soft drop shadow. */
+  .pixel-sticker {
+    filter:
+      drop-shadow(3px 0 0 hsl(var(--sticker-edge)))
+      drop-shadow(-3px 0 0 hsl(var(--sticker-edge)))
+      drop-shadow(0 3px 0 hsl(var(--sticker-edge)))
+      drop-shadow(0 -3px 0 hsl(var(--sticker-edge)))
+      drop-shadow(0 8px 8px hsl(25 40% 20% / 0.18));
   }
 }
